@@ -8,7 +8,8 @@
 AProjectXGameMode::AProjectXGameMode()
 {
 	// use our custom PlayerController class
-	PlayerControllerClass = AProjectXPlayerController::StaticClass();
+
+//	PlayerControllerClass = AProjectXPlayerController::StaticClass();
 
 	// set default pawn class to our Blueprinted character
 	/* static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprint/Character/BP_Character"));
