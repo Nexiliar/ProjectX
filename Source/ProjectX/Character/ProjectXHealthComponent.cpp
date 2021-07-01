@@ -61,7 +61,7 @@ void UProjectXHealthComponent::ChangeHealthValue(float ChangeValue)
 {
 	ChangeValue = ChangeValue * CoefDamage;
 	Health = Health + ChangeValue;
-	
+	OnHealthChange.Broadcast(Health, ChangeValue);
 	
 	if (Health > MaxHealth)
 	{
@@ -75,7 +75,7 @@ void UProjectXHealthComponent::ChangeHealthValue(float ChangeValue)
 
 		}
 	}
-	OnHealthChange.Broadcast(Health, ChangeValue);
+	
 }
 
 

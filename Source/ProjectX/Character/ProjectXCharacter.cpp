@@ -146,7 +146,11 @@ void AProjectXCharacter::InputAxisY(float Value)
 
 void AProjectXCharacter::InputAttackPressed()
 {
-	AttackCharEvent(true);
+	if (bIsAlive)
+	{
+		AttackCharEvent(true);
+	}
+	
 }
 
 void AProjectXCharacter::InputAttackReleased()
@@ -480,7 +484,7 @@ void AProjectXCharacter::InitWeapon(FName IdWeaponName, FAddicionalWeaponInfo We
 
 void AProjectXCharacter::TryReloadWeapon()
 {
-	if (CurrentWeapon && !CurrentWeapon->WeaponReloading)
+	if (bIsAlive && CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	{
 		if (CurrentWeapon->GetWeaponRound() < CurrentWeapon->WeaponSetting.MaxRound && CurrentWeapon->CheckCanWeaponReload())
 			
@@ -791,6 +795,12 @@ void AProjectXCharacter::CharDead()
 	GetWorldTimerManager().SetTimer(TimerHanndle_RagDollTimer, this, &AProjectXCharacter::EnableRagdoll, TimeAnim,false);
 
 	GetCursorToWorld()->SetVisibility(false);
+	
+	//Подумать, как переделать, чтобы персонаж рандомно продолжал стрелять после смерти
+		AttackCharEvent(false);
+
+
+	CharDead_BP();
 }
 
 void AProjectXCharacter::EnableRagdoll()

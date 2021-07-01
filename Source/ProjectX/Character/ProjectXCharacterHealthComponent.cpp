@@ -32,7 +32,8 @@ float UProjectXCharacterHealthComponent::GetCurrentShield()
 void UProjectXCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 {
 	Shield += ChangeValue;
-	
+	OnShieldChange.Broadcast(Shield, ChangeValue);
+
 	if (Shield > 100.0f)
 	{
 		Shield = 100.0f;
@@ -50,7 +51,7 @@ void UProjectXCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_ShieldTimerRecoveryRateTimer);
 	}
 
-	OnShieldChange.Broadcast(Shield, ChangeValue);
+	
 }
 
 void UProjectXCharacterHealthComponent::CoolDownShieldEnd()
@@ -66,6 +67,7 @@ void UProjectXCharacterHealthComponent::RecoveryShield()
 {
 	float tmp = Shield;
 	tmp = tmp + ShieldRecoveryValue;
+	OnShieldChange.Broadcast(Shield, ShieldRecoveryValue);
 	if (tmp > 100.0f)
 	{
 		Shield = 100.0f;
@@ -78,7 +80,7 @@ void UProjectXCharacterHealthComponent::RecoveryShield()
 	{
 		Shield = tmp;
 	}
-	OnShieldChange.Broadcast(Shield, ShieldRecoveryValue);
+	
 }
 
 void UProjectXCharacterHealthComponent::HealthRegenStart(float HealthToRestore)

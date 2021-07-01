@@ -179,7 +179,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		bool SplitStackToIndex(int32 FromIndex, int32 ToIndex, int32 AmountToSplit);
 
-
-
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+		void InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo);
 
 };
