@@ -113,10 +113,14 @@ bool UProjectX_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 
 void UProjectX_StateEffect_ExecuteTimer::DestroyObject()
 {
-	
-	ParticleEmitter->DestroyComponent();
-	ParticleEmitter = nullptr;
-	Super::DestroyObject();
+	if (ParticleEmitter)
+	{
+		ParticleEmitter->DestroyComponent();
+		ParticleEmitter = nullptr;
+		Super::DestroyObject();
+	}
+
+
 }
 
 
