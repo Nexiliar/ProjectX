@@ -531,7 +531,7 @@ bool UProjectXInventoryComponent::SwitchWeaponToInventory(FWeaponSlot NewWeapon,
 		
 		SwitchWeaponToIndex(CurrentIndexWeaponChar,-1,NewWeapon.AdditionalInfo,true);
 		
-		UE_LOG(LogTemp, Warning, TEXT("SwitchDone"));
+		
 
 		OnUpdateWeaponSlot.Broadcast(IndexSlot, NewWeapon);
 		result = true;
@@ -587,16 +587,57 @@ bool UProjectXInventoryComponent::EquipItem(int32 SlotIndex)
 {
 	bool bIsFind = false;
 	int8 i = 0;
+	bool isEquipSuccess = false;
+	
 	while (i < EquipmentSlots.Num() && !bIsFind)
-	{
-		if (EquipmentSlots[i].ItemsInfo.SlotType == InventorySlots[SlotIndex].ItemsInfo.SlotType)
+	{		
+		if (EquipmentSlots[i].EquipmentInfo.SlotType == InventorySlots[SlotIndex].EquipmentInfo.SlotType)
 		{
-			EquipmentSlots[i].MasterItem = InventorySlots[SlotIndex].MasterItem;
-			EquipmentSlots[i].ItemsInfo = InventorySlots[SlotIndex].ItemsInfo;
+			EquipmentSlots[i] = InventorySlots[SlotIndex];	
+			InventorySlots[SlotIndex] = {};
 
-			AMasterItem* MI = Cast<AMasterItem>(GetWorld()->GetClass());
-			MI->OnItemUsed(InventorySlots[SlotIndex].ItemsInfo.SlotType);
-			if (InventorySlots[SlotIndex].ItemsInfo.SlotType == EEquipmentSlotType::BodyKit)
+			switch (EquipmentSlots[i].EquipmentInfo.SlotType)
+			{
+				case EEquipmentSlotType::Bracer:
+
+					break;
+				case EEquipmentSlotType::BodyKit:
+					AmmoSlots.SetNum(4);
+					AmmoSlots[0].WeaponType = EWeaponType::Pistol;
+					AmmoSlots[0].MaxCount = 200;
+					AmmoSlots[0].Count = 100;
+					AmmoSlots[1].WeaponType = EWeaponType::ShotGunType;
+					AmmoSlots[1].MaxCount = 80;
+					AmmoSlots[1].Count = 20;
+					AmmoSlots[2].WeaponType = EWeaponType::Rifle;
+					AmmoSlots[2].MaxCount = 300;
+					AmmoSlots[2].Count = 150;
+					AmmoSlots[3].WeaponType = EWeaponType::GrenadeLauncher;
+					AmmoSlots[3].MaxCount = 50;
+					AmmoSlots[3].Count = 25;
+					OnEquipItem.Broadcast();
+					isBodyKitEquiped = true;
+					//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, TEXT("BodyKitAmmoInitialized"));
+
+					break;
+				case EEquipmentSlotType::Armor:
+					isArmorEquiped = true;
+					break;
+				case EEquipmentSlotType::BackPack:
+			//		EquipBackPack(EquipmentSlots[i], isEquipSuccess);
+					break;
+				default:
+					break;
+			}
+			//InventorySlots[SlotIndex].MasterItem = NULL;
+			InventorySlots[SlotIndex].ItemsInfo = {};
+			//InventorySlots[SlotIndex]. ItemsInfo.AmountOfItemsInSlot = 0;
+			bIsFind = true;
+			//isBodyKitEquiped = true;
+			OnAmountOfItemsChanged.Broadcast();
+
+			/* Временно, чекнуть как работает свич, если все ок, убрать логику
+			if (InventorySlots[SlotIndex].ItemsInfo.EquipmentInfo.SlotType == EEquipmentSlotType::BodyKit)
 			{
 				AmmoSlots.SetNum(4);
 				AmmoSlots[0].WeaponType = EWeaponType::Pistol;
@@ -614,24 +655,24 @@ bool UProjectXInventoryComponent::EquipItem(int32 SlotIndex)
 				OnEquipItem.Broadcast();
 				isBodyKitEquiped = true;
 			}
-			if (InventorySlots[SlotIndex].ItemsInfo.SlotType == EEquipmentSlotType::BackPack)
+			if (InventorySlots[SlotIndex].ItemsInfo.EquipmentInfo.SlotType == EEquipmentSlotType::BackPack)
 			{
 				AmountOfInventorySlots = 20;
 				isBackPackEquiped = true;
 				InventorySlots.SetNum(AmountOfInventorySlots);
 				OnEquipItem.Broadcast();
 			}
-			if (InventorySlots[SlotIndex].ItemsInfo.SlotType == EEquipmentSlotType::Armor)
+			if (InventorySlots[SlotIndex].ItemsInfo.EquipmentInfo.SlotType == EEquipmentSlotType::Armor)
 			{
 				isArmorEquiped = true;
 			}
 			InventorySlots[SlotIndex].MasterItem = NULL;
 			InventorySlots[SlotIndex].ItemsInfo = {};
-			InventorySlots[SlotIndex].AmountOfItemsInSlot = 0;
+			InventorySlots[SlotIndex].ItemsInfo.AmountOfItemsInSlot = 0;
 			bIsFind = true;
 			isBodyKitEquiped = true;
 			OnAmountOfItemsChanged.Broadcast();
-			
+			 */
 		}
 		i++;
 	}
@@ -639,17 +680,51 @@ bool UProjectXInventoryComponent::EquipItem(int32 SlotIndex)
 	return bIsFind;
 }
 
-bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FItemsInfo& ItemInfo)
+bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& IventorySlotInfo)
 {
+	if (EquipmentSlots[SlotIndex].EquipmentInfo.SlotType == EEquipmentSlotType::BackPack)
+	{
+		EquipmentSlots[SlotIndex] = {};
+		AmountOfInventorySlots = InventorySlotsByCharacterStats;
+		isBackPackEquiped = false;
+		
+		InventorySlots.SetNum(AmountOfInventorySlots);
+		OnUnEquipItem.Broadcast();
+		
 
 
+	}
 	int8 i = 0;
 	bool bIsFind = false;
 	while (i < InventorySlots.Num() && !bIsFind)
 	{
-		if (CheckSlotEmpty(i, false))
+		FInventory TempInv;
+		bool IsSlotEmpty = false;
+		GetItemInfoAtIndex(i, IsSlotEmpty, TempInv);
+		if (IsSlotEmpty)
 		{
-			if (isBodyKitEquiped && EquipmentSlots[SlotIndex].ItemsInfo.SlotType == EEquipmentSlotType::BodyKit)
+			switch (EquipmentSlots[i].EquipmentInfo.SlotType)
+			{
+			case EEquipmentSlotType::Bracer:
+
+				break;
+			case EEquipmentSlotType::BodyKit:
+
+				//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, TEXT("BodyKitAmmoInitialized"));
+
+				break;
+			case EEquipmentSlotType::Armor:
+				isArmorEquiped = true;
+				break;
+			case EEquipmentSlotType::BackPack:
+				//EquipBackPack(EquipmentSlots[i], isEquipSuccess);
+				break;
+			default:
+				break;
+			}
+		}
+		/*
+			if (isBodyKitEquiped && EquipmentSlots[SlotIndex].EquipmentInfo.SlotType == EEquipmentSlotType::BodyKit)
 			{
 				//AmmoSlots.SetNum(4);
 				AmmoSlots[0].WeaponType = EWeaponType::Pistol;
@@ -668,30 +743,30 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FItemsInfo& ItemI
 				isBodyKitEquiped = false;
 
 			}
-			if (isArmorEquiped && EquipmentSlots[SlotIndex].ItemsInfo.SlotType == EEquipmentSlotType::Armor)
+			if (isArmorEquiped && EquipmentSlots[SlotIndex].EquipmentInfo.SlotType == EEquipmentSlotType::Armor)
 			{
 				isArmorEquiped = false;
 			}
 
 			ItemInfo = EquipmentSlots[SlotIndex].ItemsInfo;
-			InventorySlots[i].MasterItem = EquipmentSlots[SlotIndex].MasterItem;
+			//InventorySlots[i].MasterItem = EquipmentSlots[SlotIndex].MasterItem;
 			InventorySlots[i].ItemsInfo = EquipmentSlots[SlotIndex].ItemsInfo;
 			
 			//EquipmentSlots.RemoveAt(SlotIndex);  
-			EquipmentSlots[SlotIndex].MasterItem = NULL;
+			//EquipmentSlots[SlotIndex].MasterItem = NULL;
 			
-			EquipmentSlots[SlotIndex].ItemsInfo.ItemIcon = {};
-			EquipmentSlots[SlotIndex].ItemsInfo.ItemName = " ";
+			EquipmentSlots[SlotIndex].ItemsInfo = {};
+			//EquipmentSlots[SlotIndex].ItemsInfo.ItemName = " ";
 			
 			bIsFind = true;
 			OnAmountOfItemsChanged.Broadcast();			 
 			
 		}
-			
+		 */	
 
 		i++;
 	}
-
+/* 
 	if (isBackPackEquiped)
 	{
 
@@ -700,133 +775,139 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FItemsInfo& ItemI
 		InventorySlots.SetNum(AmountOfInventorySlots);
 		OnUnEquipItem.Broadcast();
 	}
-
+	*/
 
 	return bIsFind;
 }
-
-bool UProjectXInventoryComponent::CheckSlotEmpty(int32 SlotIndex, bool IsWeapon)
+//Check for double in pickupactor DELIF NOT USSED
+void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<FInventory> InventorySlotsInfo, int32 InventorySize, bool& EquipSuccessfuly)
 {
-	bool isSlotEmpty = true;
-	if (IsWeapon)
+	for (int8 i = 0; i < EquipmentSlots.Num(); i++)
 	{
-		if (WeaponSlots[SlotIndex].NameItem != "None")
+		if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::BackPack)
 		{
-			isSlotEmpty = false;
+			EquipmentSlots[i] = BackPackInfo;
+			InventorySlots.SetNum(InventorySize);
+			for (int8 j = 0; j < InventorySlotsInfo.Num(); j++)
+			{
+				InventorySlots[j] = InventorySlotsInfo[j];
+			}
 		}
+		
 	}
-	else
-	{
-		if (InventorySlots[SlotIndex].MasterItem)
-		{
-			isSlotEmpty = false;
-		}				
-	}
-	return isSlotEmpty;
+	isBackPackEquiped = true;
+	OnEquipItem.Broadcast();
 }
 
-void UProjectXInventoryComponent::GetItemInfoAtIndex(int32 SlotIndex, bool& isSlotEmpty,FInventorySlot &Inventoryslot)
+bool UProjectXInventoryComponent::CheckWeaponSlotEmpty(int32 SlotIndex, bool IsWeapon)
 {
-	int32 IncomeIndex = SlotIndex;
-	
-		if (InventorySlots[IncomeIndex].MasterItem)
-		{
-			isSlotEmpty = false;
-			Inventoryslot = InventorySlots[IncomeIndex];
+	bool isSlotEmpty;
 
+		if (WeaponSlots[SlotIndex].NameItem == "None")
+		{
+			isSlotEmpty = true;
 		}
 		else
 		{
+			isSlotEmpty = false;
+		}
+
+	return isSlotEmpty;
+}
+
+void UProjectXInventoryComponent::GetItemInfoAtIndex(int32 SlotIndex, bool& isSlotEmpty, FInventory& InventoryslotInfo)
+{
+	int32 IncomeIndex = SlotIndex;
+	
+		if (InventorySlots[IncomeIndex].ItemsInfo.ItemName == "None")
+		{
 			isSlotEmpty = true;
+		}
+		else
+		{
+			isSlotEmpty = false;
+			InventoryslotInfo = InventorySlots[IncomeIndex];
 		}
 
 }
 
 int32 UProjectXInventoryComponent::SearchEmptySlotIndex(bool &bIsSucces)
 {
-	
-
 	bool bIsFind = false;
 	int8 i = 0;
 	int8 FoundEmptySlot = 0;
 	while (i < AmountOfInventorySlots && !bIsFind)
 	{		
-		if (InventorySlots[i].MasterItem)
+		//if (InventorySlots[i].ItemsInfo.ItemName == "None")
+		if (InventorySlots[i].ItemsInfo.isSlotOccupied)
 		{
-			
-			
+
 		}
 		else
 		{
-			bIsFind = true;
-			bIsSucces = true;
 			FoundEmptySlot = i;
+			bIsFind = true;
+			bIsSucces = bIsFind;
+
+			//UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::SearchEmptySlotIndex"));
 		}
 		i++;
 	}
-
 	return FoundEmptySlot;
+	
 }
 
 
-int32 UProjectXInventoryComponent::SearchFreeStack(TSubclassOf<class AMasterItem> MasterItem,bool &Success)
+int32 UProjectXInventoryComponent::SearchFreeStack(FItemsInfo ItemInfo,bool &Success)
 {
 	Success = false;
 	int8 i = 0;
-	//int32 Index;
+	int32 FreeStackSlotIndex = 0;
 	while (i < AmountOfInventorySlots && !Success)
 	{
-		if (InventorySlots[i].MasterItem)
-		{
-			if (InventorySlots[i].MasterItem == MasterItem && InventorySlots[i].AmountOfItemsInSlot < MaxStackSize)
+			if (InventorySlots[i].ItemsInfo.ItemName == ItemInfo.ItemName && InventorySlots[i].ItemsInfo.AmountOfItemsInSlot < ItemInfo.MaxItemsStackAtSlot)
 			{
-				//Index = i;
-				//bIsFind = true;
 				Success = true;
+				FreeStackSlotIndex = i;
+				UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::SearchFreeStack: STACK FOUND"));
 			}
-		}
 		i++;
 	}
-	return i;
+	return FreeStackSlotIndex;
 }
 
-bool UProjectXInventoryComponent::AddItem(TSubclassOf<class AMasterItem> MasterItem, int32 AmountOfItems, FName ItemName, int32 &RestItems)
+bool UProjectXInventoryComponent::AddItem(FInventory InventoryInfo, int32 AmountOfItems, int32 &RestItems)
 {
-	bool bIsSuccess;
-	
-	FInventory LocalInventoryInit;
-	InventoryInit(ItemName, LocalInventoryInit);
-	//AMasterItem* DefaultObject = MasterItem.GetDefaultObject();
-	
-	if (LocalInventoryInit.InventorySlot.ItemsInfo.ItemcanBeStacked)
-	{
+	bool bIsSuccess = false;
+	//UE_LOG(LogTemp, Warning, TEXT("UProjectXInventoryComponent::AddItem START ADDING"));
+	//FInventory LocalInventoryInit;
+	//InventoryInit(InventoryInfo.ItemsInfo.ItemName, LocalInventoryInit);
 		
-		bool bIsFound;
-		int32 ItemIndex = SearchFreeStack(MasterItem,bIsFound);
-		if (bIsFound)
-		{
-			
-			if (InventorySlots[ItemIndex].AmountOfItemsInSlot + AmountOfItems > MaxStackSize)
-			{
+	if (InventoryInfo.ItemsInfo.ItemcanBeStacked)
+	{		
+		bool FreeStackFound;
+		int32 ItemIndex = SearchFreeStack(InventoryInfo.ItemsInfo, FreeStackFound);
+		if (FreeStackFound)
+		{			
+			if (InventorySlots[ItemIndex].ItemsInfo.AmountOfItemsInSlot + AmountOfItems > InventorySlots[ItemIndex].ItemsInfo.MaxItemsStackAtSlot)
+			{				
+				int32 ResAmountOfItems = InventorySlots[ItemIndex].ItemsInfo.AmountOfItemsInSlot + AmountOfItems - InventorySlots[ItemIndex].ItemsInfo.MaxItemsStackAtSlot;				
+				InventorySlots[ItemIndex].ItemsInfo.AmountOfItemsInSlot = InventorySlots[ItemIndex].ItemsInfo.MaxItemsStackAtSlot;
+				InventorySlots[ItemIndex].ItemsInfo.isSlotOccupied = true;
+								
 				
-				int32 LocalAmount = InventorySlots[ItemIndex].AmountOfItemsInSlot + AmountOfItems - MaxStackSize;
-
-				InventorySlots[ItemIndex].MasterItem = MasterItem;
-				InventorySlots[ItemIndex].AmountOfItemsInSlot = MaxStackSize;
-				
-				InventorySlots[ItemIndex].ItemsInfo = LocalInventoryInit.InventorySlot.ItemsInfo;
-				
-				AddItem(MasterItem,LocalAmount, ItemName,RestItems);
+				AddItem(InventoryInfo, ResAmountOfItems, RestItems);
 				bIsSuccess = true;
 				RestItems = RestItems;
 			}
 			else
 			{
 			
-				InventorySlots[ItemIndex].MasterItem = MasterItem;
-				InventorySlots[ItemIndex].AmountOfItemsInSlot = InventorySlots[ItemIndex].AmountOfItemsInSlot + AmountOfItems;
 				
-				InventorySlots[ItemIndex].ItemsInfo = LocalInventoryInit.InventorySlot.ItemsInfo;
+				InventorySlots[ItemIndex].ItemsInfo.AmountOfItemsInSlot = InventorySlots[ItemIndex].ItemsInfo.AmountOfItemsInSlot + AmountOfItems;
+				InventorySlots[ItemIndex].ItemsInfo.isSlotOccupied = true;
+				InventorySlots[ItemIndex].EquipmentInfo = InventoryInfo.EquipmentInfo;
+				//InventorySlots[ItemIndex].ItemsInfo = LocalInventoryInit.ItemsInfo;
 				bIsSuccess = true;
 				RestItems = 0;
 			}
@@ -839,23 +920,27 @@ bool UProjectXInventoryComponent::AddItem(TSubclassOf<class AMasterItem> MasterI
 			if (IndexFound)
 			{
 
-				if (AmountOfItems > MaxStackSize)
+				if (AmountOfItems > InventoryInfo.ItemsInfo.MaxItemsStackAtSlot)
 				{
-					InventorySlots[EmptySlotIndex].MasterItem = MasterItem;
+					//InventorySlots[EmptySlotIndex].MasterItem = MasterItem;
 					
-					InventorySlots[EmptySlotIndex].ItemsInfo = LocalInventoryInit.InventorySlot.ItemsInfo;
-					InventorySlots[EmptySlotIndex].AmountOfItemsInSlot = MaxStackSize;
-					int32 AmountOfItemsForNewStack = AmountOfItems - MaxStackSize;
-					AddItem(MasterItem,AmountOfItemsForNewStack, ItemName,RestItems);
+					InventorySlots[EmptySlotIndex].ItemsInfo = InventoryInfo.ItemsInfo;
+					InventorySlots[EmptySlotIndex].ItemsInfo.AmountOfItemsInSlot = InventoryInfo.ItemsInfo.MaxItemsStackAtSlot;
+					int32 AmountOfItemsForNewStack = AmountOfItems - InventoryInfo.ItemsInfo.MaxItemsStackAtSlot;
+					InventorySlots[EmptySlotIndex].ItemsInfo.isSlotOccupied = true;
+					InventorySlots[EmptySlotIndex].EquipmentInfo = InventoryInfo.EquipmentInfo;
+					AddItem(InventoryInfo,AmountOfItemsForNewStack,RestItems);
 					bIsSuccess = true;
 					RestItems = RestItems;
 				}
 				else
 				{
-					InventorySlots[EmptySlotIndex].MasterItem = MasterItem;
+					//InventorySlots[EmptySlotIndex].MasterItem = MasterItem;
 					
-					InventorySlots[EmptySlotIndex].ItemsInfo = LocalInventoryInit.InventorySlot.ItemsInfo;
-					InventorySlots[EmptySlotIndex].AmountOfItemsInSlot = AmountOfItems;
+					InventorySlots[EmptySlotIndex].ItemsInfo = InventoryInfo.ItemsInfo;
+					InventorySlots[EmptySlotIndex].ItemsInfo.AmountOfItemsInSlot = AmountOfItems;
+					InventorySlots[EmptySlotIndex].ItemsInfo.isSlotOccupied = true;
+					InventorySlots[EmptySlotIndex].EquipmentInfo = InventoryInfo.EquipmentInfo;
 					bIsSuccess = true;
 					RestItems = 0;
 				}
@@ -869,23 +954,23 @@ bool UProjectXInventoryComponent::AddItem(TSubclassOf<class AMasterItem> MasterI
 	}
 	else
 	{
-		bool bIsFound;
+		bool bIsFound = false;
 		int32 FoundSlotIndex = SearchEmptySlotIndex(bIsFound);
 		if (bIsFound)
 		{	
 			int32 CurrentAmount = AmountOfItems;
-			InventorySlots[FoundSlotIndex].MasterItem = MasterItem;
+			//InventorySlots[FoundSlotIndex].MasterItem = MasterItem;
 			
-			InventorySlots[FoundSlotIndex].ItemsInfo = LocalInventoryInit.InventorySlot.ItemsInfo;
-			InventorySlots[FoundSlotIndex].AmountOfItemsInSlot = 1;
-			
+			InventorySlots[FoundSlotIndex].ItemsInfo = InventoryInfo.ItemsInfo;
+			InventorySlots[FoundSlotIndex].ItemsInfo.AmountOfItemsInSlot = 1;
+			InventorySlots[FoundSlotIndex].ItemsInfo.isSlotOccupied = true;
+			InventorySlots[FoundSlotIndex].EquipmentInfo = InventoryInfo.EquipmentInfo;
 			if(CurrentAmount >1)
-			{
-				
+			{			
 				//for (int8 LocalAmountOfItems = AmountOfItems; LocalAmountOfItems > 1; LocalAmountOfItems--)
 				for(CurrentAmount; CurrentAmount>1; CurrentAmount--)
 				{
-					AddItem(MasterItem, 1, ItemName, RestItems);
+					AddItem(InventoryInfo, 1, RestItems);
 				}
 				
 				RestItems = RestItems;
@@ -903,7 +988,7 @@ bool UProjectXInventoryComponent::AddItem(TSubclassOf<class AMasterItem> MasterI
 			RestItems = AmountOfItems;
 		}
 	}
-
+	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("ADD SUCCES"));
 	OnAmountOfItemsChanged.Broadcast();
 	return bIsSuccess;
 }
@@ -920,20 +1005,24 @@ void UProjectXInventoryComponent::InventoryInit(FName Name, FInventory& Initiali
 		if (MyGI->GetItemInfoByName(Name, myInventory))
 		{
 
-			if (myInventory.InventorySlot.MasterItem)
+			if (myInventory.ItemsInfo.ItemName == "None")
+			{		
+				//UE_LOG(LogTemp, Warning, TEXT("UProjectXInventoryComponent::InventoryInit ItemName == None"));
+			}
+			else
 			{
+				//UE_LOG(LogTemp, Warning, TEXT("UProjectXInventoryComponent::InventoryInit ItemName isValid"));
 				InitializedInventory = myInventory;
-
 			}
 		}
 	}
 
 
-
+	
 }
 int32 UProjectXInventoryComponent::GetAmountOfItemsAtIndex(int32 index)
 {
-	int32 AmountItems = InventorySlots[index].AmountOfItemsInSlot;
+	int32 AmountItems = InventorySlots[index].ItemsInfo.AmountOfItemsInSlot;
 	
 
 	return AmountItems;
@@ -942,28 +1031,31 @@ int32 UProjectXInventoryComponent::GetAmountOfItemsAtIndex(int32 index)
 bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOfItems)
 {
 	bool bIsSucces = false;
-	if (!CheckSlotEmpty(ItemIndex,false) && AmountOfItems > 0)
+	bool IsSlotEmpty;
+	FInventory LocInv;
+	GetItemInfoAtIndex(ItemIndex, IsSlotEmpty, LocInv);
+	if (!IsSlotEmpty && AmountOfItems > 0)
 	{
 		if (InventorySlots[ItemIndex].ItemsInfo.Itemtype == EItemType::Equipment)
 		{
 			EquipItem(ItemIndex);
-			bIsSucces = true;			
+			bIsSucces = true;				
 		}
 		else
 		{
 		
-		if (AmountOfItems >= GetAmountOfItemsAtIndex(ItemIndex))
-		{
-			InventorySlots[ItemIndex].AmountOfItemsInSlot = 0;
-			InventorySlots[ItemIndex].MasterItem = NULL;
+			if (AmountOfItems >= GetAmountOfItemsAtIndex(ItemIndex))
+			{
+				InventorySlots[ItemIndex].ItemsInfo = {}; // .AmountOfItemsInSlot = 0;
+		//		InventorySlots[ItemIndex].MasterItem = NULL;
 				
-			bIsSucces = true;
-		}
-		else
-		{
-			InventorySlots[ItemIndex].AmountOfItemsInSlot -= AmountOfItems;
-			bIsSucces = true;
-		}
+				bIsSucces = true;
+			}
+			else
+			{
+				InventorySlots[ItemIndex].ItemsInfo.AmountOfItemsInSlot -= AmountOfItems;
+				bIsSucces = true;
+			}
 		OnAmountOfItemsChanged.Broadcast();
 		OnItemUsed.Broadcast(AmountOfItems,InventorySlots[ItemIndex]);
 		}
@@ -975,9 +1067,7 @@ bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOf
 
 bool UProjectXInventoryComponent::SwapItemsWithIndex(int32 FirstItemIndex, int32 SecondItemIndex, bool IsWeapon)
 {
-	bool bIsSucces = false;
-	
-
+	bool bIsSucces = false;	
 	if (IsWeapon)
 	{
 				FWeaponSlot TempWeaponStorage = WeaponSlots[SecondItemIndex];
@@ -994,12 +1084,9 @@ bool UProjectXInventoryComponent::SwapItemsWithIndex(int32 FirstItemIndex, int32
 
 				}
 				else
-				{
-
-			
-					UE_LOG(LogTemp, Warning, TEXT("OurIndexs are match arraysize"));
-
-					FInventorySlot TempElemStorage = InventorySlots[SecondItemIndex];;
+				{			
+					UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::SwapItemsWithIndex OurIndexs are match arraysize"));
+					FInventory TempElemStorage = InventorySlots[SecondItemIndex];;
 					InventorySlots[SecondItemIndex] = InventorySlots[FirstItemIndex];
 					InventorySlots[FirstItemIndex] = TempElemStorage;
 					bIsSucces = true;	
@@ -1013,32 +1100,37 @@ bool UProjectXInventoryComponent::SwapItemsWithIndex(int32 FirstItemIndex, int32
 bool UProjectXInventoryComponent::SplitStackByAmount(int32 StackIndex, int32 AmountOfItemsToSplit)
 {
 	bool bIsSucces = false;
-	if (CheckSlotEmpty(StackIndex,false))
+	/* 	
+	bool IsSlotEmpty;
+	FInventory LocInv;
+	GetItemInfoAtIndex(StackIndex, IsSlotEmpty, LocInv);
+
+	if (IsSlotEmpty)
 	{
 
 	}
 	else
 	{
+	*/
 		bool isSlotEmpty = false;
-		FInventorySlot TempInventorySlot;
+		FInventory TempInventorySlot;
 
 		GetItemInfoAtIndex(StackIndex, isSlotEmpty, TempInventorySlot);
-		if (TempInventorySlot.ItemsInfo.ItemcanBeStacked && TempInventorySlot.AmountOfItemsInSlot > AmountOfItemsToSplit)
+		if (TempInventorySlot.ItemsInfo.ItemcanBeStacked && TempInventorySlot.ItemsInfo.AmountOfItemsInSlot > AmountOfItemsToSplit)
 		{
-			bool bIsFound;
+			bool bIsFound = false;
 			int32 EmptySlotIndex = SearchEmptySlotIndex(bIsFound);
 			if (bIsFound)
 			{
-				InventorySlots[StackIndex].AmountOfItemsInSlot -= AmountOfItemsToSplit;
-
-				InventorySlots[EmptySlotIndex].MasterItem = InventorySlots[StackIndex].MasterItem;
+				InventorySlots[StackIndex].ItemsInfo.AmountOfItemsInSlot -= AmountOfItemsToSplit;
+				//InventorySlots[EmptySlotIndex].MasterItem = InventorySlots[StackIndex].MasterItem;
 				InventorySlots[EmptySlotIndex].ItemsInfo = InventorySlots[StackIndex].ItemsInfo;
-				InventorySlots[EmptySlotIndex].AmountOfItemsInSlot = AmountOfItemsToSplit;
+				//InventorySlots[EmptySlotIndex].ItemsInfo.AmountOfItemsInSlot = AmountOfItemsToSplit;
 				bIsSucces = true;
 			}
 		}
 
-	}
+	//}
 	OnAmountOfItemsChanged.Broadcast();
 	return bIsSucces;
 }
@@ -1046,12 +1138,12 @@ bool UProjectXInventoryComponent::SplitStackByAmount(int32 StackIndex, int32 Amo
 bool UProjectXInventoryComponent::AddToIndex(int32 FromIndex, int32 ToIndex)
 {
 	bool bIsSuccess = false;
-	if (InventorySlots[FromIndex].MasterItem == InventorySlots[ToIndex].MasterItem && InventorySlots[ToIndex].AmountOfItemsInSlot < MaxStackSize && InventorySlots[ToIndex].ItemsInfo.ItemcanBeStacked)
+	if (InventorySlots[FromIndex].ItemsInfo.ItemName == InventorySlots[ToIndex].ItemsInfo.ItemName && InventorySlots[ToIndex].ItemsInfo.AmountOfItemsInSlot < InventorySlots[ToIndex].ItemsInfo.MaxItemsStackAtSlot && InventorySlots[ToIndex].ItemsInfo.ItemcanBeStacked)
 	{
-		if (MaxStackSize - GetAmountOfItemsAtIndex(ToIndex) >= GetAmountOfItemsAtIndex(FromIndex))
+		if (InventorySlots[ToIndex].ItemsInfo.MaxItemsStackAtSlot - GetAmountOfItemsAtIndex(ToIndex) >= GetAmountOfItemsAtIndex(FromIndex))
 		{
-			InventorySlots[ToIndex].MasterItem = InventorySlots[FromIndex].MasterItem;
-			InventorySlots[ToIndex].AmountOfItemsInSlot = GetAmountOfItemsAtIndex(FromIndex) + GetAmountOfItemsAtIndex(ToIndex);
+			//InventorySlots[ToIndex].MasterItem = InventorySlots[FromIndex].MasterItem;
+			InventorySlots[ToIndex].ItemsInfo.AmountOfItemsInSlot = GetAmountOfItemsAtIndex(FromIndex) + GetAmountOfItemsAtIndex(ToIndex);
 			
 			InventorySlots[FromIndex] = {};
 			
@@ -1060,8 +1152,8 @@ bool UProjectXInventoryComponent::AddToIndex(int32 FromIndex, int32 ToIndex)
 		}
 		else
 		{
-			InventorySlots[FromIndex].AmountOfItemsInSlot -= MaxStackSize - GetAmountOfItemsAtIndex(ToIndex);
-			InventorySlots[ToIndex].AmountOfItemsInSlot = MaxStackSize;
+			InventorySlots[FromIndex].ItemsInfo.AmountOfItemsInSlot -= InventorySlots[FromIndex].ItemsInfo.MaxItemsStackAtSlot - GetAmountOfItemsAtIndex(ToIndex);
+			InventorySlots[ToIndex].ItemsInfo.AmountOfItemsInSlot = InventorySlots[FromIndex].ItemsInfo.MaxItemsStackAtSlot;
 			bIsSuccess = true;
 		}
 		OnAmountOfItemsChanged.Broadcast();
@@ -1073,15 +1165,20 @@ bool UProjectXInventoryComponent::AddToIndex(int32 FromIndex, int32 ToIndex)
 bool UProjectXInventoryComponent::SplitStackToIndex(int32 FromIndex, int32 ToIndex, int32 AmountToSplit)
 {
 	bool bIsSucces = false;
+	bool IsSlotToEmpty;
+	bool IsSlotFromEmpty;
+	FInventory LocInv;
+	GetItemInfoAtIndex(ToIndex, IsSlotToEmpty, LocInv);
+	GetItemInfoAtIndex(ToIndex, IsSlotFromEmpty, LocInv);
 
-	if (CheckSlotEmpty(ToIndex,false) && CheckSlotEmpty(FromIndex,false) && InventorySlots[FromIndex].ItemsInfo.ItemcanBeStacked)
+	if (IsSlotToEmpty && IsSlotFromEmpty && InventorySlots[FromIndex].ItemsInfo.ItemcanBeStacked)
 	{
-		if (InventorySlots[FromIndex].AmountOfItemsInSlot > 1 && InventorySlots[FromIndex].AmountOfItemsInSlot > AmountToSplit)
+		if (InventorySlots[FromIndex].ItemsInfo.AmountOfItemsInSlot > 1 && InventorySlots[FromIndex].ItemsInfo.AmountOfItemsInSlot > AmountToSplit)
 		{
-			InventorySlots[FromIndex].AmountOfItemsInSlot -= AmountToSplit;
-			InventorySlots[ToIndex].MasterItem = InventorySlots[FromIndex].MasterItem;
+			InventorySlots[FromIndex].ItemsInfo.AmountOfItemsInSlot -= AmountToSplit;
+			//InventorySlots[ToIndex].MasterItem = InventorySlots[FromIndex].MasterItem;
 			InventorySlots[ToIndex].ItemsInfo = InventorySlots[FromIndex].ItemsInfo;
-			InventorySlots[ToIndex].AmountOfItemsInSlot = AmountToSplit;
+			InventorySlots[ToIndex].ItemsInfo.AmountOfItemsInSlot = AmountToSplit;
 			bIsSucces = true;
 			OnAmountOfItemsChanged.Broadcast();
 		}
@@ -1090,17 +1187,32 @@ bool UProjectXInventoryComponent::SplitStackToIndex(int32 FromIndex, int32 ToInd
 	return bIsSucces;
 }
 
+void UProjectXInventoryComponent::DestroyItems(int32 ItemIndex)
+{
+	//int32 AmountOfItemsAtIndex = GetAmountOfItemsAtIndex(ItemIndex);
+	InventorySlots[ItemIndex] = {};
+	OnAmountOfItemsChanged.Broadcast();
+}
+
 void UProjectXInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo)
 {
 	WeaponSlots = NewWeaponSlotsInfo;
 	AmmoSlots = NewAmmoSlotsInfo;
+	AmountOfInventorySlots = InventorySlotsByCharacterStats;
 	//Задаем количество слотов в инвентаре
 	InventorySlots.SetNum(AmountOfInventorySlots);
 	if (InventorySlots.IsValidIndex(AmountOfInventorySlots))
 		UE_LOG(LogTemp, Error, TEXT("InventorySLots.SetNum = AmountOfInventorySLots and indexisvalid"));
 	OnInventoryWidgetCreate.Broadcast();
 
-	EquipmentSlots.SetNum(4);
+	//EquipmentSlots = new TArray<FInventory>[4];
+	EquipmentSlots.SetNum(4);	
+	EquipmentSlots[0].EquipmentInfo.SlotType = EEquipmentSlotType::Bracer;
+	EquipmentSlots[1].EquipmentInfo.SlotType = EEquipmentSlotType::Armor;
+	EquipmentSlots[2].EquipmentInfo.SlotType = EEquipmentSlotType::BodyKit;
+	EquipmentSlots[3].EquipmentInfo.SlotType = EEquipmentSlotType::BackPack;
+	
+
 
 	for (int8 i = 0; i < WeaponSlots.Num(); i++)
 	{

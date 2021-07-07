@@ -60,10 +60,7 @@ void UTypes::AddEffectBySurfaceType(AActor* TakeEffectActor, TSubclassOf<UProjec
 							{
 								NewEffect->InitObject(TakeEffectActor);
 							}
-						}
-		
-						
-					
+						}		
 						
 					}
 					j++;

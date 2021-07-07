@@ -31,7 +31,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponInit, FAddicionalWeaponInf
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUpdateWeaponSlot, int32, IndexSlotChange, FWeaponSlot, NewInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAmountOfItemsChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryWidgetCreate);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUsed, int32, AmountOfItemsToUse, FInventorySlot, InventorySlotInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUsed, int32, AmountOfItemsToUse, FInventory, InventorySlotInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipItem);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnEquipItem);
 
@@ -85,9 +85,9 @@ public:
 	
 	//Equpment	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
-	TArray<FEquipmenSlot> EquipmentSlots;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
-	EEquipmentSlotType EquipmentSlotType;
+		TArray<FInventory> EquipmentSlots;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
+	//	EEquipmentSlotType EquipmentSlotType;
 
 	
 
@@ -97,14 +97,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
 		FInventory  CurrentInitializedInventory;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
-		TArray<FInventorySlot> InventorySlots;
+		TArray<FInventory> InventorySlots;
 
 	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
-		int32 MaxStackSize = 99;
-	//можно перенести в types
+		int32 AmountOfInventorySlots;
+	//Размер инвентаря без рюкзака. Определяется улучшенными параметрами.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
-		int32 AmountOfInventorySlots = 20;
+		int32 InventorySlotsByCharacterStats = 4;
 	//максимальное количество слотов оружия
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 		int32 MaxSlotWeapon = 0;
@@ -151,19 +152,21 @@ public:
 	UFUNCTION(BlueprintCallable)
 		bool EquipItem(int32 SlotIndex);
 	UFUNCTION(BlueprintCallable)
-		bool UnequipItem(int32 SlotIndex, FItemsInfo& ItemInfo);
+		bool UnequipItem(int32 SlotIndex, FInventory& IventorySlotInfo);
+	UFUNCTION(BlueprintCallable)
+		void EquipBackPack(FInventory BackPackInfo, TArray<FInventory> InventorySlotsInfo, int32 InventorySize, bool & EquipSuccessfuly);
 
 	//Инвентарь
 	UFUNCTION(BlueprintCallable)
-		bool CheckSlotEmpty(int32 SlotIndex, bool IsWeapon);
+		bool CheckWeaponSlotEmpty(int32 SlotIndex, bool IsWeapon);
 	UFUNCTION(BlueprintCallable)
-		void GetItemInfoAtIndex(int32 SlotIndex,bool& isSlotEmpty, FInventorySlot &Inventoryslot);
+		void GetItemInfoAtIndex(int32 SlotIndex,bool& isSlotEmpty, FInventory &InventoryslotInfo);
 	UFUNCTION(BlueprintCallable)
 		int32 SearchEmptySlotIndex(bool& bIsSucces);
 	UFUNCTION(BlueprintCallable)
-		int32 SearchFreeStack(TSubclassOf<class AMasterItem> MasterItem, bool& Success);
+		int32 SearchFreeStack(FItemsInfo ItemInfo, bool& Success);
 	UFUNCTION(BlueprintCallable)
-		bool AddItem(TSubclassOf<class AMasterItem> MasterItem, int32 Amount,FName ItemName, int32& RestItems);
+		bool AddItem(FInventory InventoryInfo, int32 AmountOfItems, int32& RestItems);
 	UFUNCTION(BlueprintCallable)
 		void InventoryInit(FName Name, FInventory& InitializedInventory);
 	UFUNCTION(BlueprintCallable)
@@ -178,9 +181,12 @@ public:
 		bool AddToIndex(int32 FromIndex, int32 ToIndex);
 	UFUNCTION(BlueprintCallable)
 		bool SplitStackToIndex(int32 FromIndex, int32 ToIndex, int32 AmountToSplit);
+	UFUNCTION(BlueprintCallable)
+		void DestroyItems(int32 ItemIndex);
 
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 		void InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo);
+
 
 };

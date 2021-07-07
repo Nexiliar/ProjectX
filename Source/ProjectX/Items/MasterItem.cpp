@@ -55,7 +55,7 @@ void AMasterItem::OnItemUsed(EEquipmentSlotType ItemType)
 		//AmmoSlot.WeaponType = EWeaponType::Pistol;
 		//AmmoSlot.MaxCount = 400;
 		//AmmoSlot.Count = 100;
-		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, TEXT("BodyKitAmmoInitialized"));
+		//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, TEXT("BodyKitAmmoInitialized"));
 	
 		break;
 	case EEquipmentSlotType::Armor:
@@ -82,11 +82,11 @@ void AMasterItem::ItemInit(FName Name)
 		if (MyGI->GetItemInfoByName(Name, myInventory))
 		{
 			
-			if (myInventory.InventorySlot.MasterItem)
-			{
-				CurrentInventory = myInventory;
+			//if (myInventory.InventorySlot.MasterItem)
+			//{
+			//	CurrentInventory = myInventory;
 				
-			}
+			//}
 		}
 	}
 	

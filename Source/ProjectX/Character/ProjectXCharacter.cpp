@@ -242,8 +242,8 @@ void AProjectXCharacter::AttackCharEvent(bool bIsFiring)
 			myWeapon->SetWeaponStateFire(bIsFiring);
 			myWeapon->EmptyMagTryToShoot();
 		}
-		else
-			UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
+		//else
+			//UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
 }
 
 	void AProjectXCharacter::CharacterUpdate()

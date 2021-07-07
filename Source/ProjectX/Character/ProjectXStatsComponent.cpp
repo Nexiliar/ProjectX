@@ -120,6 +120,13 @@ FStatsInfo UProjectXStatsComponent::GetEveryStat(int32& level, int32& skillpoint
 	att = AttributePoints;
 	return CharacterStatistic;
 }
+void UProjectXStatsComponent::StatsInit(int32 level, int32 skillpoints, int32 att, FStatsInfo stats)
+{
+	CurrentLevel = level;
+	SkillPoints = skillpoints;
+	AttributePoints = att;
+	CharacterStatistic = stats;
+}
 /*  Delete if not used
 FStatsInfo UProjectXStatsComponent::GetCharacterInfo(int32& CurrentSkillPoints, int32& CurrentAttributePoints, int32& CharacterLevel)
 {

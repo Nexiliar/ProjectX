@@ -19,6 +19,26 @@ enum class EMovementState : uint8
 	Run_State UMETA(DisplayName = "Run State"),
 	SprintRun_State UMETA(DisplayName = "SprintRun State")
 };
+UENUM(BlueprintType)
+enum class EConsumableItemsList : uint8
+{
+	BigHealhPack UMETA(DisplayName = "BigHealhPack"),
+	LittleHealthPack UMETA(DisplayName = "LittleHealthPack"),
+	Syringe UMETA(DisplayName = "Syringe"),	
+	LittleAmmoPack UMETA(DisplayName = "LittleAmmoPack"),
+	BigAmmoPack UMETA(DisplayName = "BigAmmoPack"),
+};
+
+UENUM(BlueprintType)
+enum class ERarity : uint8
+{
+	None UMETA(DisplayName = "None"),
+	Common UMETA(DisplayName = "Common"),
+	Uncommon UMETA(DisplayName = "Uncommon"),
+	Rare UMETA(DisplayName = "Rare"),
+	Epic UMETA(DisplayName = "Epic"),
+	Legendary UMETA(DisplayName = "Legendary"),
+};
 
 UENUM(BlueprintType)
 enum class EWeaponType : uint8
@@ -33,6 +53,7 @@ enum class EWeaponType : uint8
 UENUM(BlueprintType)
 enum class EItemType : uint8
 {
+	None UMETA(DisplayName = "None"),
 	Consumeable UMETA(DisplayName = "Consumeable"),
 	Equipment UMETA(DisplayName = "Equipment"),
 	Readables UMETA(DisplayName = "Readables"),
@@ -52,6 +73,8 @@ FourthSlot
 UENUM(BlueprintType)
 enum class EEquipmentSlotType :uint8
 {
+	None,
+	Weapon,
 	Bracer,
 	BodyKit,
 	Armor,
@@ -81,40 +104,18 @@ struct FStatsInfo
 		int32 Reaction = 5;
 };
 
-USTRUCT(BlueprintType)
-struct FItemsInfo
-{
-	GENERATED_BODY()
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemInfo")
-		FName ItemName;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemInfo")
-		FText ItemDescription;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemInfo")
-		UTexture2D* ItemIcon = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemInfo")
-		bool ItemcanBeUsed = true;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemInfo")
-		FText ItemUseText;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemInfo")
-		bool ItemcanBeStacked = true;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemInfo")
-		EItemType Itemtype = EItemType::Consumeable;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemInfo")
-		EEquipmentSlotType SlotType = EEquipmentSlotType::Bracer;
 
-};
 
+/* 
 USTRUCT(BlueprintType)
 struct FEquipmenSlot
 {
 	GENERATED_BODY()
 
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentSlots")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentSlots")
 		TSubclassOf<class AMasterItem> MasterItem = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentSlots")
 		FItemsInfo ItemsInfo;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentSlots")
-	//	EEquipmentSlotType SlotType;
 
 };
 
@@ -124,26 +125,12 @@ struct FInventorySlot
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
 		TSubclassOf<class AMasterItem> MasterItem = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
-		int32 AmountOfItemsInSlot;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomItemInfo")
 		FItemsInfo ItemsInfo;
 };
+*/
 
-USTRUCT(BlueprintType)
-struct FInventory : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItem")
-		FInventorySlot InventorySlot;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
-	//	int32 AmountOfItems;
-	
-
-
-};
 
 
 USTRUCT(BlueprintType)
@@ -390,6 +377,8 @@ struct FWeaponInfo : public FTableRowBase
 		UTexture2D* WeaponIcon = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory ")
 		EWeaponType WeaponType = EWeaponType::Pistol;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+		UStaticMesh* WeaponMesh = nullptr;
 
 };
 
@@ -430,7 +419,48 @@ struct FAmmoSlot
 
 };
 
+USTRUCT(BlueprintType)
+struct FEquipmentInfo
+{
+	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentInfo")
+		EEquipmentSlotType SlotType = EEquipmentSlotType::None;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentInfo")
+		ERarity ItemRarity = ERarity::None;
+
+};
+
+USTRUCT(BlueprintType)
+struct FItemsInfo
+{
+	GENERATED_BODY()
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		FName ItemName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		FText ItemDescription;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		UTexture2D* ItemIcon = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		UStaticMesh* ItemMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		bool ItemcanBeUsed = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		FText ItemUseText;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		bool ItemcanBeStacked = true;
+	UPROPERTY(BlueprintReadOnly, Category = "InventoryItemInfo")
+		int32 AmountOfItemsInSlot;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		int32 MaxItemsStackAtSlot;
+	UPROPERTY(BlueprintReadOnly, Category = "InventoryItemInfo")
+		bool isSlotOccupied = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		float ItemWeight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		EItemType Itemtype = EItemType::None;
+
+};
 
 USTRUCT(BlueprintType)
 struct FDropItem : public FTableRowBase
@@ -443,6 +473,23 @@ struct FDropItem : public FTableRowBase
 		USkeletalMesh* WeaponSkeletalMesh = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropWeapon")
 		FWeaponSlot WeaponInfo;
+
+};
+
+USTRUCT(BlueprintType)
+struct FInventory : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItem")
+		FItemsInfo ItemsInfo;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentItemInfo")
+		bool IsWeapon = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentItemInfo")
+		FEquipmentInfo EquipmentInfo;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
+	//	int32 AmountOfItems;	
 
 };
 

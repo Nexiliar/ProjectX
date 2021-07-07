@@ -66,6 +66,8 @@ public:
 		void StatDependance();
 	UFUNCTION(BlueprintCallable, Category = "Info")
 		FStatsInfo GetEveryStat(int32& level, int32& skillpoints, int32& att);
+	UFUNCTION(BlueprintCallable, Category = "Init")
+		void StatsInit(int32 level, int32 skillpoints, int32 att, FStatsInfo stats);
 /* Delete if not used
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
 		FStatsInfo GetCharacterInfo(int32& CurrentSkillPoints, int32& CurrentAttributePoints, int32& CharacterLevel);
