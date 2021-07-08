@@ -86,6 +86,8 @@ public:
 	//Equpment	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
 		TArray<FInventory> EquipmentSlots;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
+		FVector VariableToSpawnEquip;
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
 	//	EEquipmentSlotType EquipmentSlotType;
 
@@ -98,14 +100,10 @@ public:
 		FInventory  CurrentInitializedInventory;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
 		TArray<FInventory> InventorySlots;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		TSubclassOf<class APickUpActor> PickUpActor = nullptr;
+	
 
-	
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
-		int32 AmountOfInventorySlots;
-	//Размер инвентаря без рюкзака. Определяется улучшенными параметрами.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
-		int32 InventorySlotsByCharacterStats = 4;
 	//максимальное количество слотов оружия
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 		int32 MaxSlotWeapon = 0;
@@ -155,6 +153,8 @@ public:
 		bool UnequipItem(int32 SlotIndex, FInventory& IventorySlotInfo);
 	UFUNCTION(BlueprintCallable)
 		void EquipBackPack(FInventory BackPackInfo, TArray<FInventory> InventorySlotsInfo, int32 InventorySize, bool & EquipSuccessfuly);
+	UFUNCTION(BlueprintCallable)
+		void UnequipBackPack(int32 SlotIndex);
 
 	//Инвентарь
 	UFUNCTION(BlueprintCallable)

@@ -38,9 +38,8 @@ void APickUpActor::BeginPlay()
 	//Инициализируем переменную Character
 	Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
-
-	InitBackPack(Inventory);
-
+	
+	ItemInit(NameOfTheItem, isNewItem, InventorySlots);
 	
 }
 
@@ -75,59 +74,142 @@ void APickUpActor::CollisionBoxEndOverlap(UPrimitiveComponent* OverlappedCompone
 
 void APickUpActor::StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	AProjectXCharacter* CharacterP = Cast<AProjectXCharacter>(OtherActor);
-	if (CharacterP && CharacterP->InventoryComponent)
-	{
-		if (Inventory.IsWeapon)
-		{
-		}
-		else
-		{
-			int32 RestItems;
-			bool EmptySlotisFind = false;
-			bool FreeStackisFind = false;
-			CharacterP->InventoryComponent->SearchEmptySlotIndex(EmptySlotisFind);
+	if (ItemCFG.ItemsInfo.Itemtype != EItemType::Equipment)
+	{ 
+			AProjectXCharacter* CharacterP = Cast<AProjectXCharacter>(OtherActor);
+			if (CharacterP && CharacterP->InventoryComponent && CharacterP->InventoryComponent->InventorySlots.Num()>1)
+			{
+				UE_LOG(LogTemp, Warning, TEXT(" InventorySlots > 1"));
+					int32 RestItems;
+					bool EmptySlotisFind = false;
+					bool FreeStackisFind = false;
+					CharacterP->InventoryComponent->SearchEmptySlotIndex(EmptySlotisFind);
 			
-			if (EmptySlotisFind)
-			{
-				if (Inventory.ItemsInfo.Itemtype != EItemType::Equipment)
-				{
-					if (CharacterP->InventoryComponent->AddItem(Inventory, AmountItemsTospawn, RestItems))
+					if (EmptySlotisFind)
+					{						
+							if (CharacterP->InventoryComponent->AddItem(ItemCFG, AmountItemsTospawn, RestItems))
+							{
+								if (RestItems > 0)
+								{
+									AmountItemsTospawn = RestItems;
+								}
+								else
+								{
+									this->Destroy();
+								}							
+							}					
+					}
+					else
 					{
-						if (RestItems > 0)
+						if (CharacterP->InventoryComponent->SearchFreeStack(ItemCFG.ItemsInfo, FreeStackisFind))
 						{
-							AmountItemsTospawn = RestItems;
-						}
-						else
-						{
-							this->Destroy();
+							if (CharacterP->InventoryComponent->AddItem(ItemCFG, AmountItemsTospawn, RestItems))
+							{
+								if (RestItems > 0)
+								{
+									AmountItemsTospawn = RestItems;
+								}
+								else
+								{
+									this->Destroy();
+								}
+							}
 						}
 					}
-				}
-				else
-				{
+			}
+	}
+}
 
-				}
-				
-			}
-			else
-			{
-				if (CharacterP->InventoryComponent->SearchFreeStack(Inventory.ItemsInfo, FreeStackisFind))
-				{
-					if (CharacterP->InventoryComponent->AddItem(Inventory, AmountItemsTospawn, RestItems))
-					{
-						if (RestItems > 0)
-						{
-							AmountItemsTospawn = RestItems;
-						}
-						else
-						{
-							this->Destroy();
-						}
-					}
-				}
-			}
+void APickUpActor::ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory> InfoInSlotsOfBackPack)
+{
+	NameOfTheItem = ItemName;
+	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+	FInventory ItemInfo;
+	if (MyGI)
+	{
+		MyGI->GetItemInfoByName(ItemName, ItemInfo);		
+	}
+	if (ItemInfo.ItemsInfo.ItemName == "None")
+	{
+	}
+	else
+	{
+		ItemCFG = ItemInfo;
+		EEquipmentSlotType SlotType = ItemCFG.EquipmentInfo.SlotType;
+		StaticMesh->SetStaticMesh(ItemCFG.ItemsInfo.ItemMesh);
+		switch (SlotType)
+		{
+		case EEquipmentSlotType::None:
+			break;
+		case EEquipmentSlotType::Weapon:
+			break;
+		case EEquipmentSlotType::Bracer:
+			break;
+		case EEquipmentSlotType::BodyKit:
+			break;
+		case EEquipmentSlotType::Armor:
+			break;
+		case EEquipmentSlotType::BackPack:		
+			InitBackPack(ItemCFG, IsAnItemNew,InfoInSlotsOfBackPack);
+			break;
+		default:
+			break;
 		}
+	}
+	
+
+}
+
+void APickUpActor::InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArray<FInventory> InfoInSlotsOfBackPack)
+{
+
+	if (ItemIsNew)
+	{
+		if (CurrentItemInfo.ItemsInfo.ItemName == "LightBackPack")
+		{
+			SetBackPackSlotsAmount(6);
+		}
+		else if (CurrentItemInfo.ItemsInfo.ItemName == "MediumBackpack")
+		{
+			SetBackPackSlotsAmount(10);
+		}
+		else if (CurrentItemInfo.ItemsInfo.ItemName == "HugeBackPack")
+		{
+			SetBackPackSlotsAmount(15);
+		}
+
+		ERarity ItemRarity = CurrentItemInfo.EquipmentInfo.ItemRarity;
+		switch (ItemRarity)
+		{
+		case ERarity::None:
+			break;
+		case ERarity::Common:
+			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 1);
+			break;
+		case ERarity::Uncommon:
+			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 2);
+			break;
+		case ERarity::Rare:
+			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 5);
+			break;
+		case ERarity::Epic:
+			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 10);
+			break;
+		case ERarity::Legendary:
+			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 20);
+			break;
+		default:
+			break;
+		}
+		InventorySlots.SetNum(GetBackPackSlotsAmount());
+		UE_LOG(LogTemp, Warning, TEXT(" BackPackInitialized"));
+	}
+	else
+	{
+		ItemCFG = CurrentItemInfo;
+		InventorySlots.SetNum(GetBackPackSlotsAmount());
+		InventorySlots = InfoInSlotsOfBackPack;
+		UE_LOG(LogTemp, Warning, TEXT(" DropedBackPackInitialized"));
 	}
 }
 
@@ -138,7 +220,7 @@ void APickUpActor::TryToPickUpItem()
 	bool isFreeSlot = Character->InventoryComponent->CheckCanTakeWeapon(FreeSlotIndex);
 	if (isOverlapping)
 	{
-		EEquipmentSlotType SlotType = Inventory.EquipmentInfo.SlotType;
+		EEquipmentSlotType SlotType = ItemCFG.EquipmentInfo.SlotType;
 		switch (SlotType)
 		{
 		case EEquipmentSlotType::None:
@@ -152,7 +234,8 @@ void APickUpActor::TryToPickUpItem()
 		case EEquipmentSlotType::Armor:
 			break;
 		case EEquipmentSlotType::BackPack:
-			EquipBackPack();
+			
+			if(EquipBackPack())
 			this->Destroy();
 			break;
 		default:
@@ -202,51 +285,9 @@ void APickUpActor::TryToPickUpItem()
 		}*/
 	}	
 }
-void APickUpActor::InitBackPack(FInventory CurrentItemInfo)
-{
-	if (CurrentItemInfo.EquipmentInfo.SlotType == EEquipmentSlotType::BackPack)
-	{
-		if (CurrentItemInfo.ItemsInfo.ItemName == "LightBackPack")
-		{
-			SetBackPackSlotsAmount(6);
-		}
-		else if (CurrentItemInfo.ItemsInfo.ItemName == "MediumBackpack")
-		{
-			SetBackPackSlotsAmount(10);
-		}
-		else if (CurrentItemInfo.ItemsInfo.ItemName == "HugeBackPack")
-		{
-			SetBackPackSlotsAmount(15);
-		}
 
-		ERarity ItemRarity = CurrentItemInfo.EquipmentInfo.ItemRarity;
-		switch (ItemRarity)
-		{
-		case ERarity::None:
-			break;
-		case ERarity::Common:
-			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 1);
-			break;
-		case ERarity::Uncommon:
-			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 2);
-			break;
-		case ERarity::Rare:
-			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 5);
-			break;
-		case ERarity::Epic:
-			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 10);
-			break;
-		case ERarity::Legendary:
-			SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 20);
-			break;
-		default:
-			break;
-		}
-		InventorySlots.SetNum(GetBackPackSlotsAmount());
-		UE_LOG(LogTemp, Warning, TEXT(" BackPackInitialized"));
-	}
-	
-}
+
+
 int32 APickUpActor::GetBackPackSlotsAmount()
 {
 	return BackPackSlotAmount;
@@ -259,7 +300,7 @@ bool APickUpActor::EquipBackPack()
 {
 	bool bIsBackPackEquipSuccess = false;
 	UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
-	myInventory->EquipBackPack(Inventory, InventorySlots,GetBackPackSlotsAmount(), bIsBackPackEquipSuccess);
+	myInventory->EquipBackPack(ItemCFG, InventorySlots,GetBackPackSlotsAmount(), bIsBackPackEquipSuccess);
 	return bIsBackPackEquipSuccess;
 }
 void APickUpActor::OverlapStart_BP_Implementation(bool isOverlaping)

@@ -40,7 +40,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY()
-		int32 BackPackSlotAmount;
+		int32 BackPackSlotAmount = 0;
 
 public:	
 
@@ -66,7 +66,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
 		FWeaponInfo WeaponInfo;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
-		FInventory Inventory;
+		FInventory ItemCFG;
+	UPROPERTY()
+		bool isNewItem = true;
 
 	//ItemInit
 
@@ -76,7 +78,10 @@ public:
 		virtual	void  CollisionBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION()
 		virtual	void  StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	
+	UFUNCTION()
+		void ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory> InfoInSlotsOfBackPack);
+	UFUNCTION()
+		void InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArray<FInventory> InfoInSlotsOfBackPack);
 	UFUNCTION()
 		virtual void TryToPickUpItem();
 
@@ -84,8 +89,7 @@ public:
 		void OverlapStart_BP(bool isOverlaping);
 
 	//BackPack
-	UFUNCTION()
-		void InitBackPack(FInventory CurrentItemInfo);
+
 	UFUNCTION()
 		int32 GetBackPackSlotsAmount();
 	UFUNCTION()
