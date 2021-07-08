@@ -147,8 +147,8 @@ public:
 		bool isBackPackEquiped = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
 		bool isArmorEquiped = false;
-	UFUNCTION(BlueprintCallable)
-		bool EquipItem(int32 SlotIndex);
+	//UFUNCTION(BlueprintCallable)
+	//	bool EquipItem(int32 SlotIndex);
 	UFUNCTION(BlueprintCallable)
 		bool UnequipItem(int32 SlotIndex, FInventory& IventorySlotInfo);
 	UFUNCTION(BlueprintCallable)

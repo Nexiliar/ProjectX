@@ -51,6 +51,7 @@ AProjectXCharacter::AProjectXCharacter()
 
 	InventoryComponent = CreateDefaultSubobject<UProjectXInventoryComponent>(TEXT("InventoryComponent"));
 	DropSpawnSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DropWeaponPoint"));
+	
 	CharHealthComponent = CreateDefaultSubobject<UProjectXCharacterHealthComponent>(TEXT("HealthComponent"));
 	
 	if (CharHealthComponent)

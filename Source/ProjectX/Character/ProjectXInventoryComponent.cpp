@@ -582,7 +582,7 @@ bool UProjectXInventoryComponent::GetDropItemInfoFromInventory(int32 IndexSlot, 
 
 
 
-
+/* 
 bool UProjectXInventoryComponent::EquipItem(int32 SlotIndex)
 {
 	bool bIsFind = false;
@@ -673,28 +673,28 @@ bool UProjectXInventoryComponent::EquipItem(int32 SlotIndex)
 			isBodyKitEquiped = true;
 			OnAmountOfItemsChanged.Broadcast();
 			 */
-		}
-		i++;
-	}
+		//}
+		//i++;
+	//}
 
-	return bIsFind;
-}
+	//return bIsFind;
+//}
 
 bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& IventorySlotInfo)
 {
+	bool bIsFind = false;
 	if (EquipmentSlots[SlotIndex].EquipmentInfo.SlotType == EEquipmentSlotType::BackPack)
 	{
 		UnequipBackPack(SlotIndex);
-		//EquipmentSlots[SlotIndex] = {};
-		//AmountOfInventorySlots = InventorySlotsByCharacterStats;
 		isBackPackEquiped = false;
 		InventorySlots.Empty();
 		EquipmentSlots[SlotIndex] = {};
 		EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::BackPack;
 		UE_LOG(LogTemp, Warning, TEXT(" UnEquipSucces"));
+		bIsFind = true;
 		OnUnEquipItem.Broadcast();
 	}
-	bool bIsFind = false;
+	
 	/* 
 	int8 i = 0;
 	bool bIsFind = false;
@@ -783,24 +783,35 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 }
 //Check for double in pickupactor DELIF NOT USSED
 void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<FInventory> InventorySlotsInfo, int32 InventorySize, bool& EquipSuccessfuly)
-{	
+{		
 	for (int8 i = 0; i < EquipmentSlots.Num(); i++)
 	{
 		if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::BackPack)
 		{
-			EquipmentSlots[i] = BackPackInfo;
-			InventorySlots.SetNum(InventorySize);
-			InventorySlots = InventorySlotsInfo;
-			//for (int8 j = 0; j < InventorySlotsInfo.Num(); j++)
-			//{
-				//InventorySlots.Add(InventorySlotsInfo[j]);
-				//InventorySlots[j] = InventorySlotsInfo[j];
-			//}			
+			if (isBackPackEquiped)
+			{
+				FInventory TempInv;
+				bool EquipSucces = false;
+				if (UnequipItem(i, TempInv))
+				{
+					EquipBackPack(BackPackInfo, InventorySlotsInfo, InventorySize, EquipSucces);
+					EquipSuccessfuly = true;
+					isBackPackEquiped = true;
+				}
+
+			}
+			else
+			{
+				EquipmentSlots[i] = BackPackInfo;
+				InventorySlots.SetNum(InventorySize);
+				InventorySlots = InventorySlotsInfo;
+				EquipSuccessfuly = true;
+				isBackPackEquiped = true;
+			}
+				
 		}		
-	}
-	EquipSuccessfuly = true;
-	isBackPackEquiped = true;
-	OnEquipItem.Broadcast();
+	}	
+	OnEquipItem.Broadcast();	
 }
 
 bool UProjectXInventoryComponent::CheckWeaponSlotEmpty(int32 SlotIndex, bool IsWeapon)
@@ -821,11 +832,19 @@ bool UProjectXInventoryComponent::CheckWeaponSlotEmpty(int32 SlotIndex, bool IsW
 
 void UProjectXInventoryComponent::UnequipBackPack(int32 SlotIndex)
 {
-	FVector LocationToDropBackPack = GetOwner()->GetActorLocation() + VariableToSpawnEquip;
-	APickUpActor* DropedBackPack = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack));	
-	DropedBackPack->SetBackPackSlotsAmount(InventorySlots.Num());
-	DropedBackPack->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots);
-
+	
+	FVector LocationToDropBackPack = VariableToSpawnEquip;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.Owner = GetOwner();
+	FRotator SpawnRotation(1,1,1);
+	APickUpActor* DropedBackPack = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
+	if (DropedBackPack)
+	{
+		DropedBackPack->SetBackPackSlotsAmount(InventorySlots.Num());
+		DropedBackPack->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots);
+	}
+	
 }
 
 void UProjectXInventoryComponent::GetItemInfoAtIndex(int32 SlotIndex, bool& isSlotEmpty, FInventory& InventoryslotInfo)
@@ -1046,7 +1065,7 @@ bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOf
 	{
 		if (InventorySlots[ItemIndex].ItemsInfo.Itemtype == EItemType::Equipment)
 		{
-			EquipItem(ItemIndex);
+			//EquipItem(ItemIndex);
 			bIsSucces = true;				
 		}
 		else
@@ -1056,7 +1075,7 @@ bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOf
 			{
 				InventorySlots[ItemIndex].ItemsInfo = {}; // .AmountOfItemsInSlot = 0;
 		//		InventorySlots[ItemIndex].MasterItem = NULL;
-				
+				InventorySlots[ItemIndex].ItemsInfo.isSlotOccupied = false;
 				bIsSucces = true;
 			}
 			else
@@ -1198,6 +1217,7 @@ void UProjectXInventoryComponent::DestroyItems(int32 ItemIndex)
 {
 	//int32 AmountOfItemsAtIndex = GetAmountOfItemsAtIndex(ItemIndex);
 	InventorySlots[ItemIndex] = {};
+	InventorySlots[ItemIndex].ItemsInfo.isSlotOccupied = false;
 	OnAmountOfItemsChanged.Broadcast();
 }
 

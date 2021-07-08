@@ -206,10 +206,17 @@ void APickUpActor::InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArr
 	}
 	else
 	{
-		ItemCFG = CurrentItemInfo;
+		//ItemCFG = CurrentItemInfo;
 		InventorySlots.SetNum(GetBackPackSlotsAmount());
 		InventorySlots = InfoInSlotsOfBackPack;
-		UE_LOG(LogTemp, Warning, TEXT(" DropedBackPackInitialized"));
+		 
+		for (int8 i = 0; i < GetBackPackSlotsAmount(); i++)
+		{			
+			if (InventorySlots[i].ItemsInfo.ItemName == "None")
+			{
+				InventorySlots[i].ItemsInfo.isSlotOccupied = false;
+			}	
+		}			
 	}
 }
 
