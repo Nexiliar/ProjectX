@@ -293,6 +293,11 @@ void APickUpActor::TryToPickUpItem()
 	}	
 }
 
+void APickUpActor::DestroyItem(int32 ItemIndex)
+{
+	InventorySlots[ItemIndex] = {};
+}
+
 
 
 int32 APickUpActor::GetBackPackSlotsAmount()

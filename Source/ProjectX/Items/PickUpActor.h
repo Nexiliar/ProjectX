@@ -53,7 +53,7 @@ public:
 	AProjectXCharacter* Character = nullptr;
 
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, Category = "AdditionalInfoForWidget")
 	bool isOverlapping =false;
 		
 	// Called every frame
@@ -84,6 +84,8 @@ public:
 		void InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArray<FInventory> InfoInSlotsOfBackPack);
 	UFUNCTION()
 		virtual void TryToPickUpItem();
+	UFUNCTION(BlueprintCallable)
+		void DestroyItem(int32 ItemIndex);
 
 	UFUNCTION(BlueprintNativeEvent)
 		void OverlapStart_BP(bool isOverlaping);
