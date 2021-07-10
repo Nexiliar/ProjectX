@@ -142,12 +142,16 @@ void APickUpActor::ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory>
 		case EEquipmentSlotType::None:
 			break;
 		case EEquipmentSlotType::Weapon:
+			InitWeapon(IsAnItemNew);
 			break;
 		case EEquipmentSlotType::Bracer:
+			InitBracer(IsAnItemNew);
 			break;
 		case EEquipmentSlotType::BodyKit:
+			InitBodyKit(IsAnItemNew);
 			break;
 		case EEquipmentSlotType::Armor:
+			InitArmor(IsAnItemNew);
 			break;
 		case EEquipmentSlotType::BackPack:		
 			InitBackPack(ItemCFG, IsAnItemNew,InfoInSlotsOfBackPack);
@@ -160,11 +164,40 @@ void APickUpActor::ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory>
 
 }
 
+void APickUpActor::CheckRarity()
+{
+	int8 Random = FMath::RandRange(1, 110);
+	if (Random <= 60)
+	{
+		ItemCFG.EquipmentInfo.ItemRarity = ERarity::Common;
+	}
+	else if (Random >= 61 && Random <= 80)
+	{
+		ItemCFG.EquipmentInfo.ItemRarity = ERarity::Uncommon;
+	}
+	else if (Random >= 80 && Random <= 91)
+	{
+		ItemCFG.EquipmentInfo.ItemRarity = ERarity::Rare;
+	}
+	else if (Random >= 92 && Random <= 103)
+	{
+		ItemCFG.EquipmentInfo.ItemRarity = ERarity::Epic;
+	}
+	else if (Random >= 104 && Random <= 110)
+	{
+		ItemCFG.EquipmentInfo.ItemRarity = ERarity::Legendary;
+	}
+
+}
+
 void APickUpActor::InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArray<FInventory> InfoInSlotsOfBackPack)
 {
 
 	if (ItemIsNew)
-	{
+	{		
+		CheckRarity();
+		ERarity ItemRarity = ItemCFG.EquipmentInfo.ItemRarity;
+		//UGameplayStatics::RandomBoolWithWeight();
 		if (CurrentItemInfo.ItemsInfo.ItemName == "LightBackPack")
 		{
 			SetBackPackSlotsAmount(6);
@@ -178,7 +211,7 @@ void APickUpActor::InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArr
 			SetBackPackSlotsAmount(15);
 		}
 
-		ERarity ItemRarity = CurrentItemInfo.EquipmentInfo.ItemRarity;
+		//ERarity ItemRarity = CurrentItemInfo.EquipmentInfo.ItemRarity;
 		switch (ItemRarity)
 		{
 		case ERarity::None:
@@ -237,6 +270,8 @@ void APickUpActor::TryToPickUpItem()
 		case EEquipmentSlotType::Bracer:
 			break;
 		case EEquipmentSlotType::BodyKit:
+			if (EquipBodyKit())
+				this->Destroy();
 			break;
 		case EEquipmentSlotType::Armor:
 			break;
@@ -314,6 +349,189 @@ bool APickUpActor::EquipBackPack()
 	UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
 	myInventory->EquipBackPack(ItemCFG, InventorySlots,GetBackPackSlotsAmount(), bIsBackPackEquipSuccess);
 	return bIsBackPackEquipSuccess;
+}
+void APickUpActor::InitBodyKit(bool ItemIsNew)
+{
+	if (ItemIsNew)
+	{
+		CheckRarity();
+		ERarity ItemRarity = ItemCFG.EquipmentInfo.ItemRarity;
+
+		//ERarity ItemRarity = CurrentItemInfo.EquipmentInfo.ItemRarity;
+		switch (ItemRarity)
+		{
+		case ERarity::None:
+			break;
+		case ERarity::Common:
+			
+			break;
+		case ERarity::Uncommon:
+		
+			break;
+		case ERarity::Rare:
+			
+			break;
+		case ERarity::Epic:
+			
+			break;
+		case ERarity::Legendary:
+			
+			break;
+		default:
+			break;
+		}
+	
+		UE_LOG(LogTemp, Warning, TEXT(" BodyKitInitialized"));
+	}
+	else
+	{
+
+	}
+}
+bool APickUpActor::EquipBodyKit()
+{
+	return false;
+}
+void APickUpActor::InitBracer(bool ItemIsNew)
+{
+	if (ItemIsNew)
+	{
+		CheckRarity();
+		ERarity ItemRarity = ItemCFG.EquipmentInfo.ItemRarity;
+		switch (ItemRarity)
+		{
+		case ERarity::None:
+			break;
+		case ERarity::Common:
+
+			break;
+		case ERarity::Uncommon:
+
+			break;
+		case ERarity::Rare:
+
+			break;
+		case ERarity::Epic:
+
+			break;
+		case ERarity::Legendary:
+
+			break;
+		default:
+			break;
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT(" BracerInit"));
+	}
+	else
+	{
+
+	}
+}
+bool APickUpActor::EquipBracer()
+{
+	return false;
+}
+void APickUpActor::InitArmor(bool ItemIsNew)
+{
+	if (ItemIsNew)
+	{
+		CheckRarity();
+		ERarity ItemRarity = ItemCFG.EquipmentInfo.ItemRarity;
+		switch (ItemRarity)
+		{
+		case ERarity::None:
+			break;
+		case ERarity::Common:
+
+			break;
+		case ERarity::Uncommon:
+
+			break;
+		case ERarity::Rare:
+
+			break;
+		case ERarity::Epic:
+
+			break;
+		case ERarity::Legendary:
+
+			break;
+		default:
+			break;
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT(" ArmorInit"));
+	}
+	else
+	{
+
+	}
+}
+bool APickUpActor::EquipArmor()
+{
+	return false;
+}
+void APickUpActor::InitWeapon(bool ItemIsNew)
+{
+	//NameOfTheItem = ItemName;
+	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+	if (MyGI)
+	{
+		MyGI->GetWeaponInfoByName(NameOfTheItem, WeaponInfo);
+	}
+	if (WeaponInfo.WeaponClass)
+	{
+		if (ItemIsNew)
+		{
+			CheckRarity();
+			ERarity ItemRarity = ItemCFG.EquipmentInfo.ItemRarity;
+			switch (ItemRarity)
+			{
+			case ERarity::None:
+				break;
+			case ERarity::Common:
+				WeaponInfo.ProjectileSetting.ProjectileDamage += 2;
+				
+				break;
+			case ERarity::Uncommon:
+				WeaponInfo.ProjectileSetting.ProjectileDamage += 5;
+				break;
+			case ERarity::Rare:
+				WeaponInfo.ProjectileSetting.ProjectileDamage += 9;
+				WeaponInfo.RateOfFire -= 0.03;
+				WeaponInfo.MaxRound += 4;
+				break;
+			case ERarity::Epic:
+				WeaponInfo.ProjectileSetting.ProjectileDamage += 13;
+				WeaponInfo.RateOfFire -= 0.06;
+				WeaponInfo.MaxRound += 10;
+				break;
+			case ERarity::Legendary:
+				WeaponInfo.ProjectileSetting.ProjectileDamage += 20;
+				WeaponInfo.RateOfFire -= 0.1;
+				WeaponInfo.MaxRound += 16;
+				break;
+			default:
+				break;
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("WeaponInit"));
+		}
+		else
+		{
+
+		}
+	}
+
+	
+}
+bool APickUpActor::EquipWeapon()
+{
+	bool bIsWeaponEquipSuccess = false;
+	UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
+	myInventory->TryGetWeaponToInventory(WeaponInfo);
+	return bIsWeaponEquipSuccess;	
 }
 void APickUpActor::OverlapStart_BP_Implementation(bool isOverlaping)
 {

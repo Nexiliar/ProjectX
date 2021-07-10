@@ -38,13 +38,13 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	//BackPack
 	UPROPERTY()
 		int32 BackPackSlotAmount = 0;
 
 public:	
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
+	//BackPack
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BackPack")
 		TArray<FInventory> InventorySlots;
 	
 	FOnItemZoneBeginOverlap OnItemZoneBeginOverlap;
@@ -61,12 +61,14 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
 		int32 AmountItemsTospawn = 1;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "ItemCFG")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "ItemCFG", meta = (ExposeOnSpawn = "true"))
 		FName NameOfTheItem;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
 		FWeaponInfo WeaponInfo;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
 		FInventory ItemCFG;
+	
 	UPROPERTY()
 		bool isNewItem = true;
 
@@ -81,7 +83,8 @@ public:
 	UFUNCTION()
 		void ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory> InfoInSlotsOfBackPack);
 	UFUNCTION()
-		void InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArray<FInventory> InfoInSlotsOfBackPack);
+		void CheckRarity();
+	
 	UFUNCTION()
 		virtual void TryToPickUpItem();
 	UFUNCTION(BlueprintCallable)
@@ -91,17 +94,38 @@ public:
 		void OverlapStart_BP(bool isOverlaping);
 
 	//BackPack
-
 	UFUNCTION()
+		void InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArray<FInventory> InfoInSlotsOfBackPack);
+	UFUNCTION(BlueprintCallable)
 		int32 GetBackPackSlotsAmount();
 	UFUNCTION()
 		void SetBackPackSlotsAmount(int32 AmountOfSlots);
 	UFUNCTION()
 		bool EquipBackPack();
 
+	//BodyKit
+	UFUNCTION()
+		void InitBodyKit(bool ItemIsNew);
+	UFUNCTION()
+		bool EquipBodyKit();
 
+	//Bracer
+	UFUNCTION()
+		void InitBracer(bool ItemIsNew);
+	UFUNCTION()
+		bool EquipBracer();
 
+	//Armor
+	UFUNCTION()
+		void InitArmor(bool ItemIsNew);
+	UFUNCTION()
+		bool EquipArmor();
 
+	//Weapon
+	UFUNCTION()
+		void InitWeapon(bool ItemIsNew);
+	UFUNCTION()
+		bool EquipWeapon();
 	//UFUNCTION()
 		//void DropWeaponOnSwitch(FDropItem DroppedItemCFG);
 
