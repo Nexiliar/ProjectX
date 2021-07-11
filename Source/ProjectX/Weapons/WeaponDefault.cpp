@@ -41,7 +41,7 @@ AWeaponDefault::AWeaponDefault()
 void AWeaponDefault::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	WeaponSetting.CurrentRound = WeaponSetting.MaxRound;
 	WeaponInit();
 	
 }
@@ -212,9 +212,9 @@ void AWeaponDefault::Fire()
 	int8 NumberProjectile = GetNumberProjectileByShot();
 	
 	FireTimer = WeaponSetting.RateOfFire;
-	WeaponInfo.Round = WeaponInfo.Round - NumberProjectile;
+	WeaponSetting.CurrentRound = WeaponSetting.CurrentRound - NumberProjectile;
 	
-	if (WeaponInfo.Round == 0)
+	if (WeaponSetting.CurrentRound == 0)
 	{
 		EmptyMagTryToShoot();
 	}
@@ -474,7 +474,7 @@ FVector AWeaponDefault::GetFireEndLocation() const
 
 int32 AWeaponDefault::GetWeaponRound()
 {
-	return WeaponInfo.Round;
+	return WeaponSetting.CurrentRound;
 	
 }
 
@@ -514,16 +514,16 @@ void AWeaponDefault::FinishReload()
 	WeaponReloading = false;
 	int32 AvailableAmmoFromInventory = GetAviableAmmoForReload();
 	int32 AmmoNeedToTakeFromInv;
-	int32 NeedToReload = WeaponSetting.MaxRound - WeaponInfo.Round;
+	int32 NeedToReload = WeaponSetting.MaxRound - WeaponSetting.CurrentRound;
 
 	if (NeedToReload > AvailableAmmoFromInventory)
 	{
-		WeaponInfo.Round = AvailableAmmoFromInventory;
+		WeaponSetting.CurrentRound = AvailableAmmoFromInventory;
 		AmmoNeedToTakeFromInv = AvailableAmmoFromInventory;
 	}
 	else
 	{
-		WeaponInfo.Round += NeedToReload;
+		WeaponSetting.CurrentRound += NeedToReload;
 		AmmoNeedToTakeFromInv = NeedToReload;
 	}
 

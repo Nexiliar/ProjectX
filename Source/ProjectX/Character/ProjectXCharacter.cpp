@@ -406,7 +406,7 @@ UDecalComponent* AProjectXCharacter::GetCursorToWorld()
 	return CurrentCursor;
 }
 
-void AProjectXCharacter::InitWeapon(FName IdWeaponName, FAddicionalWeaponInfo WeaponAdditionalInfo, int32 NewCurrentIndexWeapon)//ToDo Init by id row by table
+void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit, FAddicionalWeaponInfo WeaponAdditionalInfo)//ToDo Init by id row by table
 
 {
 	if (CurrentWeapon)
@@ -414,6 +414,7 @@ void AProjectXCharacter::InitWeapon(FName IdWeaponName, FAddicionalWeaponInfo We
 		CurrentWeapon->Destroy();
 		CurrentWeapon = nullptr;
 	}
+	/* 
 	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetGameInstance());
 	FWeaponInfo myWeaponInfo;
 
@@ -421,8 +422,8 @@ void AProjectXCharacter::InitWeapon(FName IdWeaponName, FAddicionalWeaponInfo We
 	{
 		if (MyGI->GetWeaponInfoByName(IdWeaponName, myWeaponInfo))
 		{
-		
-			if (myWeaponInfo.WeaponClass)
+		*/
+			if (InfoOfWeaponToInit.WeaponClass)
 			{
 				FVector SpawnLocation = FVector(0);
 				FRotator SpawnRotation = FRotator(0);
@@ -432,7 +433,7 @@ void AProjectXCharacter::InitWeapon(FName IdWeaponName, FAddicionalWeaponInfo We
 				SpawnParams.Owner = this;
 				SpawnParams.Instigator = GetInstigator();
 
-				AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(myWeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+				AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InfoOfWeaponToInit.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
 				if (myWeapon)
 				{
 					
@@ -443,15 +444,15 @@ void AProjectXCharacter::InitWeapon(FName IdWeaponName, FAddicionalWeaponInfo We
 					
 
 					
-					myWeapon->WeaponSetting = myWeaponInfo;
+					myWeapon->WeaponSetting = InfoOfWeaponToInit;
 					//myWeapon->WeaponInfo.Round = myWeapon->WeaponSetting.MaxRound;
 					//Remove DEBUG!
-					myWeapon->ReloadTime = myWeaponInfo.ReloadTime;
+					myWeapon->ReloadTime = InfoOfWeaponToInit.ReloadTime;
 					myWeapon->UpdateStateWeapon(MovementState);
 					
 					myWeapon->WeaponInfo = WeaponAdditionalInfo;
 					//if (InventoryComponent)
-						CurrentIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(IdWeaponName);
+						//CurrentIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(IdWeaponName);
 					//—лушаем делегатов, объ€вленных в weapondefault
 					myWeapon->OnWeaponReloadStart.AddDynamic(this, &AProjectXCharacter::WeaponReloadStart);
 					myWeapon->OnWeaponReloadEnd.AddDynamic(this, &AProjectXCharacter::WeaponReloadEnd);
@@ -459,28 +460,14 @@ void AProjectXCharacter::InitWeapon(FName IdWeaponName, FAddicionalWeaponInfo We
 
 					//ѕытаемс€ перезар€дитьс€, после подбора оружи€
 					if (CurrentWeapon->GetWeaponRound() <= 0 && CurrentWeapon->CheckCanWeaponReload())
-						CurrentWeapon->InitReload();
-					/* 
-					int32  SlotIndex;
-					ESlotType TempSlotInfo = GetCurrentSlot(SlotIndex);
-
-					if (InventoryComponent)
-						InventoryComponent->OnWeaponInit.Broadcast(InventoryComponent->WeaponSlots[SlotIndex].AdditionalInfo, InventoryComponent->WeaponSlots[SlotIndex].NameItem);
-					
-					*/
-					
-				
+						CurrentWeapon->InitReload();					
 				}
 			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("AProjectXCharacter::InitWeapon - Weapon not found in table -NULL"));
-		}
-	}
-	
-
-	
+		//}
+		//else
+		//{
+			//UE_LOG(LogTemp, Warning, TEXT("AProjectXCharacter::InitWeapon - Weapon not found in table -NULL"));
+		//}	
 }
 
 void AProjectXCharacter::TryReloadWeapon()
@@ -557,17 +544,19 @@ void AProjectXCharacter::EquipWeapon()
 
 ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumber)
 {
-	FName FirstIndexWeaponName;
+	//FName FirstIndexWeaponName;
+	FWeaponInfo WeaponInfoAtIndex;
 	//if (CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	
 		switch (EquipmentSlotNumber)
 		{
 			case ESlotType::FirstSlot:
 			{
-				FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(0);
+				//FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(0);
 				FAddicionalWeaponInfo FirstIndexWeaponInfo = InventoryComponent->GetAdditionalInfoWeapon(0);
-				int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
-				InitWeapon(FirstIndexWeaponName, FirstIndexWeaponInfo, FirstIndexWeapon);
+				//int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);				
+				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(0);
+				InitWeapon(WeaponInfoAtIndex, FirstIndexWeaponInfo);
 
 				EnumIndex = 0;
 				SlotVar = ESlotType::FirstSlot;
@@ -578,10 +567,11 @@ ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumbe
 			}
 			case ESlotType::SecondSlot:
 			{
-				FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(1);
+				//FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(1);
 				FAddicionalWeaponInfo FirstIndexWeaponInfo = InventoryComponent->GetAdditionalInfoWeapon(1);
-				int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
-				InitWeapon(FirstIndexWeaponName, FirstIndexWeaponInfo, FirstIndexWeapon);
+				//int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
+				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(1);
+				InitWeapon(WeaponInfoAtIndex, FirstIndexWeaponInfo);
 				EnumIndex = 1;
 				SlotVar = ESlotType::SecondSlot;
 				if (!IsArmed)
@@ -591,10 +581,11 @@ ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumbe
 			}
 			case ESlotType::ThirdSlot:
 			{
-				FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(2);
+				//FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(2);
 				FAddicionalWeaponInfo FirstIndexWeaponInfo = InventoryComponent->GetAdditionalInfoWeapon(2);
-				int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
-				InitWeapon(FirstIndexWeaponName, FirstIndexWeaponInfo, FirstIndexWeapon);
+				//int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
+				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(2);
+				InitWeapon(WeaponInfoAtIndex, FirstIndexWeaponInfo);
 				EnumIndex = 2;
 				SlotVar = ESlotType::ThirdSlot;
 				if (!IsArmed)
@@ -604,27 +595,29 @@ ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumbe
 			}
 			case ESlotType::FourthSlot:
 			{
-				FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(3);
+				//FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(3);
 				FAddicionalWeaponInfo FirstIndexWeaponInfo = InventoryComponent->GetAdditionalInfoWeapon(3);
-				int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
-				InitWeapon(FirstIndexWeaponName, FirstIndexWeaponInfo, FirstIndexWeapon);
+				//int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
+				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(3);
+				InitWeapon(WeaponInfoAtIndex, FirstIndexWeaponInfo);
 				EnumIndex = 3;
 				SlotVar = ESlotType::FourthSlot;
 				if (!IsArmed)
 					IsArmed = true;
-
-				//GLog->Log("Equipped FourthSlot");
 				break;
 			}
 
 		}
 
 	
-	if (FirstIndexWeaponName == "None")
+	if (WeaponInfoAtIndex.WeaponClass)
+	{		
+	}
+	else
 	{
 		EquipWeapon();
 	}
-
+	//Equip AnimCheck
 	if (CurrentWeapon && CurrentWeapon->WeaponSetting.WeaponType == EWeaponType::Pistol)
 	{
 		IsRifle = false;
@@ -635,8 +628,9 @@ ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumbe
 	}
 	int32  SlotIndex;
 	ESlotType TempSlotInfo = GetCurrentSlot(SlotIndex);
+	
 	if (InventoryComponent)
-		InventoryComponent->OnWeaponInit.Broadcast(InventoryComponent->WeaponSlots[SlotIndex].AdditionalInfo, InventoryComponent->WeaponSlots[SlotIndex].NameItem);
+		InventoryComponent->OnWeaponInit.Broadcast(InventoryComponent->WeaponSlotsInfo[SlotIndex].CurrentRound, InventoryComponent->WeaponSlotsInfo[SlotIndex]);
 	
 
 	return SlotVar;

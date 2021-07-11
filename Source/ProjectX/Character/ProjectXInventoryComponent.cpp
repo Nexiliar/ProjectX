@@ -32,7 +32,7 @@ void UProjectXInventoryComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 	// ...
 }
-
+ 
 bool UProjectXInventoryComponent::SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldIndex, FAddicionalWeaponInfo OldInfo, bool bIsForward)
 {
 	
@@ -467,6 +467,14 @@ void UProjectXInventoryComponent::AmmoSlotChangeValue(EWeaponType TypeWeapon, in
 		}
 		i++;
 	}
+}
+
+FWeaponInfo UProjectXInventoryComponent::GetWeaponInfo(int32 SlotIndex)
+{
+	//MainWeaponInfo = WeaponInfo; 
+	FWeaponInfo WeaponInfoAtIndex= WeaponSlotsInfo[SlotIndex];
+
+	return WeaponInfoAtIndex;
 }
 
 bool UProjectXInventoryComponent::CheckAmmoForWeapon(EWeaponType TypeWeapon, int32 &AviableAmmoForWeapon)

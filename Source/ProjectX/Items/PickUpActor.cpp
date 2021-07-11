@@ -474,7 +474,7 @@ bool APickUpActor::EquipArmor()
 }
 void APickUpActor::InitWeapon(bool ItemIsNew)
 {
-	//NameOfTheItem = ItemName;
+
 	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 	if (MyGI)
 	{
@@ -520,7 +520,7 @@ void APickUpActor::InitWeapon(bool ItemIsNew)
 		}
 		else
 		{
-
+			
 		}
 	}
 
@@ -530,7 +530,10 @@ bool APickUpActor::EquipWeapon()
 {
 	bool bIsWeaponEquipSuccess = false;
 	UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
-	myInventory->TryGetWeaponToInventory(WeaponInfo);
+	//if (myInventory->WeaponEquipment(WeaponInfo))
+	//{
+//		bIsWeaponEquipSuccess = true;
+//	}
 	return bIsWeaponEquipSuccess;	
 }
 void APickUpActor::OverlapStart_BP_Implementation(bool isOverlaping)

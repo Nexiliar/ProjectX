@@ -27,7 +27,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSwitchWeapon, FName, WeaponIdN
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoChange, EWeaponType, TypeAmmo, int32, Count, int32, MaxCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdditionalInfoChange, int32, IndexSlot, FAddicionalWeaponInfo, Additionalnfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAmmoEmpty, EWeaponType, WeaponType);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponInit, FAddicionalWeaponInfo, WeaponInfo,FName, WeaponName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponInit, int32, AmmoInMag,FWeaponInfo, WeaponInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUpdateWeaponSlot, int32, IndexSlotChange, FWeaponSlot, NewInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAmountOfItemsChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryWidgetCreate);
@@ -75,21 +75,24 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	//Old WeaponEquipSys del if reworked
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 		TArray<FWeaponSlot> WeaponSlots;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 		TArray<FAmmoSlot> AmmoSlots;
 
-
+	//TestWeaponEquip
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
+		TArray<FWeaponInfo> WeaponSlotsInfo;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
+		FWeaponInfo MainWeaponInfo;
 	
 	//Equpment	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
 		TArray<FInventory> EquipmentSlots;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
 		FVector VariableToSpawnEquip;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
-	//	EEquipmentSlotType EquipmentSlotType;
 
 	
 
@@ -110,15 +113,19 @@ public:
 	
 	bool SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldIndex, FAddicionalWeaponInfo OldInfo, bool bIsForward);
 	UFUNCTION(BlueprintCallable)
-	FAddicionalWeaponInfo GetAdditionalInfoWeapon(int32 IndexWeapon);
+		FAddicionalWeaponInfo GetAdditionalInfoWeapon(int32 IndexWeapon);
 	UFUNCTION(BlueprintCallable)
-	int32 GetWeaponIndexSlotByName(FName IdWeaponName);
+		int32 GetWeaponIndexSlotByName(FName IdWeaponName);
 	UFUNCTION(BlueprintCallable)
-	FName GetWeaponNameBySlotIndex(int32 IndexSlot);
+		FName GetWeaponNameBySlotIndex(int32 IndexSlot);
 	void SetAdditionalInfoWeapon(int32 IndexWeapon, FAddicionalWeaponInfo Newinfo);
 
-
+	UFUNCTION(BlueprintCallable)
+		FWeaponInfo GetWeaponInfo(int32 SlotIndex);
 	
+
+
+		//Old WeaponEquipSys del if reworked
 	UFUNCTION(BlueprintCallable)
 		void AmmoSlotChangeValue(EWeaponType TypeWeapon, int32 CountAmmoChange);
 	UFUNCTION(BlueprintCallable)

@@ -321,6 +321,18 @@ struct FMeshInfo
 
 };
 
+
+
+
+USTRUCT(BlueprintType)
+struct FAddicionalWeaponInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")		
+	int32 Round = 10;
+};
+
 USTRUCT(BlueprintType)
 struct FWeaponInfo : public FTableRowBase
 {
@@ -335,6 +347,8 @@ struct FWeaponInfo : public FTableRowBase
 		float ReloadTime = 2.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 		int32 MaxRound = 10;
+	UPROPERTY(BlueprintReadOnly)
+		int32 CurrentRound = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 		int32 NumberProjectileByShot = 1;
 
@@ -360,7 +374,7 @@ struct FWeaponInfo : public FTableRowBase
 	//one decal on all?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect ")
 		UDecalComponent* DecalOnHit = nullptr;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh ")
 		FMeshInfo Shell;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh ")
@@ -373,6 +387,7 @@ struct FWeaponInfo : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory ")
 		float SwitchTimeToWeapon = 1.0f;
 
+	 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory ")
 		UTexture2D* WeaponIcon = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory ")
@@ -380,16 +395,6 @@ struct FWeaponInfo : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 		UStaticMesh* WeaponMesh = nullptr;
 
-};
-
-
-USTRUCT(BlueprintType)
-struct FAddicionalWeaponInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")		
-	int32 Round = 10;
 };
 
 USTRUCT(BlueprintType)
@@ -402,6 +407,8 @@ struct FWeaponSlot
 		FName NameItem = "NoName";
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSlot")
 		FAddicionalWeaponInfo AdditionalInfo;
+	UPROPERTY()
+		FWeaponInfo WeaponInfo;
 };
 
 USTRUCT(BlueprintType)

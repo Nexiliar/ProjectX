@@ -98,7 +98,7 @@ public:
 		bool WalkEnabled = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool AimEnabled = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY()
 		bool isEqual;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool SprintCheck;
@@ -169,7 +169,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		AWeaponDefault* GetCurrentWeapon();
 	UFUNCTION(BlueprintCallable)
-		void InitWeapon(FName IdWeaponName, FAddicionalWeaponInfo WeaponAdditionalInfo,int32 NewCurrentIndexWeapon);
+		void InitWeapon(FWeaponInfo InfoOfWeaponToInit, FAddicionalWeaponInfo WeaponAdditionalInfo);
 	UFUNCTION(BlueprintCallable)
 		void TryReloadWeapon();
 	UFUNCTION()
