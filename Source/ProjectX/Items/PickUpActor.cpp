@@ -266,6 +266,8 @@ void APickUpActor::TryToPickUpItem()
 		case EEquipmentSlotType::None:
 			break;
 		case EEquipmentSlotType::Weapon:
+			if (EquipWeapon())
+				this->Destroy();
 			break;
 		case EEquipmentSlotType::Bracer:
 			break;
@@ -474,7 +476,6 @@ bool APickUpActor::EquipArmor()
 }
 void APickUpActor::InitWeapon(bool ItemIsNew)
 {
-
 	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 	if (MyGI)
 	{
@@ -515,7 +516,6 @@ void APickUpActor::InitWeapon(bool ItemIsNew)
 			default:
 				break;
 			}
-
 			UE_LOG(LogTemp, Warning, TEXT("WeaponInit"));
 		}
 		else
@@ -530,10 +530,12 @@ bool APickUpActor::EquipWeapon()
 {
 	bool bIsWeaponEquipSuccess = false;
 	UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
-	//if (myInventory->WeaponEquipment(WeaponInfo))
-	//{
-//		bIsWeaponEquipSuccess = true;
-//	}
+	
+	if (myInventory)
+	{
+		bIsWeaponEquipSuccess = myInventory->EquipWeapon(ItemCFG, WeaponInfo);
+	}
+
 	return bIsWeaponEquipSuccess;	
 }
 void APickUpActor::OverlapStart_BP_Implementation(bool isOverlaping)

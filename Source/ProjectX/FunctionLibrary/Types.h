@@ -340,6 +340,8 @@ struct FWeaponInfo : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
 		TSubclassOf<class AWeaponDefault> WeaponClass = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
+		FName WeaponName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 		float RateOfFire = 0.5f;

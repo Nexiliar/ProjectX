@@ -76,17 +76,16 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
-	//Old WeaponEquipSys del if reworked
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
-	//	TArray<FWeaponSlot> WeaponSlots;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
-		TArray<FAmmoSlot> AmmoSlots;
+
+
 
 	//TestWeaponEquip
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 		TArray<FWeaponInfo> WeaponSlotsInfo;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
-		FWeaponInfo MainWeaponInfo;
+		TArray<FAmmoSlot> AmmoSlots;
+
+
 	
 	//Equpment	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EqipmentSlots")
@@ -95,7 +94,7 @@ public:
 		FVector VariableToSpawnEquip;
 
 	
-
+	
 
 	//TestInventory
 	
@@ -157,10 +156,16 @@ public:
 		void EquipBackPack(FInventory BackPackInfo, TArray<FInventory> InventorySlotsInfo, int32 InventorySize, bool & EquipSuccessfuly);
 	UFUNCTION(BlueprintCallable)
 		void UnequipBackPack(int32 SlotIndex);
+	UFUNCTION(BlueprintCallable)
+		bool EquipWeapon(FInventory ItemInfo, FWeaponInfo InfoOfTheWeapon);
+	UFUNCTION(BlueprintCallable)
+		void UnequipWeapon(int32 SlotIndex);
+
+
 
 	//Инвентарь
-	UFUNCTION(BlueprintCallable)
-		bool CheckWeaponSlotEmpty(int32 SlotIndex, bool IsWeapon);
+	//UFUNCTION(BlueprintCallable)
+	//	bool CheckWeaponSlotEmpty(int32 SlotIndex, bool IsWeapon);
 	UFUNCTION(BlueprintCallable)
 		void GetItemInfoAtIndex(int32 SlotIndex,bool& isSlotEmpty, FInventory &InventoryslotInfo);
 	UFUNCTION(BlueprintCallable)
