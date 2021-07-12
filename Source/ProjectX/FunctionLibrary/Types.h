@@ -347,8 +347,9 @@ struct FWeaponInfo : public FTableRowBase
 		float ReloadTime = 2.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 		int32 MaxRound = 10;
-	UPROPERTY(BlueprintReadOnly)
-		int32 CurrentRound = 10;
+	//UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+		int32 CurrentRound;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 		int32 NumberProjectileByShot = 1;
 

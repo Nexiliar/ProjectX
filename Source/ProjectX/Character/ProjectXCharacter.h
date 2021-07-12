@@ -133,8 +133,8 @@ public:
 	bool isCharacterOverlapingItem = false;
 
 	ESlotType SlotVar;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	int32 EnumIndex;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponEnum")
+	int32 EnumIndex = 0;
 	//inputs
 	UFUNCTION()
 		void InputAxisY(float Value);
@@ -169,7 +169,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		AWeaponDefault* GetCurrentWeapon();
 	UFUNCTION(BlueprintCallable)
-		void InitWeapon(FWeaponInfo InfoOfWeaponToInit, FAddicionalWeaponInfo WeaponAdditionalInfo);
+		void InitWeapon(FWeaponInfo InfoOfWeaponToInit);
 	UFUNCTION(BlueprintCallable)
 		void TryReloadWeapon();
 	UFUNCTION()
@@ -184,7 +184,7 @@ public:
 		void WeaponReloadStart_BP(UAnimMontage* Anim);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void WeaponReloadEnd_BP(bool bIsSucces);
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void WeaponFireStart_BP(UAnimMontage* Anim);
 
 	UFUNCTION(BlueprintCallable)
@@ -200,8 +200,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	ESlotType GetCurrentSlot(int32& IndexOfEnum);
-	void TrySwicthNextWeapon();
-	void TrySwitchPreviosWeapon();
+	
+	//OldSwitchSystem Del if not used
+	//void TrySwicthNextWeapon();
+	//void TrySwitchPreviosWeapon();
 	
 	UFUNCTION(BlueprintCallable)
 		void TryUseAbillity();

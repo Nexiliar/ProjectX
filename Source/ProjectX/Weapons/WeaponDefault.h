@@ -19,6 +19,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponFireStart, UAnimMontage*, AnimFireChar);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadStart, UAnimMontage*, AnimReloadChar);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponReloadEnd, bool, bIsSucces, int32, AmmoSafe);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFireEvent, int32, CurrentAmmo);
 
 UCLASS()
 class PROJECTX_API AWeaponDefault : public AActor
@@ -32,7 +33,8 @@ public:
 	FOnWeaponFireStart OnWeaponFireStart;
 	FOnWeaponReloadEnd OnWeaponReloadEnd;
 	FOnWeaponReloadStart OnWeaponReloadStart;
-	
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "FireEvent")
+	FOnFireEvent OnFireEvent;
 	FTimerHandle TimerHandle_EmptyMagShootTimer;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
@@ -48,10 +50,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 		class UArrowComponent* AmmoClipDropLocation = nullptr;
 
-	UPROPERTY()
-		FWeaponInfo WeaponSetting;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
-		FAddicionalWeaponInfo WeaponInfo;
+		FWeaponInfo WeaponSetting;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
+	//	FAddicionalWeaponInfo WeaponInfo;
 
 protected:
 	// Called when the game starts or when spawned

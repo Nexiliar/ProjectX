@@ -59,13 +59,7 @@ AProjectXCharacter::AProjectXCharacter()
 		CharHealthComponent->OnDead.AddDynamic(this, &AProjectXCharacter::CharDead);
 	}
 
-	/* 
-	if (InventoryComponent && IsArmed)
-	{
-		SwitchWeaponToSlotNum(ESlotType::FirstSlot);
-		InventoryComponent->OnSwitchWeapon.AddDynamic(this, &AProjectXCharacter::InitWeapon);		
-	}
-	*/
+
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -75,21 +69,16 @@ void AProjectXCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//InitWeapon(InitWeaponName);
-
 	if (CursorMaterial)
 	{
 		CurrentCursor = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), CursorMaterial, CursorSize, FVector(0));
-	}
-	
-	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Blue, TEXT("HI THERE"));
+	}	
 	GetWorldTimerManager().SetTimer(DelayTimer, this, &AProjectXCharacter::Compare, 0.1f, true, 0.1f);
 
 }
 void AProjectXCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-
 
 	if (CurrentCursor)
 	{
@@ -105,9 +94,7 @@ void AProjectXCharacter::Tick(float DeltaSeconds)
 			CurrentCursor->SetWorldRotation(CursorR);
 		}
 	}
-
-	MovementTick(DeltaSeconds);
-	
+	MovementTick(DeltaSeconds);	
 }
 
 void AProjectXCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent)
@@ -121,9 +108,9 @@ void AProjectXCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComp
 	NewInputComponent->BindAction(TEXT("ReloadEvent"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TryReloadWeapon);
 	
 	NewInputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TryToInterractWithObject);
-
-	NewInputComponent->BindAction(TEXT("SwitchNextWeapon"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TrySwicthNextWeapon);
-	NewInputComponent->BindAction(TEXT("SwitchPrevioseWeapon"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TrySwitchPreviosWeapon);
+	//Old switch sys del if not use
+	//NewInputComponent->BindAction(TEXT("SwitchNextWeapon"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TrySwicthNextWeapon);
+	//NewInputComponent->BindAction(TEXT("SwitchPrevioseWeapon"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TrySwitchPreviosWeapon);
 	NewInputComponent->BindAction(TEXT("AbillityAction"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TryUseAbillity);
 	
 	
@@ -150,8 +137,7 @@ void AProjectXCharacter::InputAttackPressed()
 	if (bIsAlive)
 	{
 		AttackCharEvent(true);
-	}
-	
+	}	
 }
 
 void AProjectXCharacter::InputAttackReleased()
@@ -218,17 +204,13 @@ void AProjectXCharacter::MovementTick(float Deltatime)
 					default:
 						break;
 					}
-
 					//ќпредел€ем место в которое полет€т пули
 					CurrentWeapon->ShootEndLocation = ResultHit.Location + Displacement;
 					//aim cursor like 3d Widget?
 				}
 			}
-
 		}
 	}
-	
-
 }
 
 
@@ -237,8 +219,7 @@ void AProjectXCharacter::AttackCharEvent(bool bIsFiring)
 		AWeaponDefault* myWeapon = nullptr;
 		myWeapon = GetCurrentWeapon();
 		if (myWeapon)
-		{
-			
+		{			
 			//ToDo Check melee or range
 			myWeapon->SetWeaponStateFire(bIsFiring);
 			myWeapon->EmptyMagTryToShoot();
@@ -247,7 +228,7 @@ void AProjectXCharacter::AttackCharEvent(bool bIsFiring)
 			//UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
 }
 
-	void AProjectXCharacter::CharacterUpdate()
+void AProjectXCharacter::CharacterUpdate()
 {
 	float ResSpeed = 600.0f;
 	switch (MovementState)
@@ -276,17 +257,11 @@ void AProjectXCharacter::AttackCharEvent(bool bIsFiring)
 	default:
 		break;
 	}
-
-
-
 	GetCharacterMovement()->MaxWalkSpeed = ResSpeed;
-
 }
 
 void AProjectXCharacter::ChangeMovementState()
-
-{
-	
+{	
 	FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
 	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled && !CrouchEnabled)
 	{
@@ -314,9 +289,7 @@ void AProjectXCharacter::ChangeMovementState()
 				else
 				{
 					CurrentWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketPistolCrouch"));
-				}
-			
-			
+				}				
 		}
 		if (AimEnabled && CrouchEnabled && !WalkEnabled && !SprintRunEnabled)
 		{
@@ -367,8 +340,7 @@ void AProjectXCharacter::ChangeMovementState()
 	//Weapon state update
 	AWeaponDefault* myWeapon = GetCurrentWeapon();
 	if (myWeapon)
-	{
-		
+	{		
 		myWeapon->UpdateStateWeapon(MovementState);
 	}
 }
@@ -406,68 +378,51 @@ UDecalComponent* AProjectXCharacter::GetCursorToWorld()
 	return CurrentCursor;
 }
 
-void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit, FAddicionalWeaponInfo WeaponAdditionalInfo)//ToDo Init by id row by table
-
+void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 {
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->Destroy();
 		CurrentWeapon = nullptr;
 	}
-	/* 
-	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetGameInstance());
-	FWeaponInfo myWeaponInfo;
-
-	if (MyGI)
-	{
-		if (MyGI->GetWeaponInfoByName(IdWeaponName, myWeaponInfo))
+	if (InfoOfWeaponToInit.WeaponClass)
 		{
-		*/
-			if (InfoOfWeaponToInit.WeaponClass)
+			FVector SpawnLocation = FVector(0);
+			FRotator SpawnRotation = FRotator(0);
+
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = GetInstigator();
+
+			AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InfoOfWeaponToInit.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+			if (myWeapon)
 			{
-				FVector SpawnLocation = FVector(0);
-				FRotator SpawnRotation = FRotator(0);
-
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-				SpawnParams.Owner = this;
-				SpawnParams.Instigator = GetInstigator();
-
-				AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InfoOfWeaponToInit.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
-				if (myWeapon)
-				{
 					
-					FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-					myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
-					CurrentWeapon = myWeapon;
+				FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+				myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));								
+								
+				myWeapon->WeaponSetting = InfoOfWeaponToInit;
+				
+				//myWeapon->WeaponInfo.Round = myWeapon->WeaponSetting.MaxRound;
+				//Remove DEBUG!
+				//myWeapon->ReloadTime = InfoOfWeaponToInit.ReloadTime;
+				myWeapon->UpdateStateWeapon(MovementState);
 					
-					
-
-					
-					myWeapon->WeaponSetting = InfoOfWeaponToInit;
-					//myWeapon->WeaponInfo.Round = myWeapon->WeaponSetting.MaxRound;
-					//Remove DEBUG!
-					myWeapon->ReloadTime = InfoOfWeaponToInit.ReloadTime;
-					myWeapon->UpdateStateWeapon(MovementState);
-					
-					myWeapon->WeaponInfo = WeaponAdditionalInfo;
-					//if (InventoryComponent)
-						//CurrentIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(IdWeaponName);
-					//—лушаем делегатов, объ€вленных в weapondefault
-					myWeapon->OnWeaponReloadStart.AddDynamic(this, &AProjectXCharacter::WeaponReloadStart);
-					myWeapon->OnWeaponReloadEnd.AddDynamic(this, &AProjectXCharacter::WeaponReloadEnd);
-					myWeapon->OnWeaponFireStart.AddDynamic(this, &AProjectXCharacter::WeaponFireStart);
-
-					//ѕытаемс€ перезар€дитьс€, после подбора оружи€
-					if (CurrentWeapon->GetWeaponRound() <= 0 && CurrentWeapon->CheckCanWeaponReload())
-						CurrentWeapon->InitReload();					
-				}
+				//myWeapon->WeaponInfo = WeaponAdditionalInfo;
+				//if (InventoryComponent)
+				//CurrentIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(IdWeaponName);
+				//—лушаем делегатов, объ€вленных в weapondefault
+				CurrentWeapon = myWeapon;
+				myWeapon->OnWeaponReloadStart.AddDynamic(this, &AProjectXCharacter::WeaponReloadStart);
+				myWeapon->OnWeaponReloadEnd.AddDynamic(this, &AProjectXCharacter::WeaponReloadEnd);
+				myWeapon->OnWeaponFireStart.AddDynamic(this, &AProjectXCharacter::WeaponFireStart);
+				
+				//ѕытаемс€ перезар€дитьс€, после подбора оружи€
+				if (CurrentWeapon->GetWeaponRound() <= 0 && CurrentWeapon->CheckCanWeaponReload())
+					CurrentWeapon->InitReload();					
 			}
-		//}
-		//else
-		//{
-			//UE_LOG(LogTemp, Warning, TEXT("AProjectXCharacter::InitWeapon - Weapon not found in table -NULL"));
-		//}	
+		}
 }
 
 void AProjectXCharacter::TryReloadWeapon()
@@ -491,7 +446,7 @@ void AProjectXCharacter::WeaponReloadEnd(bool bIsSucces,int32 AmmoTake)
 	if (InventoryComponent)
 	{
 		InventoryComponent->AmmoSlotChangeValue(CurrentWeapon->WeaponSetting.WeaponType, AmmoTake);
-		InventoryComponent->SetAdditionalInfoWeapon(CurrentIndexWeapon, CurrentWeapon->WeaponInfo);
+		InventoryComponent->SetCurrentAmmo(EnumIndex, CurrentWeapon->WeaponSetting.CurrentRound);
 	}
 	WeaponReloadEnd_BP(bIsSucces);
 }
@@ -499,7 +454,7 @@ void AProjectXCharacter::WeaponReloadEnd(bool bIsSucces,int32 AmmoTake)
 void AProjectXCharacter::WeaponFireStart(UAnimMontage* Anim)
 {
 	if (InventoryComponent && CurrentWeapon)
-		InventoryComponent->SetAdditionalInfoWeapon(CurrentIndexWeapon,CurrentWeapon->WeaponInfo);
+		InventoryComponent->SetCurrentAmmo(EnumIndex, CurrentWeapon->WeaponSetting.CurrentRound);
 	WeaponFireStart_BP(Anim);
 }
 
@@ -517,8 +472,6 @@ void AProjectXCharacter::WeaponFireStart_BP_Implementation(UAnimMontage* Anim)
 
 void AProjectXCharacter::EquipWeapon()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Green, TEXT("Equiped"));
-
 	if (InventoryComponent && IsArmed)
 	{
 		if (CurrentWeapon)
@@ -526,89 +479,78 @@ void AProjectXCharacter::EquipWeapon()
 			CurrentWeapon->Destroy();
 			CurrentWeapon = nullptr;
 		}
-
 		IsArmed = false;
 	}
 	else
 	{
+		
 		int32 TempIndexSlot;
 		ESlotType WeaponSlot = GetCurrentSlot(TempIndexSlot);
-
 			SwitchWeaponToSlotNum(WeaponSlot);
-		
-		//InventoryComponent->OnSwitchWeapon.AddDynamic(this, &AProjectXCharacter::InitWeapon);
-
 		IsArmed = true;
 	}
 }
 
 ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumber)
-{
-	//FName FirstIndexWeaponName;
-	FWeaponInfo WeaponInfoAtIndex;
-	//if (CurrentWeapon && !CurrentWeapon->WeaponReloading)
+{	
 	
+	FWeaponInfo WeaponInfoAtIndex;	
 		switch (EquipmentSlotNumber)
 		{
 			case ESlotType::FirstSlot:
 			{
-				//FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(0);
-				FAddicionalWeaponInfo FirstIndexWeaponInfo = InventoryComponent->GetAdditionalInfoWeapon(0);
-				//int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);				
-				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(0);
-				InitWeapon(WeaponInfoAtIndex, FirstIndexWeaponInfo);
-
-				EnumIndex = 0;
-				SlotVar = ESlotType::FirstSlot;
-				if (!IsArmed)
-					IsArmed = true;
+					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(0);
+					InitWeapon(WeaponInfoAtIndex);
+					EnumIndex = 0;
+					SlotVar = ESlotType::FirstSlot;
+					if (!IsArmed)
+						IsArmed = true;
 
 				break;
 			}
 			case ESlotType::SecondSlot:
 			{
-				//FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(1);
-				FAddicionalWeaponInfo FirstIndexWeaponInfo = InventoryComponent->GetAdditionalInfoWeapon(1);
-				//int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
-				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(1);
-				InitWeapon(WeaponInfoAtIndex, FirstIndexWeaponInfo);
-				EnumIndex = 1;
-				SlotVar = ESlotType::SecondSlot;
-				if (!IsArmed)
-					IsArmed = true;
+					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(1);
+					InitWeapon(WeaponInfoAtIndex);
+					EnumIndex = 1;
+					SlotVar = ESlotType::SecondSlot;
+					if (!IsArmed)
+						IsArmed = true;
+
+
 
 				break;
 			}
 			case ESlotType::ThirdSlot:
 			{
-				//FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(2);
-				FAddicionalWeaponInfo FirstIndexWeaponInfo = InventoryComponent->GetAdditionalInfoWeapon(2);
-				//int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
-				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(2);
-				InitWeapon(WeaponInfoAtIndex, FirstIndexWeaponInfo);
-				EnumIndex = 2;
-				SlotVar = ESlotType::ThirdSlot;
-				if (!IsArmed)
-					IsArmed = true;
+					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(2);
+
+					InitWeapon(WeaponInfoAtIndex);
+					EnumIndex = 2;
+					SlotVar = ESlotType::ThirdSlot;
+					if (!IsArmed)
+						IsArmed = true;
+
+
 
 				break;
 			}
 			case ESlotType::FourthSlot:
 			{
-				//FirstIndexWeaponName = InventoryComponent->GetWeaponNameBySlotIndex(3);
-				FAddicionalWeaponInfo FirstIndexWeaponInfo = InventoryComponent->GetAdditionalInfoWeapon(3);
-				//int32 FirstIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(FirstIndexWeaponName);
-				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(3);
-				InitWeapon(WeaponInfoAtIndex, FirstIndexWeaponInfo);
-				EnumIndex = 3;
-				SlotVar = ESlotType::FourthSlot;
-				if (!IsArmed)
-					IsArmed = true;
+
+					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(3);
+
+					InitWeapon(WeaponInfoAtIndex);
+					EnumIndex = 3;
+					SlotVar = ESlotType::FourthSlot;
+					if (!IsArmed)
+						IsArmed = true;
+
+
 				break;
 			}
 
 		}
-
 	
 	if (WeaponInfoAtIndex.WeaponClass)
 	{		
@@ -626,13 +568,11 @@ ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumbe
 	{
 		IsRifle = true;
 	}
-	int32  SlotIndex;
-	ESlotType TempSlotInfo = GetCurrentSlot(SlotIndex);
+
 	
 	if (InventoryComponent)
-		InventoryComponent->OnWeaponInit.Broadcast(InventoryComponent->WeaponSlotsInfo[SlotIndex].CurrentRound, InventoryComponent->WeaponSlotsInfo[SlotIndex]);
+		InventoryComponent->OnWeaponInit.Broadcast(GetCurrentWeapon()->WeaponSetting.CurrentRound, GetCurrentWeapon()->WeaponSetting);
 	
-
 	return SlotVar;
 }
 
@@ -643,10 +583,8 @@ ESlotType AProjectXCharacter::GetCurrentSlot(int32& IndexOfEnum)
 	IndexOfEnum = EnumIndex;
 	
 	return SlotVar;
-
-
 }
-
+/* OldSwitchSystem Del if not used
 void AProjectXCharacter::TrySwicthNextWeapon()
 {
 	if (InventoryComponent->WeaponSlots.Num() > 1)
@@ -656,7 +594,7 @@ void AProjectXCharacter::TrySwicthNextWeapon()
 		FAddicionalWeaponInfo OldInfo;
 		if (CurrentWeapon)
 		{
-			OldInfo = CurrentWeapon->WeaponInfo;
+			//OldInfo = CurrentWeapon->WeaponInfo;
 			if (CurrentWeapon->WeaponReloading)
 				CurrentWeapon->CancelReload();
 		}
@@ -669,7 +607,9 @@ void AProjectXCharacter::TrySwicthNextWeapon()
 		}
 	}
 }
+*/
 
+/* OldSwitchSystem Del if not used
 void AProjectXCharacter::TrySwitchPreviosWeapon()
 {
 	if (InventoryComponent->WeaponSlots.Num() > 1)
@@ -679,7 +619,7 @@ void AProjectXCharacter::TrySwitchPreviosWeapon()
 		FAddicionalWeaponInfo OldInfo;
 		if (CurrentWeapon)
 		{
-			OldInfo = CurrentWeapon->WeaponInfo;
+			//OldInfo = CurrentWeapon->WeaponInfo;
 			if (CurrentWeapon->WeaponReloading)
 				CurrentWeapon->CancelReload();
 		}
@@ -693,7 +633,7 @@ void AProjectXCharacter::TrySwitchPreviosWeapon()
 		}
 	}
 }
-
+*/
 void AProjectXCharacter::TryUseAbillity()
 {
 	if (AbillityEffect)//to do colldown
@@ -735,8 +675,7 @@ TArray<UProjectX_StateEffect*> AProjectXCharacter::GetAllCurrentEffects()
 }
 
 void AProjectXCharacter::RemoveEffect(UProjectX_StateEffect* RemoveEffect)
-{
-		
+{		
 	Effects.Remove(RemoveEffect);
 }
 
@@ -751,21 +690,16 @@ void AProjectXCharacter::GetSpawnLocationForEffect(FVector& MeshLocation, FName&
 {
 	if (GetMesh())
 	{
-
 		MeshLocation = EffectOffset;
-		BoneName = BoneNameForEffect;
-		
-	
+		BoneName = BoneNameForEffect;		
 	}
 	
 }
 
 
 void AProjectXCharacter::TryToInterractWithObject()
-{
-	
-		OnIterractButtonPressed.Broadcast();
-		
+{	
+		OnIterractButtonPressed.Broadcast();		
 }
 
 void AProjectXCharacter::CharDead()
@@ -800,7 +734,6 @@ void AProjectXCharacter::CharDead()
 
 void AProjectXCharacter::EnableRagdoll()
 {
-
 	if (GetMesh())
 	{
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
@@ -824,7 +757,6 @@ void AProjectXCharacter::EnableHealthRegenTimer(float HealthRegenSpeed)
 
 void AProjectXCharacter::HealthRegen()
 {
-
 	CharHealthComponent->HealthRegen();
 }
 

@@ -23,9 +23,9 @@ struct FWeaponSlotTest
 
 }; 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSwitchWeapon, FName, WeaponIdName, FAddicionalWeaponInfo, WeaponAdditionalInfo, int32, NewCurrentIndexWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwitchWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoChange, EWeaponType, TypeAmmo, int32, Count, int32, MaxCount);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdditionalInfoChange, int32, IndexSlot, FAddicionalWeaponInfo, Additionalnfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponEventAmmoChange, int32, IndexSlot, int32, Ammo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAmmoEmpty, EWeaponType, WeaponType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponInit, int32, AmmoInMag,FWeaponInfo, WeaponInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUpdateWeaponSlot, int32, IndexSlotChange, FWeaponSlot, NewInfo);
@@ -46,11 +46,11 @@ public:
 	// Sets default values for this component's properties
 	UProjectXInventoryComponent();
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "WeaponEquipment")
-	FOnSwitchWeapon OnSwitchWeapon;
+		FOnSwitchWeapon OnSwitchWeapon;
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
-	FOnAmmoChange OnAmmoChange;
+		FOnAmmoChange OnAmmoChange;
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
-		FOnWeaponAdditionalInfoChange OnWeaponAdditionalInfoChange;
+		FOnWeaponEventAmmoChange OnWeaponEventAmmoChange;
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 		FOnWeaponAmmoEmpty OnWeaponAmmoEmpty;
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
@@ -75,10 +75,10 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	//Old WeaponEquipSys del if reworked
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
-		TArray<FWeaponSlot> WeaponSlots;
 	
+	//Old WeaponEquipSys del if reworked
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
+	//	TArray<FWeaponSlot> WeaponSlots;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 		TArray<FAmmoSlot> AmmoSlots;
 
@@ -111,16 +111,11 @@ public:
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 		int32 MaxSlotWeapon = 0;
 	
-	bool SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldIndex, FAddicionalWeaponInfo OldInfo, bool bIsForward);
-	UFUNCTION(BlueprintCallable)
-		FAddicionalWeaponInfo GetAdditionalInfoWeapon(int32 IndexWeapon);
-	UFUNCTION(BlueprintCallable)
-		int32 GetWeaponIndexSlotByName(FName IdWeaponName);
-	UFUNCTION(BlueprintCallable)
-		FName GetWeaponNameBySlotIndex(int32 IndexSlot);
-	void SetAdditionalInfoWeapon(int32 IndexWeapon, FAddicionalWeaponInfo Newinfo);
 
-	UFUNCTION(BlueprintCallable)
+	
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		void SetCurrentAmmo(int32 IndexWeapon, int32 CurrentAmmo);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		FWeaponInfo GetWeaponInfo(int32 SlotIndex);
 	
 
@@ -130,16 +125,16 @@ public:
 		void AmmoSlotChangeValue(EWeaponType TypeWeapon, int32 CountAmmoChange);
 	UFUNCTION(BlueprintCallable)
 		bool CheckAmmoForWeapon(EWeaponType TypeWeapon, int32 &AvailableAmmoForWeapon);
-	UFUNCTION(BlueprintCallable, Category = "Interface")
-		bool CheckCanTakeAmmo(EWeaponType AmmoType);
+//	UFUNCTION(BlueprintCallable, Category = "Interface")
+//		bool CheckCanTakeAmmo(EWeaponType AmmoType);
 	UFUNCTION(BlueprintCallable, Category = "Interface")
 		bool CheckCanTakeWeapon(int32& FreeSlot);
-	UFUNCTION(BlueprintCallable, Category = "Interface")
-		bool SwitchWeaponToInventory(FWeaponSlot NewWeapon, int32 IndexSlot, int32 CurrentIndexWeaponChar, FDropItem& DropItemInfo);
-	UFUNCTION(BlueprintCallable, Category = "Interface")
-		void TryGetWeaponToInventory(FWeaponSlot NewWeapon);
-	UFUNCTION(BlueprintCallable, Category = "Interface")
-		bool GetDropItemInfoFromInventory(int32 IndexSlot, FDropItem &DropItemInfo);
+//	UFUNCTION(BlueprintCallable, Category = "Interface")
+//		bool SwitchWeaponToInventory(FWeaponSlot NewWeapon, int32 IndexSlot, int32 CurrentIndexWeaponChar, FDropItem& DropItemInfo);
+//	UFUNCTION(BlueprintCallable, Category = "Interface")
+//		void TryGetWeaponToInventory(FWeaponSlot NewWeapon);
+//	UFUNCTION(BlueprintCallable, Category = "Interface")
+//		bool GetDropItemInfoFromInventory(int32 IndexSlot, FDropItem &DropItemInfo);
 	
 
 

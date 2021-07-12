@@ -256,8 +256,8 @@ void APickUpActor::InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArr
 void APickUpActor::TryToPickUpItem()
 {
 	Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	int32 FreeSlotIndex = 0;
-	bool isFreeSlot = Character->InventoryComponent->CheckCanTakeWeapon(FreeSlotIndex);
+	//int32 FreeSlotIndex = 0;
+	//bool isFreeSlot = Character->InventoryComponent->CheckCanTakeWeapon(FreeSlotIndex);
 	if (isOverlapping)
 	{
 		EEquipmentSlotType SlotType = ItemCFG.EquipmentInfo.SlotType;

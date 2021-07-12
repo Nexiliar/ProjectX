@@ -32,7 +32,8 @@ void UProjectXInventoryComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 	// ...
 }
- 
+
+/* OldSwitchSys del if not used
 bool UProjectXInventoryComponent::SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldIndex, FAddicionalWeaponInfo OldInfo, bool bIsForward)
 {
 	
@@ -355,12 +356,13 @@ bool UProjectXInventoryComponent::SwitchWeaponToIndex(int32 ChangeToIndex, int32
 	}
 	if (bIsSUcces)
 	{
-		SetAdditionalInfoWeapon(OldIndex, OldInfo);
+		//SetAdditionalInfoWeapon(OldIndex, OldInfo);
 		OnSwitchWeapon.Broadcast(NewIdWeapon, NewAdditionalInfo, NewCurrentIndex);
 	}
 	return bIsSUcces;
 }
-
+*/
+/* No use in AdditionalInfo
 FAddicionalWeaponInfo UProjectXInventoryComponent::GetAdditionalInfoWeapon(int32 IndexWeapon)
 {
 	FAddicionalWeaponInfo result;
@@ -388,7 +390,8 @@ FAddicionalWeaponInfo UProjectXInventoryComponent::GetAdditionalInfoWeapon(int32
 
 	return result;
 }
-
+*/
+/* Old sys
 int32 UProjectXInventoryComponent::GetWeaponIndexSlotByName(FName IdWeaponName)
 {
 	int32 result = -1;
@@ -405,7 +408,8 @@ int32 UProjectXInventoryComponent::GetWeaponIndexSlotByName(FName IdWeaponName)
 	}
 	return result;
 }
-
+*/
+/* Old sys
 FName UProjectXInventoryComponent::GetWeaponNameBySlotIndex(int32 IndexSlot)
 {
 	FName result;
@@ -416,34 +420,18 @@ FName UProjectXInventoryComponent::GetWeaponNameBySlotIndex(int32 IndexSlot)
 
 	return result;
 }
+*/
 
-void UProjectXInventoryComponent::SetAdditionalInfoWeapon(int32 IndexWeapon, FAddicionalWeaponInfo Newinfo)
+//??? is it working? del comm if its
+void UProjectXInventoryComponent::SetCurrentAmmo(int32 IndexWeapon, int32 CurrentAmmo)
 {
-	if (WeaponSlots.IsValidIndex(IndexWeapon))
-	{
-		bool bIsFind = false;
-		int8 i = 0;
-		while (i < WeaponSlots.Num() && !bIsFind)
-		{
-			if (i == IndexWeapon)
-			{
-				WeaponSlots[i].AdditionalInfo = Newinfo;
-				bIsFind = true;
-				OnWeaponAdditionalInfoChange.Broadcast(IndexWeapon,Newinfo);
-			}
-			i++;
-		}
-		if (!bIsFind)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("ProjectXInventoryComponent::SetAdditionalInfoWeapon = No found weapon with index - % d"), IndexWeapon);
-		}
-
+	if (WeaponSlotsInfo.IsValidIndex(IndexWeapon))
+	{	
+		WeaponSlotsInfo[IndexWeapon].CurrentRound = CurrentAmmo;		
+		OnWeaponEventAmmoChange.Broadcast(IndexWeapon, CurrentAmmo);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("ProjectXInventoryComponent::SetAdditionalInfoWeapon = Not correct index weapon - % d"), IndexWeapon);
-
-
-
 }
 
 
@@ -471,16 +459,16 @@ void UProjectXInventoryComponent::AmmoSlotChangeValue(EWeaponType TypeWeapon, in
 
 FWeaponInfo UProjectXInventoryComponent::GetWeaponInfo(int32 SlotIndex)
 {
-	//MainWeaponInfo = WeaponInfo; 
-	FWeaponInfo WeaponInfoAtIndex= WeaponSlotsInfo[SlotIndex];
+	FWeaponInfo WeaponInfoAtIndex = WeaponSlotsInfo[SlotIndex];
 
 	return WeaponInfoAtIndex;
 }
-
+//Check how much ammo is left 
 bool UProjectXInventoryComponent::CheckAmmoForWeapon(EWeaponType TypeWeapon, int32 &AviableAmmoForWeapon)
 {
 	AviableAmmoForWeapon = 0;
 	bool bIsFind = false;
+	bool IsEnoughAmmo = false;
 	int8 i = 0;
 	while (i< AmmoSlots.Num() && !bIsFind)
 	{
@@ -489,17 +477,15 @@ bool UProjectXInventoryComponent::CheckAmmoForWeapon(EWeaponType TypeWeapon, int
 			bIsFind = true;
 			AviableAmmoForWeapon = AmmoSlots[i].Count;
 			if (AmmoSlots[i].Count > 0)
-				return true;
-		}
-			
+				IsEnoughAmmo = true;
+		}			
 		i++;
 	}
-
 	OnWeaponAmmoEmpty.Broadcast(TypeWeapon);
-
-	return false;
+	return IsEnoughAmmo;
 }
 
+/* Check if need
 bool UProjectXInventoryComponent::CheckCanTakeAmmo(EWeaponType AmmoType)
 {
 	bool result = false;
@@ -512,14 +498,18 @@ bool UProjectXInventoryComponent::CheckCanTakeAmmo(EWeaponType AmmoType)
 	}
 	return result;
 }
-
+*/
+//NeedRework delet comm after
 bool UProjectXInventoryComponent::CheckCanTakeWeapon(int32 &FreeSlot)
 {
 	bool bIsFreeslot = false;
 	int8 i = 0;
-	while (i < WeaponSlots.Num() && !bIsFreeslot)
+	while (i < WeaponSlotsInfo.Num() && !bIsFreeslot)
 	{
-		if (WeaponSlots[i].NameItem.IsNone())
+		if (WeaponSlotsInfo[i].WeaponClass)
+		{
+		}
+		else
 		{
 			bIsFreeslot = true;
 			FreeSlot = i;
@@ -528,7 +518,7 @@ bool UProjectXInventoryComponent::CheckCanTakeWeapon(int32 &FreeSlot)
 	}
 	return bIsFreeslot;
 }
-
+/* Old Drop/picUpSys delete after NewPickUpWeaponSysworking
 bool UProjectXInventoryComponent::SwitchWeaponToInventory(FWeaponSlot NewWeapon, int32 IndexSlot, int32 CurrentIndexWeaponChar, FDropItem &DropItemInfo)
 {
 	bool result = false;
@@ -549,7 +539,8 @@ bool UProjectXInventoryComponent::SwitchWeaponToInventory(FWeaponSlot NewWeapon,
 	OnAmountOfItemsChanged.Broadcast();
 	return result;
 }
-
+*/
+/* OldEquipWeaponSys
 void UProjectXInventoryComponent::TryGetWeaponToInventory(FWeaponSlot NewWeapon)
 {
 	int32 indexSlot = -1;
@@ -565,7 +556,8 @@ void UProjectXInventoryComponent::TryGetWeaponToInventory(FWeaponSlot NewWeapon)
 	}
 	OnAmountOfItemsChanged.Broadcast();
 }
-
+*/
+/* Old Drop/picUpSys delete after NewPickUpWeaponSysworking
 bool UProjectXInventoryComponent::GetDropItemInfoFromInventory(int32 IndexSlot, FDropItem& DropItemInfo)
 {
 	bool result = false;
@@ -586,7 +578,7 @@ bool UProjectXInventoryComponent::GetDropItemInfoFromInventory(int32 IndexSlot, 
 
 	return result;
 }
-
+*/
 
 
 
@@ -826,15 +818,14 @@ bool UProjectXInventoryComponent::CheckWeaponSlotEmpty(int32 SlotIndex, bool IsW
 {
 	bool isSlotEmpty;
 
-		if (WeaponSlots[SlotIndex].NameItem == "None")
-		{
-			isSlotEmpty = true;
-		}
-		else
+		if (WeaponSlotsInfo[SlotIndex].WeaponClass)
 		{
 			isSlotEmpty = false;
 		}
-
+		else
+		{
+			isSlotEmpty = true;
+		}
 	return isSlotEmpty;
 }
 
@@ -1105,28 +1096,31 @@ bool UProjectXInventoryComponent::SwapItemsWithIndex(int32 FirstItemIndex, int32
 	bool bIsSucces = false;	
 	if (IsWeapon)
 	{
-				FWeaponSlot TempWeaponStorage = WeaponSlots[SecondItemIndex];
-				WeaponSlots[SecondItemIndex] = WeaponSlots[FirstItemIndex];
-				WeaponSlots[FirstItemIndex] = TempWeaponStorage;
-				bIsSucces = true;
+		FWeaponInfo TempWeaponStorage = WeaponSlotsInfo[SecondItemIndex];
+		WeaponSlotsInfo[SecondItemIndex] = WeaponSlotsInfo[FirstItemIndex];
+		WeaponSlotsInfo[FirstItemIndex] = TempWeaponStorage;
+		bIsSucces = true;
+		OnSwitchWeapon.Broadcast();
+		
+		
 	}
-			else
+	else
+	{
+		int32 LastInventoryIndex = InventorySlots.Num();
+
+			if (FirstItemIndex > LastInventoryIndex || SecondItemIndex > LastInventoryIndex)
 			{
-				int32 LastInventoryIndex = InventorySlots.Num();
 
-				if (FirstItemIndex > LastInventoryIndex || SecondItemIndex > LastInventoryIndex)
-				{
-
-				}
-				else
-				{			
-					UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::SwapItemsWithIndex OurIndexs are match arraysize"));
-					FInventory TempElemStorage = InventorySlots[SecondItemIndex];;
-					InventorySlots[SecondItemIndex] = InventorySlots[FirstItemIndex];
-					InventorySlots[FirstItemIndex] = TempElemStorage;
-					bIsSucces = true;	
-				}
 			}
+			else
+			{			
+				UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::SwapItemsWithIndex OurIndexs are match arraysize"));
+				FInventory TempElemStorage = InventorySlots[SecondItemIndex];;
+				InventorySlots[SecondItemIndex] = InventorySlots[FirstItemIndex];
+				InventorySlots[FirstItemIndex] = TempElemStorage;
+				bIsSucces = true;	
+			}
+	}
 
 	OnAmountOfItemsChanged.Broadcast();
 	return bIsSucces;
@@ -1231,8 +1225,8 @@ void UProjectXInventoryComponent::DestroyItems(int32 ItemIndex)
 
 void UProjectXInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo)
 {
-	WeaponSlots = NewWeaponSlotsInfo;
-	AmmoSlots = NewAmmoSlotsInfo;
+	//WeaponSlots = NewWeaponSlotsInfo;
+	//AmmoSlots = NewAmmoSlotsInfo;
 	//AmountOfInventorySlots = InventorySlotsByCharacterStats;
 	//Задаем количество слотов в инвентаре
 	//InventorySlots.SetNum(AmountOfInventorySlots);
@@ -1249,22 +1243,22 @@ void UProjectXInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlo
 	
 
 
-	for (int8 i = 0; i < WeaponSlots.Num(); i++)
+	for (int8 i = 0; i < WeaponSlotsInfo.Num(); i++)
 	{
 		UProjectXGameInstance* myGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 		if (myGI)
 		{
-			if (!WeaponSlots[i].NameItem.IsNone())
-			{
+			//if (!WeaponSlotsInfo[i].NameItem.IsNone())
+			//{
 				//FWeaponInfo  Info;
 				//if (myGI->GetWeaponInfoByName(WeaponSlots[i].NameItem, Info))
 					//WeaponSlots[i].AdditionalInfo.Round = Info.MaxRound;
 
-			}
+			//}
 
 		}
 	}
-
+	/* 
 	MaxSlotWeapon = WeaponSlots.Num();
 
 	if (WeaponSlots.IsValidIndex(0))
@@ -1272,7 +1266,7 @@ void UProjectXInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlo
 		if (!WeaponSlots[0].NameItem.IsNone())
 			OnSwitchWeapon.Broadcast(WeaponSlots[0].NameItem, WeaponSlots[0].AdditionalInfo, 0);
 	}
-
+	*/
 }
 
 

@@ -41,7 +41,7 @@ AWeaponDefault::AWeaponDefault()
 void AWeaponDefault::BeginPlay()
 {
 	Super::BeginPlay();
-	WeaponSetting.CurrentRound = WeaponSetting.MaxRound;
+	
 	WeaponInit();
 	
 }
@@ -159,7 +159,7 @@ void AWeaponDefault::WeaponInit()
 	{
 		StaticMeshWeapon->DestroyComponent();
 	}
-	
+	//WeaponSetting.CurrentRound = WeaponSetting.MaxRound;
 	UpdateStateWeapon(EMovementState::Run_State);
 	
 }
@@ -213,7 +213,7 @@ void AWeaponDefault::Fire()
 	
 	FireTimer = WeaponSetting.RateOfFire;
 	WeaponSetting.CurrentRound = WeaponSetting.CurrentRound - NumberProjectile;
-	
+	//OnFireEvent.Broadcast(WeaponSetting.CurrentRound);
 	if (WeaponSetting.CurrentRound == 0)
 	{
 		EmptyMagTryToShoot();
@@ -222,10 +222,11 @@ void AWeaponDefault::Fire()
 	ChangeDispersionByShot();
 
 	OnWeaponFireStart.Broadcast(AnimToPlay);
+	
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSetting.EffectFireWeapon, ShootLocation->GetComponentTransform());
 	
-
+	
 	
 	if (ShootLocation)
 	{
@@ -315,6 +316,7 @@ void AWeaponDefault::Fire()
 		
 	}
 //	if(inventoryComponent)
+	OnFireEvent.Broadcast(GetWeaponRound());
 }
 
 
@@ -479,9 +481,7 @@ int32 AWeaponDefault::GetWeaponRound()
 }
 
 void AWeaponDefault::InitReload()
-{
-	
-		
+{		
 	WeaponReloading = true;
 	ReloadTimer = WeaponSetting.ReloadTime;
 	UAnimMontage* AnimToPlay = nullptr;
@@ -560,8 +560,7 @@ void AWeaponDefault::ClickTimer()
 
 bool AWeaponDefault::CheckCanWeaponReload()
 {
-	bool result = true;
-
+	bool CanWeaponReload = true;
 	if (GetOwner())
 	{
 		UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(GetOwner()->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
@@ -570,13 +569,11 @@ bool AWeaponDefault::CheckCanWeaponReload()
 			int32 AvailableAmmoForWeapon = WeaponSetting.MaxRound;
 			if (!myInventory->CheckAmmoForWeapon(WeaponSetting.WeaponType, AvailableAmmoForWeapon))
 			{
-
-				result = false;
+				CanWeaponReload = false;
 			}
 		}
-
 	}
-	return result;
+	return CanWeaponReload;
 }
 
 int32 AWeaponDefault::GetAviableAmmoForReload()
