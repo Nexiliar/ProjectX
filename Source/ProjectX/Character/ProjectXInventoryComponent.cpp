@@ -123,9 +123,13 @@ bool UProjectXInventoryComponent::CheckCanTakeWeapon(int32 &FreeSlot)
 		{
 		}
 		else
-		{
-			bIsFreeslot = true;
-			FreeSlot = i;
+		{	
+			if (WeaponSlotsInfo[i].CanUseSlot)
+			{
+				bIsFreeslot = true;
+				FreeSlot = i;
+			}
+			
 		}
 		i++;
 	}
@@ -418,16 +422,25 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 bool UProjectXInventoryComponent::EquipWeapon(FInventory ItemInfo,FWeaponInfo InfoOfTheWeapon)
 {
 	int32 FreeSlotIndex;
-	bool EquipWeapon = false;
+	bool isEquipWeapon = false;
 			if (CheckCanTakeWeapon(FreeSlotIndex))
 			{
 				WeaponSlotsInfo[FreeSlotIndex] = InfoOfTheWeapon;
-				EquipWeapon = true;				
+				isEquipWeapon = true;
 				UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::EquipWeapon SUCCES"));
 			}
-
-	
-	return EquipWeapon;
+			else
+			{
+				AProjectXCharacter* Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+				int32 CurrentSlot;
+				Character->GetCurrentSlot(CurrentSlot);
+				UnequipWeapon(CurrentSlot);
+				EquipWeapon(ItemInfo, InfoOfTheWeapon);
+				Character->InitWeapon(InfoOfTheWeapon);
+				isEquipWeapon = true;
+			}
+			OnSwitchWeapon.Broadcast();
+	return isEquipWeapon;
 }
 
 //Check for double in pickupactor DELIF NOT USSED
@@ -472,8 +485,10 @@ void UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
 	if (DropedWeapon)
 	{		
 		DropedWeapon->ItemInit(WeaponSlotsInfo[SlotIndex].WeaponName, false, InventorySlots);
-		WeaponSlotsInfo[SlotIndex] = {};
+		
 	}
+	WeaponSlotsInfo[SlotIndex] = {};
+	
 }
 /*
 bool UProjectXInventoryComponent::CheckWeaponSlotEmpty(int32 SlotIndex, bool IsWeapon)
@@ -891,34 +906,9 @@ void UProjectXInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlo
 	EquipmentSlots[0].EquipmentInfo.SlotType = EEquipmentSlotType::Bracer;
 	EquipmentSlots[1].EquipmentInfo.SlotType = EEquipmentSlotType::Armor;
 	EquipmentSlots[2].EquipmentInfo.SlotType = EEquipmentSlotType::BodyKit;
-	EquipmentSlots[3].EquipmentInfo.SlotType = EEquipmentSlotType::BackPack;
-	
+	EquipmentSlots[3].EquipmentInfo.SlotType = EEquipmentSlotType::BackPack;	
 
 
-	for (int8 i = 0; i < WeaponSlotsInfo.Num(); i++)
-	{
-		UProjectXGameInstance* myGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
-		if (myGI)
-		{
-			//if (!WeaponSlotsInfo[i].NameItem.IsNone())
-			//{
-				//FWeaponInfo  Info;
-				//if (myGI->GetWeaponInfoByName(WeaponSlots[i].NameItem, Info))
-					//WeaponSlots[i].AdditionalInfo.Round = Info.MaxRound;
-
-			//}
-
-		}
-	}
-	/* 
-	MaxSlotWeapon = WeaponSlots.Num();
-
-	if (WeaponSlots.IsValidIndex(0))
-	{
-		if (!WeaponSlots[0].NameItem.IsNone())
-			OnSwitchWeapon.Broadcast(WeaponSlots[0].NameItem, WeaponSlots[0].AdditionalInfo, 0);
-	}
-	*/
 }
 
 

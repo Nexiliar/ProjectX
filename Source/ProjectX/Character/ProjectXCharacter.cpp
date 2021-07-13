@@ -385,8 +385,9 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 		CurrentWeapon->Destroy();
 		CurrentWeapon = nullptr;
 	}
+
 	if (InfoOfWeaponToInit.WeaponClass)
-		{
+	{
 			FVector SpawnLocation = FVector(0);
 			FRotator SpawnRotation = FRotator(0);
 
@@ -397,8 +398,7 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 
 			AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InfoOfWeaponToInit.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
 			if (myWeapon)
-			{
-					
+			{					
 				FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
 				myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));								
 								
@@ -420,9 +420,26 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 				
 				//Пытаемся перезарядиться, после подбора оружия
 				if (CurrentWeapon->GetWeaponRound() <= 0 && CurrentWeapon->CheckCanWeaponReload())
-					CurrentWeapon->InitReload();					
+					CurrentWeapon->InitReload();	
+				
+				if (InventoryComponent && CurrentWeapon)
+					InventoryComponent->OnWeaponInit.Broadcast(CurrentWeapon->WeaponSetting.CurrentRound, CurrentWeapon->WeaponSetting);
+				
+				//Fof equip anim
+				if (CurrentWeapon && CurrentWeapon->WeaponSetting.WeaponType == EWeaponType::Pistol)
+				{
+					IsRifle = false;
+				}
+				else
+				{
+					IsRifle = true;
+				}
 			}
-		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::InitWeapon - CurrentWeapon -NULL"));
+	}
 }
 
 void AProjectXCharacter::TryReloadWeapon()
@@ -493,31 +510,31 @@ void AProjectXCharacter::EquipWeapon()
 
 ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumber)
 {	
-	
-	FWeaponInfo WeaponInfoAtIndex;	
+	FWeaponInfo WeaponInfoAtIndex;
 		switch (EquipmentSlotNumber)
 		{
+			
 			case ESlotType::FirstSlot:
 			{
-					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(0);
+				WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(0);
 					InitWeapon(WeaponInfoAtIndex);
 					EnumIndex = 0;
 					SlotVar = ESlotType::FirstSlot;
 					if (!IsArmed)
 						IsArmed = true;
-
+					
 				break;
 			}
 			case ESlotType::SecondSlot:
 			{
-					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(1);
-					InitWeapon(WeaponInfoAtIndex);
-					EnumIndex = 1;
-					SlotVar = ESlotType::SecondSlot;
-					if (!IsArmed)
-						IsArmed = true;
+					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(1);		
 
-
+						InitWeapon(WeaponInfoAtIndex);
+						EnumIndex = 1;
+						SlotVar = ESlotType::SecondSlot;
+						if (!IsArmed)
+							IsArmed = true;
+						
 
 				break;
 			}
@@ -525,14 +542,12 @@ ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumbe
 			{
 					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(2);
 
-					InitWeapon(WeaponInfoAtIndex);
-					EnumIndex = 2;
-					SlotVar = ESlotType::ThirdSlot;
-					if (!IsArmed)
-						IsArmed = true;
-
-
-
+						InitWeapon(WeaponInfoAtIndex);
+						EnumIndex = 2;
+						SlotVar = ESlotType::ThirdSlot;
+						if (!IsArmed)
+							IsArmed = true;
+					
 				break;
 			}
 			case ESlotType::FourthSlot:
@@ -540,13 +555,12 @@ ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumbe
 
 					WeaponInfoAtIndex = InventoryComponent->GetWeaponInfo(3);
 
-					InitWeapon(WeaponInfoAtIndex);
-					EnumIndex = 3;
-					SlotVar = ESlotType::FourthSlot;
-					if (!IsArmed)
-						IsArmed = true;
-
-
+						InitWeapon(WeaponInfoAtIndex);
+						EnumIndex = 3;
+						SlotVar = ESlotType::FourthSlot;
+						if (!IsArmed)
+							IsArmed = true;
+					
 				break;
 			}
 
@@ -560,18 +574,6 @@ ESlotType AProjectXCharacter::SwitchWeaponToSlotNum(ESlotType EquipmentSlotNumbe
 		EquipWeapon();
 	}
 	//Equip AnimCheck
-	if (CurrentWeapon && CurrentWeapon->WeaponSetting.WeaponType == EWeaponType::Pistol)
-	{
-		IsRifle = false;
-	}
-	else
-	{
-		IsRifle = true;
-	}
-
-	
-	if (InventoryComponent)
-		InventoryComponent->OnWeaponInit.Broadcast(GetCurrentWeapon()->WeaponSetting.CurrentRound, GetCurrentWeapon()->WeaponSetting);
 	
 	return SlotVar;
 }
