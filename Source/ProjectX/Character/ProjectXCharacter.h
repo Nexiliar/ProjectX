@@ -104,6 +104,10 @@ public:
 		bool SprintCheck;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool bIsAlive = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		float ResSpeed = 600.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool isOverloaded = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		TArray<UAnimMontage*> DeadAnim;

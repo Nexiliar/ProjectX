@@ -230,30 +230,43 @@ void AProjectXCharacter::AttackCharEvent(bool bIsFiring)
 
 void AProjectXCharacter::CharacterUpdate()
 {
-	float ResSpeed = 600.0f;
+	
 	switch (MovementState)
 	{
 	case EMovementState::Aim_State:
+		if(!isOverloaded)
 		ResSpeed = MovementSpeedInfo.AimSpeedNormal;
 		break;
 	case EMovementState::AimWalk_State:
+		if (!isOverloaded)
 		ResSpeed = MovementSpeedInfo.AimSpeedWalk;
 		break;
 	case EMovementState::AimCrouch_State:
+		if (!isOverloaded)
 		ResSpeed = MovementSpeedInfo.AimCrouchSpeed;
 		break;
 	case EMovementState::Walk_State:
+		if (!isOverloaded)
 		ResSpeed = MovementSpeedInfo.WalkSpeedNormal;
 		break;
 	case EMovementState::Crouch_State:
+		if (!isOverloaded)
 		ResSpeed = MovementSpeedInfo.CrouchSpeedNormal;
 		break;
 	case EMovementState::Run_State:
+		if (!isOverloaded)
 		ResSpeed = MovementSpeedInfo.RunSpeedNormal;
 		break;
 	case EMovementState::SprintRun_State:
+		if (!isOverloaded)
 		ResSpeed = MovementSpeedInfo.SprintRunSpeedRun;
 		break;
+	case EMovementState::Overloaded_State:
+		
+		ResSpeed = MovementSpeedInfo.Overloaded;
+		break;
+	case EMovementState::CantMoove_State:
+		ResSpeed = MovementSpeedInfo.CantMove;
 	default:
 		break;
 	}
@@ -263,7 +276,7 @@ void AProjectXCharacter::CharacterUpdate()
 void AProjectXCharacter::ChangeMovementState()
 {	
 	FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled && !CrouchEnabled)
+	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled && !CrouchEnabled && !isOverloaded)
 	{
 		MovementState = EMovementState::Run_State;
 		if (CurrentWeapon)
@@ -278,7 +291,7 @@ void AProjectXCharacter::ChangeMovementState()
 	}
 	else
 	{
-		if (CrouchEnabled && !WalkEnabled && !SprintRunEnabled && !AimEnabled)
+		if (CrouchEnabled && !WalkEnabled && !SprintRunEnabled && !AimEnabled && !isOverloaded)
 		{
 			MovementState = EMovementState::Crouch_State;
 			if (CurrentWeapon)
@@ -291,7 +304,7 @@ void AProjectXCharacter::ChangeMovementState()
 					CurrentWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketPistolCrouch"));
 				}				
 		}
-		if (AimEnabled && CrouchEnabled && !WalkEnabled && !SprintRunEnabled)
+		if (AimEnabled && CrouchEnabled && !WalkEnabled && !SprintRunEnabled && !isOverloaded)
 		{
 			MovementState = EMovementState::AimCrouch_State;
 			if (CurrentWeapon)
@@ -304,14 +317,14 @@ void AProjectXCharacter::ChangeMovementState()
 					CurrentWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketPistolCrouch"));
 				}
 		}
-		if (SprintRunEnabled)
+		if (SprintRunEnabled && !isOverloaded)
 		{
 			WalkEnabled = false;
 			AimEnabled = false;
 			MovementState = EMovementState::SprintRun_State;
 			
 		}
-		if (WalkEnabled && !SprintRunEnabled && AimEnabled && !CrouchEnabled)
+		if (WalkEnabled && !SprintRunEnabled && AimEnabled && !CrouchEnabled && !isOverloaded)
 		{
 			MovementState = EMovementState::AimWalk_State;
 			if (CurrentWeapon)
@@ -319,7 +332,7 @@ void AProjectXCharacter::ChangeMovementState()
 		}
 		else
 		{
-			if (WalkEnabled && !SprintRunEnabled && !AimEnabled && !CrouchEnabled)
+			if (WalkEnabled && !SprintRunEnabled && !AimEnabled && !CrouchEnabled && !isOverloaded)
 			{
 				MovementState = EMovementState::Walk_State;
 				if (CurrentWeapon)
@@ -327,13 +340,17 @@ void AProjectXCharacter::ChangeMovementState()
 			}
 			else
 			{
-				if (!WalkEnabled && !SprintRunEnabled && AimEnabled && !CrouchEnabled)
+				if (!WalkEnabled && !SprintRunEnabled && AimEnabled && !CrouchEnabled && !isOverloaded)
 				{
 					MovementState = EMovementState::Aim_State;
 					if (CurrentWeapon)
 					CurrentWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
 				}
 			}
+		}
+		if (isOverloaded)
+		{
+			MovementState = EMovementState::Overloaded_State;
 		}
 	}
 	CharacterUpdate();

@@ -34,6 +34,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryWidgetCreate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUsed, int32, AmountOfItemsToUse, FInventory, InventorySlotInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipItem);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnEquipItem);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentWeightChange, float, CurrentWeight);
+
 
 
 
@@ -68,6 +70,9 @@ public:
 		FOnEquipItem OnEquipItem;
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Equipment")
 		FOnUnEquipItem OnUnEquipItem;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Equipment")
+		FOnCurrentWeightChange OnCurrentWeightChange;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -79,7 +84,7 @@ public:
 
 
 
-	//TestWeaponEquip
+	//Weapon
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 		TArray<FWeaponInfo> WeaponSlotsInfo;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
@@ -96,8 +101,7 @@ public:
 	
 	
 
-	//TestInventory
-	
+	//BackPackInventory	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
 		FInventory  CurrentInitializedInventory;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventorySlots")
@@ -106,9 +110,14 @@ public:
 		TSubclassOf<class APickUpActor> PickUpActor = nullptr;
 	
 
-	//максимальное количество слотов оружия
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
-		int32 MaxSlotWeapon = 0;
+	//Weight
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weight")
+		float MaxWeightLimit = 120;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weight")
+		float CurrentWeight = 0;
+	UFUNCTION(BlueprintCallable, Category = "Weight")
+		void ChangeCurrentWeight(FInventory ItemInfo,int32 ItemsInSlot, bool Increase);
+
 	
 
 	
@@ -159,7 +168,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		bool EquipWeapon(FInventory ItemInfo, FWeaponInfo InfoOfTheWeapon);
 	UFUNCTION(BlueprintCallable)
-		void UnequipWeapon(int32 SlotIndex);
+		bool UnequipWeapon(int32 SlotIndex);
 
 
 
@@ -194,6 +203,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 		void InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo);
+	UFUNCTION(BlueprintCallable, Category = "WeaponINIT")
+		void WeaponINIT();
 
 
 };

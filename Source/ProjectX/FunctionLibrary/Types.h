@@ -17,7 +17,9 @@ enum class EMovementState : uint8
 	Walk_State UMETA(DisplayName = "Walk State"),
 	Crouch_State UMETA(DisplayName = "Crouch State"),
 	Run_State UMETA(DisplayName = "Run State"),
-	SprintRun_State UMETA(DisplayName = "SprintRun State")
+	SprintRun_State UMETA(DisplayName = "SprintRun State"),
+	Overloaded_State UMETA(DisplayName = "Overloaded_State"),
+	CantMoove_State UMETA(DisplayName = "CantMoove_State"),
 };
 UENUM(BlueprintType)
 enum class EConsumableItemsList : uint8
@@ -152,6 +154,10 @@ struct FCharacterSpeed
 		float CrouchSpeedNormal = 50.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float AimCrouchSpeed = 30.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		float Overloaded = 300.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		float CantMove = 0.0f;
 };
 
 

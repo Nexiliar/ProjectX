@@ -20,7 +20,7 @@ UProjectXInventoryComponent::UProjectXInventoryComponent()
 void UProjectXInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	WeaponINIT();
 
 }
 
@@ -34,6 +34,21 @@ void UProjectXInventoryComponent::TickComponent(float DeltaTime, ELevelTick Tick
 }
 
 
+
+void UProjectXInventoryComponent::ChangeCurrentWeight(FInventory ItemInfo, int32 ItemsInSlot, bool Increase)
+{
+	if (Increase)
+	{
+		if(CurrentWeight < MaxWeightLimit)		
+		CurrentWeight += ItemInfo.ItemsInfo.ItemWeight *ItemsInSlot;		
+	}
+	else
+	{
+		//if (CurrentWeight >= 0)
+		CurrentWeight -= ItemInfo.ItemsInfo.ItemWeight* ItemsInSlot;
+	}
+	OnCurrentWeightChange.Broadcast(CurrentWeight);
+}
 
 //??? is it working? del comm if its
 void UProjectXInventoryComponent::SetCurrentAmmo(int32 IndexWeapon, int32 CurrentAmmo)
@@ -427,18 +442,24 @@ bool UProjectXInventoryComponent::EquipWeapon(FInventory ItemInfo,FWeaponInfo In
 			{
 				WeaponSlotsInfo[FreeSlotIndex] = InfoOfTheWeapon;
 				isEquipWeapon = true;
-				UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::EquipWeapon SUCCES"));
+				ChangeCurrentWeight(ItemInfo, 1, true);
+				//UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::EquipWeapon SUCCES"));
 			}
 			else
 			{
 				AProjectXCharacter* Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 				int32 CurrentSlot;
 				Character->GetCurrentSlot(CurrentSlot);
-				UnequipWeapon(CurrentSlot);
+				if (UnequipWeapon(CurrentSlot))
+				{
+					ChangeCurrentWeight(ItemInfo, 1, true);
+				}
 				EquipWeapon(ItemInfo, InfoOfTheWeapon);
+				//ChangeCurrentWeight(ItemInfo, 1, true);
 				Character->InitWeapon(InfoOfTheWeapon);
 				isEquipWeapon = true;
 			}
+			//ChangeCurrentWeight(ItemInfo, 1, true);
 			OnSwitchWeapon.Broadcast();
 	return isEquipWeapon;
 }
@@ -471,11 +492,14 @@ void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<
 			}
 				
 		}		
-	}	
+	}
+	ChangeCurrentWeight(BackPackInfo, 1, true);
 	OnEquipItem.Broadcast();	
 }
-void UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
+bool UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
 {
+
+	bool isSucces = false;
 	FVector LocationToDropBackPack = VariableToSpawnEquip;
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -484,11 +508,16 @@ void UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
 	APickUpActor* DropedWeapon = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
 	if (DropedWeapon)
 	{		
-		DropedWeapon->ItemInit(WeaponSlotsInfo[SlotIndex].WeaponName, false, InventorySlots);
-		
+		DropedWeapon->ItemInit(WeaponSlotsInfo[SlotIndex].WeaponName, false, InventorySlots);		
+				
 	}
+	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+	FInventory ItemInfo;
+	MyGI->GetItemInfoByName(WeaponSlotsInfo[SlotIndex].WeaponName, ItemInfo);
+	ChangeCurrentWeight(ItemInfo, 1, false);
 	WeaponSlotsInfo[SlotIndex] = {};
-	
+
+	return isSucces;
 }
 /*
 bool UProjectXInventoryComponent::CheckWeaponSlotEmpty(int32 SlotIndex, bool IsWeapon)
@@ -519,6 +548,11 @@ void UProjectXInventoryComponent::UnequipBackPack(int32 SlotIndex)
 	{
 		DropedBackPack->SetBackPackSlotsAmount(InventorySlots.Num());
 		DropedBackPack->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots);
+
+		UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+		FInventory ItemInfo;
+		MyGI->GetItemInfoByName(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, ItemInfo);
+		ChangeCurrentWeight(ItemInfo, 1, false);
 	}
 	
 }
@@ -602,6 +636,7 @@ bool UProjectXInventoryComponent::AddItem(FInventory InventoryInfo, int32 Amount
 				AddItem(InventoryInfo, ResAmountOfItems, RestItems);
 				bIsSuccess = true;
 				RestItems = RestItems;
+				ChangeCurrentWeight(InventoryInfo, AmountOfItems,true);
 			}
 			else
 			{
@@ -613,6 +648,7 @@ bool UProjectXInventoryComponent::AddItem(FInventory InventoryInfo, int32 Amount
 				//InventorySlots[ItemIndex].ItemsInfo = LocalInventoryInit.ItemsInfo;
 				bIsSuccess = true;
 				RestItems = 0;
+				ChangeCurrentWeight(InventoryInfo, AmountOfItems, true);
 			}
 		}
 		else
@@ -635,6 +671,7 @@ bool UProjectXInventoryComponent::AddItem(FInventory InventoryInfo, int32 Amount
 					AddItem(InventoryInfo,AmountOfItemsForNewStack,RestItems);
 					bIsSuccess = true;
 					RestItems = RestItems;
+					ChangeCurrentWeight(InventoryInfo, AmountOfItems, true);
 				}
 				else
 				{
@@ -646,6 +683,7 @@ bool UProjectXInventoryComponent::AddItem(FInventory InventoryInfo, int32 Amount
 					InventorySlots[EmptySlotIndex].EquipmentInfo = InventoryInfo.EquipmentInfo;
 					bIsSuccess = true;
 					RestItems = 0;
+					ChangeCurrentWeight(InventoryInfo, AmountOfItems, true);
 				}
 			}
 			else
@@ -668,12 +706,14 @@ bool UProjectXInventoryComponent::AddItem(FInventory InventoryInfo, int32 Amount
 			InventorySlots[FoundSlotIndex].ItemsInfo.AmountOfItemsInSlot = 1;
 			InventorySlots[FoundSlotIndex].ItemsInfo.isSlotOccupied = true;
 			InventorySlots[FoundSlotIndex].EquipmentInfo = InventoryInfo.EquipmentInfo;
+			ChangeCurrentWeight(InventoryInfo, 1, true);
 			if(CurrentAmount >1)
 			{			
 				//for (int8 LocalAmountOfItems = AmountOfItems; LocalAmountOfItems > 1; LocalAmountOfItems--)
 				for(CurrentAmount; CurrentAmount>1; CurrentAmount--)
 				{
 					AddItem(InventoryInfo, 1, RestItems);
+					//ChangeCurrentWeight(InventoryInfo, 1, true);
 				}
 				
 				RestItems = RestItems;
@@ -692,9 +732,12 @@ bool UProjectXInventoryComponent::AddItem(FInventory InventoryInfo, int32 Amount
 		}
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("ADD SUCCES"));
+	
 	OnAmountOfItemsChanged.Broadcast();
 	return bIsSuccess;
 }
+
+
 
 void UProjectXInventoryComponent::InventoryInit(FName Name, FInventory& InitializedInventory)
 {
@@ -894,9 +937,15 @@ bool UProjectXInventoryComponent::SplitStackToIndex(int32 FromIndex, int32 ToInd
 
 void UProjectXInventoryComponent::DestroyItems(int32 ItemIndex)
 {
+	bool isSlotEpty = false;
+	FInventory TempInv;
+	GetItemInfoAtIndex(ItemIndex, isSlotEpty, TempInv);
+	
+	ChangeCurrentWeight(TempInv, TempInv.ItemsInfo.AmountOfItemsInSlot, false);
 	//int32 AmountOfItemsAtIndex = GetAmountOfItemsAtIndex(ItemIndex);
 	InventorySlots[ItemIndex] = {};
 	InventorySlots[ItemIndex].ItemsInfo.isSlotOccupied = false;
+
 	OnAmountOfItemsChanged.Broadcast();
 }
 
@@ -909,6 +958,25 @@ void UProjectXInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlo
 	EquipmentSlots[3].EquipmentInfo.SlotType = EEquipmentSlotType::BackPack;	
 
 
+}
+
+void UProjectXInventoryComponent::WeaponINIT()
+{
+	for (int8 i = 0; i < WeaponSlotsInfo.Num(); i++)
+	{
+		if (WeaponSlotsInfo[i].WeaponClass)
+		{
+			UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+			FInventory ItemInfo;
+			MyGI->GetItemInfoByName(WeaponSlotsInfo[i].WeaponName, ItemInfo);
+
+			ChangeCurrentWeight(ItemInfo, 1, true);
+
+			//ChangeCurrentWeight();
+		}
+		
+	}
+	
 }
 
 
