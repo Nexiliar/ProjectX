@@ -599,6 +599,13 @@ int32 UProjectXInventoryComponent::SearchEmptySlotIndex(bool &bIsSucces)
 	
 }
 
+bool UProjectXInventoryComponent::EquipBodyKit(FInventory BackPackInfo, TArray<FAmmoSlot> BodyKitAmmoSlots)
+{
+	AmmoSlots = BodyKitAmmoSlots;
+	OnEquipItem.Broadcast();
+	return true;
+}
+
 
 int32 UProjectXInventoryComponent::SearchFreeStack(FItemsInfo ItemInfo,bool &Success)
 {

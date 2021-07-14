@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+#include "UObject/Class.h"
 #include "ProjectX/Items/PickUpActor.h"
 
 // Sets default values
@@ -354,6 +354,39 @@ bool APickUpActor::EquipBackPack()
 }
 void APickUpActor::InitBodyKit(bool ItemIsNew)
 {
+	AmmoInfo.SetNum(5);
+	
+	for (int i = 0; i < AmmoInfo.Num(); i++)
+	{
+		AmmoInfo[i].WeaponType = static_cast<EWeaponType>(i);
+		EWeaponType temp = AmmoInfo[i].WeaponType;
+		switch (temp)
+		{
+		case EWeaponType::Pistol:
+			AmmoInfo[i].Count = 0;
+			AmmoInfo[i].MaxCount = 100;
+			break;
+		case EWeaponType::ShotGunType:
+			AmmoInfo[i].Count = 0;
+			AmmoInfo[i].MaxCount = 40;
+			break;
+		case EWeaponType::Rifle:
+			AmmoInfo[i].Count = 0;
+			AmmoInfo[i].MaxCount = 200;
+			break;
+		case EWeaponType::GrenadeLauncher:
+			AmmoInfo[i].Count = 0;
+			AmmoInfo[i].MaxCount = 10;
+			break;
+		case EWeaponType::SniperRIfle:
+			AmmoInfo[i].Count = 0;
+			AmmoInfo[i].MaxCount = 20;
+			break;
+		default:
+			break;
+		}
+	}	
+
 	if (ItemIsNew)
 	{
 		CheckRarity();
@@ -365,19 +398,31 @@ void APickUpActor::InitBodyKit(bool ItemIsNew)
 		case ERarity::None:
 			break;
 		case ERarity::Common:
-			
+
 			break;
 		case ERarity::Uncommon:
-		
+			for (int i = 0; i < AmmoInfo.Num(); i++)
+			{
+				AmmoInfo[i].MaxCount += 5;
+			}
 			break;
 		case ERarity::Rare:
-			
+			for (int i = 0; i < AmmoInfo.Num(); i++)
+			{
+				AmmoInfo[i].MaxCount += 8;
+			}
 			break;
 		case ERarity::Epic:
-			
+			for (int i = 0; i < AmmoInfo.Num(); i++)
+			{
+				AmmoInfo[i].MaxCount += 10;
+			}
 			break;
 		case ERarity::Legendary:
-			
+			for (int i = 0; i < AmmoInfo.Num(); i++)
+			{
+				AmmoInfo[i].MaxCount += 15;
+			}
 			break;
 		default:
 			break;
@@ -392,7 +437,10 @@ void APickUpActor::InitBodyKit(bool ItemIsNew)
 }
 bool APickUpActor::EquipBodyKit()
 {
-	return false;
+	bool bIsBodyKitEquipSuccess = false;
+	UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
+	bIsBodyKitEquipSuccess = myInventory->EquipBodyKit(ItemCFG,AmmoInfo);
+	return bIsBodyKitEquipSuccess;
 }
 void APickUpActor::InitBracer(bool ItemIsNew)
 {

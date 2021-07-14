@@ -169,6 +169,8 @@ public:
 		bool EquipWeapon(FInventory ItemInfo, FWeaponInfo InfoOfTheWeapon);
 	UFUNCTION(BlueprintCallable)
 		bool UnequipWeapon(int32 SlotIndex);
+	UFUNCTION(BlueprintCallable)
+		bool EquipBodyKit(FInventory BodyKitInfo, TArray<FAmmoSlot> BodyKitAmmoSlots);
 
 
 

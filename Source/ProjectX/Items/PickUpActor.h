@@ -52,6 +52,9 @@ public:
 	
 	AProjectXCharacter* Character = nullptr;
 
+	//TEST DEL!
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TEST")
+	int32 aa;
 
 	UPROPERTY(BlueprintReadOnly, Category = "AdditionalInfoForWidget")
 	bool isOverlapping =false;
@@ -65,6 +68,8 @@ public:
 		FName NameOfTheItem;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
 		FWeaponInfo WeaponInfo;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
+		TArray<FAmmoSlot> AmmoInfo;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
 		FInventory ItemCFG;
