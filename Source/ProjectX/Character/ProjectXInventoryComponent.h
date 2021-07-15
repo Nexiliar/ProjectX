@@ -118,7 +118,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weight")
 		void ChangeCurrentWeight(FInventory ItemInfo,int32 ItemsInSlot, bool Increase);
 
-	
+	//BodyKit
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BodyKit")
+		TArray<FAmmoSlot> BodyKitAmmoSlotsInfo;
+	UFUNCTION(BlueprintCallable, Category = "BodyKit")
+		TArray<FAmmoSlot> GetAmmoSlotsInfo();
+	UFUNCTION(BlueprintCallable, Category = "BodyKit")
+		void SetAmmoInBodyKit(EWeaponType WeaponType, int32 AmountOfAmmo, int32& AmmoRemain);
+	UFUNCTION(BlueprintCallable, Category = "BodyKit")
+		void BodyKitAmmoTypeChange(FAmmoSlot AmmoSlotInfo);
+
+	//TESTVARFORBODYKIT
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TESTVARFORBODYKIT")
+	FName AmmoPackName;
+
 
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -129,20 +142,15 @@ public:
 
 
 		//Old WeaponEquipSys del if reworked
-	UFUNCTION(BlueprintCallable)
-		void AmmoSlotChangeValue(EWeaponType TypeWeapon, int32 CountAmmoChange);
+	//UFUNCTION(BlueprintCallable)
+		//void AmmoSlotChangeValue(EWeaponType TypeWeapon, int32 CountAmmoChange);
 	UFUNCTION(BlueprintCallable)
 		bool CheckAmmoForWeapon(EWeaponType TypeWeapon, int32 &AvailableAmmoForWeapon);
 //	UFUNCTION(BlueprintCallable, Category = "Interface")
 //		bool CheckCanTakeAmmo(EWeaponType AmmoType);
 	UFUNCTION(BlueprintCallable, Category = "Interface")
 		bool CheckCanTakeWeapon(int32& FreeSlot);
-//	UFUNCTION(BlueprintCallable, Category = "Interface")
-//		bool SwitchWeaponToInventory(FWeaponSlot NewWeapon, int32 IndexSlot, int32 CurrentIndexWeaponChar, FDropItem& DropItemInfo);
-//	UFUNCTION(BlueprintCallable, Category = "Interface")
-//		void TryGetWeaponToInventory(FWeaponSlot NewWeapon);
-//	UFUNCTION(BlueprintCallable, Category = "Interface")
-//		bool GetDropItemInfoFromInventory(int32 IndexSlot, FDropItem &DropItemInfo);
+
 	
 
 
@@ -171,6 +179,8 @@ public:
 		bool UnequipWeapon(int32 SlotIndex);
 	UFUNCTION(BlueprintCallable)
 		bool EquipBodyKit(FInventory BodyKitInfo, TArray<FAmmoSlot> BodyKitAmmoSlots);
+	UFUNCTION(BlueprintCallable)
+		bool UnequipBodyKit(int32 SlotIndex);
 
 
 
@@ -207,6 +217,7 @@ public:
 		void InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo);
 	UFUNCTION(BlueprintCallable, Category = "WeaponINIT")
 		void WeaponINIT();
-
+	UFUNCTION(BlueprintCallable, Category = "BodyKitInit")
+		void BodyKitInit(FWeaponInfo WeaponInfo);
 
 };

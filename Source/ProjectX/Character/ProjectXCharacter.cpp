@@ -479,7 +479,8 @@ void AProjectXCharacter::WeaponReloadEnd(bool bIsSucces,int32 AmmoTake)
 	
 	if (InventoryComponent)
 	{
-		InventoryComponent->AmmoSlotChangeValue(CurrentWeapon->WeaponSetting.WeaponType, AmmoTake);
+		int32 temp;
+		InventoryComponent->SetAmmoInBodyKit(CurrentWeapon->WeaponSetting.WeaponType, AmmoTake, temp);
 		InventoryComponent->SetCurrentAmmo(EnumIndex, CurrentWeapon->WeaponSetting.CurrentRound);
 	}
 	WeaponReloadEnd_BP(bIsSucces);

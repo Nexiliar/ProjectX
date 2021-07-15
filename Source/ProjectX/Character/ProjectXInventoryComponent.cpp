@@ -50,6 +50,108 @@ void UProjectXInventoryComponent::ChangeCurrentWeight(FInventory ItemInfo, int32
 	OnCurrentWeightChange.Broadcast(CurrentWeight);
 }
 
+TArray<FAmmoSlot> UProjectXInventoryComponent::GetAmmoSlotsInfo()
+{
+	return BodyKitAmmoSlotsInfo;
+}
+
+void UProjectXInventoryComponent::SetAmmoInBodyKit(EWeaponType WeaponType, int32 AmountOfAmmo, int32& AmmoRemain)
+{
+	if (isBodyKitEquiped)
+	{
+		/* bool bIsFind = false;
+		int8 i = 0;
+		while (i < AmmoSlots.Num() && !bIsFind)
+		{
+			if (AmmoSlots[i].WeaponType == WeaponType)
+			{
+				if (AmmoSlots[i].Count + AmountOfAmmo >= AmmoSlots[i].MaxCount)
+				{
+					int32 Rem = AmmoSlots[i].MaxCount - AmmoSlots[i].Count;
+					AmmoRemain = AmountOfAmmo - Rem;
+					AmmoSlots[i].Count = AmmoSlots[i].MaxCount;
+				}
+				else
+				{
+					AmmoSlots[i].Count += AmountOfAmmo;
+				}
+
+				bIsFind = true;
+				OnAmmoChange.Broadcast(AmmoSlots[i].WeaponType, AmmoSlots[i].Count, AmmoSlots[i].MaxCount);
+			}
+		}
+		i++;
+		*/
+		for (int8 i = 0; i < AmmoSlots.Num(); i++)
+		{
+			if (AmmoSlots[i].WeaponType == WeaponType)
+			{
+				if (AmmoSlots[i].Count + AmountOfAmmo >= AmmoSlots[i].MaxCount)
+				{
+					int32 Rem = AmmoSlots[i].MaxCount - AmmoSlots[i].Count;
+					AmmoRemain = AmountOfAmmo - Rem;
+					AmmoSlots[i].Count = AmmoSlots[i].MaxCount;
+				}
+				else
+				{
+					AmmoSlots[i].Count += AmountOfAmmo;
+				}
+
+				//bIsFind = true;
+				OnAmmoChange.Broadcast(AmmoSlots[i].WeaponType, AmmoSlots[i].Count, AmmoSlots[i].MaxCount);
+			}
+		}
+	}
+}
+
+void UProjectXInventoryComponent::BodyKitAmmoTypeChange(FAmmoSlot AmmoSlotInfo)
+{
+	EWeaponType CurrentWeaponType = AmmoSlotInfo.WeaponType;
+	
+	switch (CurrentWeaponType)
+	{
+	case EWeaponType::Pistol:
+		AmmoPackName = "AmmoPistol";
+		break;
+	case EWeaponType::ShotGunType:
+		AmmoPackName = "AmmoShotGun";
+		break;
+	case EWeaponType::Rifle:
+		AmmoPackName = "AmmoRifle";
+		break;
+	case EWeaponType::GrenadeLauncher:
+		AmmoPackName = "AmmoGrenadeLauncher";
+		break;
+	case EWeaponType::SniperRIfle:
+		AmmoPackName = "AmmoSniperRIfle";
+		break;
+	default:
+		break;
+	}
+
+	if (isBackPackEquiped)
+	{
+		
+		UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+		FInventory ItemInfo;
+		MyGI->GetItemInfoByName(AmmoPackName, ItemInfo);
+		int32 RES;
+		AddItem(ItemInfo, AmmoSlotInfo.Count, RES);
+	}
+	else
+	{
+		FVector LocationToDropBackPack = VariableToSpawnEquip;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		SpawnParams.Owner = GetOwner();
+		FRotator SpawnRotation(1, 1, 1);
+		APickUpActor* DropedAmmo = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
+		DropedAmmo->ItemInit(AmmoPackName,true,InventorySlots,CurrentInitializedInventory);
+		DropedAmmo->AmountItemsTospawn = AmmoSlotInfo.Count;
+	}
+	
+}
+
 //??? is it working? del comm if its
 void UProjectXInventoryComponent::SetCurrentAmmo(int32 IndexWeapon, int32 CurrentAmmo)
 {
@@ -63,7 +165,7 @@ void UProjectXInventoryComponent::SetCurrentAmmo(int32 IndexWeapon, int32 Curren
 }
 
 
-
+/* /DelIF NOT USE
 void UProjectXInventoryComponent::AmmoSlotChangeValue(EWeaponType TypeWeapon, int32 CountAmmoChange)
 {
 	bool bIsFind = false;
@@ -83,7 +185,7 @@ void UProjectXInventoryComponent::AmmoSlotChangeValue(EWeaponType TypeWeapon, in
 		}
 		i++;
 	}
-}
+}*/
 
 FWeaponInfo UProjectXInventoryComponent::GetWeaponInfo(int32 SlotIndex)
 {
@@ -150,167 +252,7 @@ bool UProjectXInventoryComponent::CheckCanTakeWeapon(int32 &FreeSlot)
 	}
 	return bIsFreeslot;
 }
-/* Old Drop/picUpSys delete after NewPickUpWeaponSysworking
-bool UProjectXInventoryComponent::SwitchWeaponToInventory(FWeaponSlot NewWeapon, int32 IndexSlot, int32 CurrentIndexWeaponChar, FDropItem &DropItemInfo)
-{
-	bool result = false;
 
-	if (WeaponSlots.IsValidIndex(IndexSlot) && GetDropItemInfoFromInventory(IndexSlot, DropItemInfo))
-	{
-		WeaponSlots[IndexSlot] = NewWeapon;
-		
-		SwitchWeaponToIndex(CurrentIndexWeaponChar,-1,NewWeapon.AdditionalInfo,true);
-		
-		
-
-		OnUpdateWeaponSlot.Broadcast(IndexSlot, NewWeapon);
-		result = true;
-		
-	
-	}
-	OnAmountOfItemsChanged.Broadcast();
-	return result;
-}
-*/
-/* OldEquipWeaponSys
-void UProjectXInventoryComponent::TryGetWeaponToInventory(FWeaponSlot NewWeapon)
-{
-	int32 indexSlot = -1;
-	if (CheckCanTakeWeapon(indexSlot))
-	{
-		if (WeaponSlots.IsValidIndex(indexSlot))
-		{
-			WeaponSlots[indexSlot] = NewWeapon;
-
-			OnUpdateWeaponSlot.Broadcast(indexSlot, NewWeapon);
-			
-		}
-	}
-	OnAmountOfItemsChanged.Broadcast();
-}
-*/
-/* Old Drop/picUpSys delete after NewPickUpWeaponSysworking
-bool UProjectXInventoryComponent::GetDropItemInfoFromInventory(int32 IndexSlot, FDropItem& DropItemInfo)
-{
-	bool result = false;
-	
-	FName DropItemName = GetWeaponNameBySlotIndex(IndexSlot);
-	
-	UProjectXGameInstance* myGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
-	if (myGI)
-	{
-		
-		result = myGI->GetDropItemInfoByName(DropItemName, DropItemInfo);
-		if (WeaponSlots.IsValidIndex(IndexSlot))
-		{
-			DropItemInfo.WeaponInfo.AdditionalInfo = WeaponSlots[IndexSlot].AdditionalInfo;
-		}
-		
-	}
-
-	return result;
-}
-*/
-
-
-
-/* 
-bool UProjectXInventoryComponent::EquipItem(int32 SlotIndex)
-{
-	bool bIsFind = false;
-	int8 i = 0;
-	bool isEquipSuccess = false;
-	
-	while (i < EquipmentSlots.Num() && !bIsFind)
-	{		
-		if (EquipmentSlots[i].EquipmentInfo.SlotType == InventorySlots[SlotIndex].EquipmentInfo.SlotType)
-		{
-			EquipmentSlots[i] = InventorySlots[SlotIndex];	
-			InventorySlots[SlotIndex] = {};
-
-			switch (EquipmentSlots[i].EquipmentInfo.SlotType)
-			{
-				case EEquipmentSlotType::Bracer:
-
-					break;
-				case EEquipmentSlotType::BodyKit:
-					AmmoSlots.SetNum(4);
-					AmmoSlots[0].WeaponType = EWeaponType::Pistol;
-					AmmoSlots[0].MaxCount = 200;
-					AmmoSlots[0].Count = 100;
-					AmmoSlots[1].WeaponType = EWeaponType::ShotGunType;
-					AmmoSlots[1].MaxCount = 80;
-					AmmoSlots[1].Count = 20;
-					AmmoSlots[2].WeaponType = EWeaponType::Rifle;
-					AmmoSlots[2].MaxCount = 300;
-					AmmoSlots[2].Count = 150;
-					AmmoSlots[3].WeaponType = EWeaponType::GrenadeLauncher;
-					AmmoSlots[3].MaxCount = 50;
-					AmmoSlots[3].Count = 25;
-					OnEquipItem.Broadcast();
-					isBodyKitEquiped = true;
-					//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, TEXT("BodyKitAmmoInitialized"));
-
-					break;
-				case EEquipmentSlotType::Armor:
-					isArmorEquiped = true;
-					break;
-				case EEquipmentSlotType::BackPack:
-			//		EquipBackPack(EquipmentSlots[i], isEquipSuccess);
-					break;
-				default:
-					break;
-			}
-			//InventorySlots[SlotIndex].MasterItem = NULL;
-			InventorySlots[SlotIndex].ItemsInfo = {};
-			//InventorySlots[SlotIndex]. ItemsInfo.AmountOfItemsInSlot = 0;
-			bIsFind = true;
-			//isBodyKitEquiped = true;
-			OnAmountOfItemsChanged.Broadcast();
-
-			/* Временно, чекнуть как работает свич, если все ок, убрать логику
-			if (InventorySlots[SlotIndex].ItemsInfo.EquipmentInfo.SlotType == EEquipmentSlotType::BodyKit)
-			{
-				AmmoSlots.SetNum(4);
-				AmmoSlots[0].WeaponType = EWeaponType::Pistol;
-				AmmoSlots[0].MaxCount = 200;
-				AmmoSlots[0].Count = 100;
-				AmmoSlots[1].WeaponType = EWeaponType::ShotGunType;
-				AmmoSlots[1].MaxCount = 80;
-				AmmoSlots[1].Count = 20;
-				AmmoSlots[2].WeaponType = EWeaponType::Rifle;
-				AmmoSlots[2].MaxCount = 300;
-				AmmoSlots[2].Count = 150;
-				AmmoSlots[3].WeaponType = EWeaponType::GrenadeLauncher;
-				AmmoSlots[3].MaxCount = 50;
-				AmmoSlots[3].Count = 25;
-				OnEquipItem.Broadcast();
-				isBodyKitEquiped = true;
-			}
-			if (InventorySlots[SlotIndex].ItemsInfo.EquipmentInfo.SlotType == EEquipmentSlotType::BackPack)
-			{
-				AmountOfInventorySlots = 20;
-				isBackPackEquiped = true;
-				InventorySlots.SetNum(AmountOfInventorySlots);
-				OnEquipItem.Broadcast();
-			}
-			if (InventorySlots[SlotIndex].ItemsInfo.EquipmentInfo.SlotType == EEquipmentSlotType::Armor)
-			{
-				isArmorEquiped = true;
-			}
-			InventorySlots[SlotIndex].MasterItem = NULL;
-			InventorySlots[SlotIndex].ItemsInfo = {};
-			InventorySlots[SlotIndex].ItemsInfo.AmountOfItemsInSlot = 0;
-			bIsFind = true;
-			isBodyKitEquiped = true;
-			OnAmountOfItemsChanged.Broadcast();
-			 */
-		//}
-		//i++;
-	//}
-
-	//return bIsFind;
-//}
 
 bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& IventorySlotInfo)
 {
@@ -331,6 +273,7 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 	case EEquipmentSlotType::Bracer:
 		break;
 	case EEquipmentSlotType::BodyKit:
+		UnequipBodyKit(SlotIndex);
 		break;
 	case EEquipmentSlotType::Armor:
 		break;
@@ -347,89 +290,7 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 	default:
 		break;
 	}
-	/* 
-	int8 i = 0;
-	bool bIsFind = false;
-	while (i < InventorySlots.Num() && !bIsFind)
-	{
-		FInventory TempInv;
-		bool IsSlotEmpty = false;
-		GetItemInfoAtIndex(i, IsSlotEmpty, TempInv);
-		if (IsSlotEmpty)
-		{
-			switch (EquipmentSlots[i].EquipmentInfo.SlotType)
-			{
-			case EEquipmentSlotType::Bracer:
 
-				break;
-			case EEquipmentSlotType::BodyKit:
-
-				//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, TEXT("BodyKitAmmoInitialized"));
-
-				break;
-			case EEquipmentSlotType::Armor:
-				isArmorEquiped = true;
-				break;
-			case EEquipmentSlotType::BackPack:
-				//EquipBackPack(EquipmentSlots[i], isEquipSuccess);
-				break;
-			default:
-				break;
-			}
-		}*/
-		/*
-			if (isBodyKitEquiped && EquipmentSlots[SlotIndex].EquipmentInfo.SlotType == EEquipmentSlotType::BodyKit)
-			{
-				//AmmoSlots.SetNum(4);
-				AmmoSlots[0].WeaponType = EWeaponType::Pistol;
-				AmmoSlots[0].MaxCount = 0;
-				AmmoSlots[0].Count = 0;
-				AmmoSlots[1].WeaponType = EWeaponType::ShotGunType;
-				AmmoSlots[1].MaxCount = 0;
-				AmmoSlots[1].Count = 0;
-				AmmoSlots[2].WeaponType = EWeaponType::Rifle;
-				AmmoSlots[2].MaxCount = 0;
-				AmmoSlots[2].Count = 0;
-				AmmoSlots[3].WeaponType = EWeaponType::GrenadeLauncher;
-				AmmoSlots[3].MaxCount = 0;
-				AmmoSlots[3].Count = 0;
-				OnEquipItem.Broadcast();
-				isBodyKitEquiped = false;
-
-			}
-			if (isArmorEquiped && EquipmentSlots[SlotIndex].EquipmentInfo.SlotType == EEquipmentSlotType::Armor)
-			{
-				isArmorEquiped = false;
-			}
-
-			ItemInfo = EquipmentSlots[SlotIndex].ItemsInfo;
-			//InventorySlots[i].MasterItem = EquipmentSlots[SlotIndex].MasterItem;
-			InventorySlots[i].ItemsInfo = EquipmentSlots[SlotIndex].ItemsInfo;
-			
-			//EquipmentSlots.RemoveAt(SlotIndex);  
-			//EquipmentSlots[SlotIndex].MasterItem = NULL;
-			
-			EquipmentSlots[SlotIndex].ItemsInfo = {};
-			//EquipmentSlots[SlotIndex].ItemsInfo.ItemName = " ";
-			
-			bIsFind = true;
-			OnAmountOfItemsChanged.Broadcast();			 
-			
-		}
-		 */	
-
-	//	i++;
-	//}
-/* 
-	if (isBackPackEquiped)
-	{
-
-		AmountOfInventorySlots = 4;
-		isBackPackEquiped = false;
-		InventorySlots.SetNum(AmountOfInventorySlots);
-		OnUnEquipItem.Broadcast();
-	}
-	*/
 
 	return bIsFind;
 }
@@ -443,7 +304,9 @@ bool UProjectXInventoryComponent::EquipWeapon(FInventory ItemInfo,FWeaponInfo In
 				WeaponSlotsInfo[FreeSlotIndex] = InfoOfTheWeapon;
 				isEquipWeapon = true;
 				ChangeCurrentWeight(ItemInfo, 1, true);
+				BodyKitInit(InfoOfTheWeapon);
 				//UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::EquipWeapon SUCCES"));
+				
 			}
 			else
 			{
@@ -455,16 +318,17 @@ bool UProjectXInventoryComponent::EquipWeapon(FInventory ItemInfo,FWeaponInfo In
 					ChangeCurrentWeight(ItemInfo, 1, true);
 				}
 				EquipWeapon(ItemInfo, InfoOfTheWeapon);
-				//ChangeCurrentWeight(ItemInfo, 1, true);
+
 				Character->InitWeapon(InfoOfTheWeapon);
 				isEquipWeapon = true;
+				
 			}
-			//ChangeCurrentWeight(ItemInfo, 1, true);
+			
 			OnSwitchWeapon.Broadcast();
 	return isEquipWeapon;
 }
 
-//Check for double in pickupactor DELIF NOT USSED
+
 void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<FInventory> InventorySlotsInfo, int32 InventorySize, bool& EquipSuccessfuly)
 {		
 	for (int8 i = 0; i < EquipmentSlots.Num(); i++)
@@ -498,7 +362,6 @@ void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<
 }
 bool UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
 {
-
 	bool isSucces = false;
 	FVector LocationToDropBackPack = VariableToSpawnEquip;
 	FActorSpawnParameters SpawnParams;
@@ -507,34 +370,21 @@ bool UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
 	FRotator SpawnRotation(1, 1, 1);
 	APickUpActor* DropedWeapon = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
 	if (DropedWeapon)
-	{		
-		DropedWeapon->ItemInit(WeaponSlotsInfo[SlotIndex].WeaponName, false, InventorySlots);		
-				
+	{	
+		//TempInv - del after reworkpickupweapon
+		FInventory TempInv;
+		DropedWeapon->ItemInit(WeaponSlotsInfo[SlotIndex].WeaponName, false, InventorySlots, TempInv);
 	}
 	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 	FInventory ItemInfo;
 	MyGI->GetItemInfoByName(WeaponSlotsInfo[SlotIndex].WeaponName, ItemInfo);
 	ChangeCurrentWeight(ItemInfo, 1, false);
+	BodyKitInit(WeaponSlotsInfo[SlotIndex]);
 	WeaponSlotsInfo[SlotIndex] = {};
 
 	return isSucces;
 }
-/*
-bool UProjectXInventoryComponent::CheckWeaponSlotEmpty(int32 SlotIndex, bool IsWeapon)
-{
-	bool isSlotEmpty;
 
-		if (WeaponSlotsInfo[SlotIndex].WeaponClass)
-		{
-			isSlotEmpty = false;
-		}
-		else
-		{
-			isSlotEmpty = true;
-		}
-	return isSlotEmpty;
-}
- */
 void UProjectXInventoryComponent::UnequipBackPack(int32 SlotIndex)
 {
 	
@@ -547,7 +397,7 @@ void UProjectXInventoryComponent::UnequipBackPack(int32 SlotIndex)
 	if (DropedBackPack)
 	{
 		DropedBackPack->SetBackPackSlotsAmount(InventorySlots.Num());
-		DropedBackPack->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots);
+		DropedBackPack->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots, EquipmentSlots[SlotIndex]);
 
 		UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 		FInventory ItemInfo;
@@ -599,10 +449,61 @@ int32 UProjectXInventoryComponent::SearchEmptySlotIndex(bool &bIsSucces)
 	
 }
 
-bool UProjectXInventoryComponent::EquipBodyKit(FInventory BackPackInfo, TArray<FAmmoSlot> BodyKitAmmoSlots)
+bool UProjectXInventoryComponent::UnequipBodyKit(int32 SlotIndex)
 {
-	AmmoSlots = BodyKitAmmoSlots;
+	bool UnequipSuccess = false;
+	FVector LocationToDropBackPack = VariableToSpawnEquip;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.Owner = GetOwner();
+	FRotator SpawnRotation(1, 1, 1);
+	APickUpActor* DropedBodyKit = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
+	if (DropedBodyKit)
+	{
+		DropedBodyKit->SetBodyKitInfo(BodyKitAmmoSlotsInfo);
+		DropedBodyKit->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots, EquipmentSlots[SlotIndex]);
+		
+		
+		UnequipSuccess = true;
+		isBodyKitEquiped = false;
+	}
+	
+	ChangeCurrentWeight(EquipmentSlots[SlotIndex], 1, false);
+	EquipmentSlots[SlotIndex] = {};
+	EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::BodyKit;
 	OnEquipItem.Broadcast();
+	return UnequipSuccess;
+}
+
+bool UProjectXInventoryComponent::EquipBodyKit(FInventory BodyKitInfo, TArray<FAmmoSlot> BodyKitAmmoSlots)
+{
+	bool EquipSucces = false;
+	
+	for (int8 i = 0; i < EquipmentSlots.Num(); i++)
+	{
+		if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::BodyKit)
+		{
+			if (isBodyKitEquiped)
+			{
+				UnequipBodyKit(i);
+				
+				EquipBodyKit(BodyKitInfo, BodyKitAmmoSlots);
+
+			}
+			else
+			{
+				BodyKitAmmoSlotsInfo = BodyKitAmmoSlots;
+				EquipSucces = true;
+				FWeaponInfo WeaponSlot;
+				BodyKitInit(WeaponSlot);
+				isBodyKitEquiped = true;
+				EquipmentSlots[i] = BodyKitInfo;
+				ChangeCurrentWeight(BodyKitInfo, 1, true);
+			}
+		}
+	}
+
+	//OnEquipItem.Broadcast();
 	return true;
 }
 
@@ -788,19 +689,10 @@ bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOf
 	FInventory LocInv;
 	GetItemInfoAtIndex(ItemIndex, IsSlotEmpty, LocInv);
 	if (!IsSlotEmpty && AmountOfItems > 0)
-	{
-		if (InventorySlots[ItemIndex].ItemsInfo.Itemtype == EItemType::Equipment)
-		{
-			//EquipItem(ItemIndex);
-			bIsSucces = true;				
-		}
-		else
-		{
-		
+	{		
 			if (AmountOfItems >= GetAmountOfItemsAtIndex(ItemIndex))
 			{
-				InventorySlots[ItemIndex].ItemsInfo = {}; // .AmountOfItemsInSlot = 0;
-		//		InventorySlots[ItemIndex].MasterItem = NULL;
+				InventorySlots[ItemIndex].ItemsInfo = {};
 				InventorySlots[ItemIndex].ItemsInfo.isSlotOccupied = false;
 				bIsSucces = true;
 			}
@@ -810,11 +702,8 @@ bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOf
 				bIsSucces = true;
 			}
 		OnAmountOfItemsChanged.Broadcast();
-		OnItemUsed.Broadcast(AmountOfItems,InventorySlots[ItemIndex]);
-		}
-
-	}
-	
+		OnItemUsed.Broadcast(AmountOfItems,InventorySlots[ItemIndex]);	
+	}	
 	return bIsSucces;
 }
 
@@ -827,9 +716,7 @@ bool UProjectXInventoryComponent::SwapItemsWithIndex(int32 FirstItemIndex, int32
 		WeaponSlotsInfo[SecondItemIndex] = WeaponSlotsInfo[FirstItemIndex];
 		WeaponSlotsInfo[FirstItemIndex] = TempWeaponStorage;
 		bIsSucces = true;
-		OnSwitchWeapon.Broadcast();
-		
-		
+		OnSwitchWeapon.Broadcast();			
 	}
 	else
 	{
@@ -983,6 +870,55 @@ void UProjectXInventoryComponent::WeaponINIT()
 		}
 		
 	}
+	
+}
+
+void UProjectXInventoryComponent::BodyKitInit(FWeaponInfo WeaponInfo)
+{
+	if (WeaponInfo.WeaponClass)
+	{
+		for (int8 f = 0; f < AmmoSlots.Num(); f++)
+		{
+			if (AmmoSlots[f].WeaponType == WeaponInfo.WeaponType)
+			{
+				BodyKitAmmoTypeChange(AmmoSlots[f]);
+			}
+			else
+			{
+				
+			}
+
+		}
+	}
+		AmmoSlots.Empty();
+		for (int8 i = 0; i < WeaponSlotsInfo.Num(); i++)
+		{
+			if (WeaponSlotsInfo[i].WeaponClass)
+			{
+				for (int8 j = 0; j < BodyKitAmmoSlotsInfo.Num(); j++)
+				{
+					if (WeaponSlotsInfo[i].WeaponType == BodyKitAmmoSlotsInfo[j].WeaponType)
+						AmmoSlots.Add(BodyKitAmmoSlotsInfo[j]);
+				}
+			}
+		}
+	/*  }
+	else
+	{
+		AmmoSlots.Empty();
+		for (int8 i = 0; i < WeaponSlotsInfo.Num(); i++)
+		{
+			if (WeaponSlotsInfo[i].WeaponClass)
+			{
+				for (int8 j = 0; j < BodyKitAmmoSlotsInfo.Num(); j++)
+				{
+					if (WeaponSlotsInfo[i].WeaponType == BodyKitAmmoSlotsInfo[j].WeaponType)
+						AmmoSlots.Add(BodyKitAmmoSlotsInfo[j]);
+				}
+			}
+		}
+	}*/
+	OnEquipItem.Broadcast();
 	
 }
 

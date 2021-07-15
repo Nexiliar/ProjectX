@@ -39,7 +39,7 @@ void APickUpActor::BeginPlay()
 	Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
 	
-	ItemInit(NameOfTheItem, isNewItem, InventorySlots);
+	ItemInit(NameOfTheItem, isNewItem, InventorySlots,ItemCFG);
 	
 }
 
@@ -120,15 +120,24 @@ void APickUpActor::StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedCompone
 	}
 }
 
-void APickUpActor::ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory> InfoInSlotsOfBackPack)
+void APickUpActor::ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory> InfoInSlotsOfBackPack, FInventory DropedItem)
 {
 	NameOfTheItem = ItemName;
-	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 	FInventory ItemInfo;
-	if (MyGI)
+	if(DropedItem.ItemsInfo.ItemName == "None")
 	{
-		MyGI->GetItemInfoByName(ItemName, ItemInfo);		
+		UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+		
+		if (MyGI)
+		{
+			MyGI->GetItemInfoByName(ItemName, ItemInfo);
+		}
 	}
+	else
+	{
+		ItemInfo = DropedItem;
+	}
+
 	if (ItemInfo.ItemsInfo.ItemName == "None")
 	{
 	}
@@ -285,48 +294,7 @@ void APickUpActor::TryToPickUpItem()
 		default:
 			break;
 		}
-		/* 
-		if (Inventory.IsWeapon)
-		{
-			if (isFreeSlot)
-			{
-				//Character->InventoryComponent->TryGetWeaponToInventory(WeaponInfo); rework whole logic
-				this->Destroy();
-			}
-			else
-			{
-				int32 CurrentIndexSLot = 0;
-				Character->GetCurrentSlot(CurrentIndexSLot);
-				//	if (Character->InventoryComponent->SwitchWeaponToInventory(WeaponOnGroundInfo.WeaponInfo, CurrentIndexSLot, CurrentIndexSLot, WeaponOnGroundInfo))
-				{
-					//DropWeaponOnSwitch(WeaponOnGroundInfo);				
-				}
-			}
-		}
-		else
-		{
-			EquipBackPack();
-			//Need rework pickupsystem
-			bool EmptySlotisFind = false;
-			int32 RestItems;
-			Character->InventoryComponent->SearchEmptySlotIndex(EmptySlotisFind);
-			if (EmptySlotisFind)
-			{
-				//UE_LOG(LogTemp, Warning, TEXT(" APickUpActor::TryToPickUpItem"));
-				if (Character->InventoryComponent->AddItem(Inventory, AmountItemsTospawn, RestItems))
-				{
-					
-					if (RestItems > 0)
-					{
-						AmountItemsTospawn = RestItems;
-					}
-					else
-					{
-						this->Destroy();
-					}
-				}
-			}
-		}*/
+		
 	}	
 }
 
@@ -354,45 +322,43 @@ bool APickUpActor::EquipBackPack()
 }
 void APickUpActor::InitBodyKit(bool ItemIsNew)
 {
-	AmmoInfo.SetNum(5);
-	
-	for (int i = 0; i < AmmoInfo.Num(); i++)
-	{
-		AmmoInfo[i].WeaponType = static_cast<EWeaponType>(i);
-		EWeaponType temp = AmmoInfo[i].WeaponType;
-		switch (temp)
-		{
-		case EWeaponType::Pistol:
-			AmmoInfo[i].Count = 0;
-			AmmoInfo[i].MaxCount = 100;
-			break;
-		case EWeaponType::ShotGunType:
-			AmmoInfo[i].Count = 0;
-			AmmoInfo[i].MaxCount = 40;
-			break;
-		case EWeaponType::Rifle:
-			AmmoInfo[i].Count = 0;
-			AmmoInfo[i].MaxCount = 200;
-			break;
-		case EWeaponType::GrenadeLauncher:
-			AmmoInfo[i].Count = 0;
-			AmmoInfo[i].MaxCount = 10;
-			break;
-		case EWeaponType::SniperRIfle:
-			AmmoInfo[i].Count = 0;
-			AmmoInfo[i].MaxCount = 20;
-			break;
-		default:
-			break;
-		}
-	}	
-
 	if (ItemIsNew)
 	{
+		AmmoInfo.SetNum(5);
+		for (int i = 0; i < AmmoInfo.Num(); i++)
+		{
+			AmmoInfo[i].WeaponType = static_cast<EWeaponType>(i);
+			EWeaponType temp = AmmoInfo[i].WeaponType;
+			switch (temp)
+			{
+			case EWeaponType::Pistol:
+				AmmoInfo[i].Count = 0;
+				AmmoInfo[i].MaxCount = 100;
+				break;
+			case EWeaponType::ShotGunType:
+				AmmoInfo[i].Count = 0;
+				AmmoInfo[i].MaxCount = 40;
+				break;
+			case EWeaponType::Rifle:
+				AmmoInfo[i].Count = 0;
+				AmmoInfo[i].MaxCount = 200;
+				break;
+			case EWeaponType::GrenadeLauncher:
+				AmmoInfo[i].Count = 0;
+				AmmoInfo[i].MaxCount = 10;
+				break;
+			case EWeaponType::SniperRIfle:
+				AmmoInfo[i].Count = 0;
+				AmmoInfo[i].MaxCount = 20;
+				break;
+			default:
+				break;
+			}
+		}
 		CheckRarity();
 		ERarity ItemRarity = ItemCFG.EquipmentInfo.ItemRarity;
 
-		//ERarity ItemRarity = CurrentItemInfo.EquipmentInfo.ItemRarity;
+	
 		switch (ItemRarity)
 		{
 		case ERarity::None:
@@ -403,25 +369,25 @@ void APickUpActor::InitBodyKit(bool ItemIsNew)
 		case ERarity::Uncommon:
 			for (int i = 0; i < AmmoInfo.Num(); i++)
 			{
-				AmmoInfo[i].MaxCount += 5;
+				AmmoInfo[i].MaxCount += 10;
 			}
 			break;
 		case ERarity::Rare:
 			for (int i = 0; i < AmmoInfo.Num(); i++)
 			{
-				AmmoInfo[i].MaxCount += 8;
+				AmmoInfo[i].MaxCount += 25;
 			}
 			break;
 		case ERarity::Epic:
 			for (int i = 0; i < AmmoInfo.Num(); i++)
 			{
-				AmmoInfo[i].MaxCount += 10;
+				AmmoInfo[i].MaxCount += 40;
 			}
 			break;
 		case ERarity::Legendary:
 			for (int i = 0; i < AmmoInfo.Num(); i++)
 			{
-				AmmoInfo[i].MaxCount += 15;
+				AmmoInfo[i].MaxCount += 100;
 			}
 			break;
 		default:
@@ -432,7 +398,8 @@ void APickUpActor::InitBodyKit(bool ItemIsNew)
 	}
 	else
 	{
-
+		UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
+		//AmmoInfo = myInventory->GetAmmoSlotsInfo();
 	}
 }
 bool APickUpActor::EquipBodyKit()
@@ -442,6 +409,12 @@ bool APickUpActor::EquipBodyKit()
 	bIsBodyKitEquipSuccess = myInventory->EquipBodyKit(ItemCFG,AmmoInfo);
 	return bIsBodyKitEquipSuccess;
 }
+
+void APickUpActor::SetBodyKitInfo(TArray<FAmmoSlot> Ammo)
+{
+	AmmoInfo = Ammo;
+}
+
 void APickUpActor::InitBracer(bool ItemIsNew)
 {
 	if (ItemIsNew)
@@ -590,121 +563,4 @@ void APickUpActor::OverlapStart_BP_Implementation(bool isOverlaping)
 {
 
 }
- /* Метод дропа оружия, после подбора. Подумать о реворке.
-void APickUpActor::DropWeaponOnSwitch(FDropItem DroppedItemCFG)
-{
-
-	if (ActorForPickUp)
-	{
-
-		FVector SpawnLocation = StaticMesh->GetComponentLocation();
-		FRotator SpawnRotation = StaticMesh->GetComponentRotation();
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		SpawnParams.Owner = GetOwner();
-		SpawnParams.Instigator = GetInstigator();
-	
-	
-		
-	
-		APickUpActor* DropedWeapon = GetWorld()->SpawnActor<APickUpActor>(ActorForPickUp, SpawnLocation, SpawnRotation, SpawnParams);
-		if (DropedWeapon)
-		{
-
-	
-
-			DropedWeapon->WeaponOnGroundInfo = DroppedItemCFG;
-		
-			//DropedWeapon->SkeletalMesh->SetSkeletalMesh(DroppedItemCFG.WeaponSkeletalMesh);
-			DropedWeapon->StaticMesh->SetStaticMesh(DroppedItemCFG.WeaponStaticMesh);
-			DropedWeapon->WeaponOnGroundInfo.WeaponSkeletalMesh = DroppedItemCFG.WeaponSkeletalMesh;
-			DropedWeapon->WeaponOnGroundInfo.WeaponStaticMesh = DroppedItemCFG.WeaponStaticMesh;
-				
-			DropedWeapon->isOverlapping = true;
-			DropedWeapon->isWeapon = true;
-			DropedWeapon->ActorForPickUp = this->GetClass();
-			//UMaterialInterface* Temp  = DropedWeapon->SkeletalMesh->GetMaterial(0);
-			
-			//DropedWeapon->SkeletalMesh->SetMaterial(0, CloseToPickUp);
-			
-		
-			Destroy();
-			}
-		}
-		else
-		{
-			
-		
-		
-		}
-	 
-
-	
-}
-*/
-
-
-/*
-int32 ABackPackActor::GetBackPackSlotsAmount()
-{
-	return BackPackSlotAmount;
-}
-
-void ABackPackActor::SetBackPackSlotsAmount(int32 AmountOfSlots)
-{
-	BackPackSlotAmount = AmountOfSlots;
-}
-
-
-void ABackPackActor::InitObject(FInventory CurrentItemInfo)
-{
-	Super::InitObject(CurrentItemInfo);
-	UE_LOG(LogTemp, Warning, TEXT(" BackPackInitialized"));
-	if (CurrentItemInfo.EquipmentInfo.SlotType == EEquipmentSlotType::BackPack)
-	{
-		if (CurrentItemInfo.ItemsInfo.ItemName == "LightBackPack")
-		{
-			SetBackPackSlotsAmount(6);
-		}
-		else if (CurrentItemInfo.ItemsInfo.ItemName == "MediumBackpack")
-		{
-			SetBackPackSlotsAmount(10);
-		}
-		else if (CurrentItemInfo.ItemsInfo.ItemName == "HugeBackPack")
-		{
-			SetBackPackSlotsAmount(15);
-		}
-	}
-	ERarity ItemRarity = CurrentItemInfo.EquipmentInfo.ItemRarity;
-	switch (ItemRarity)
-	{
-	case ERarity::None:
-		break;
-	case ERarity::Common:
-		break;
-	case ERarity::Uncommon:
-		
-		break;
-	case ERarity::Rare:
-		SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 5);
-		break;
-	case ERarity::Epic:
-		SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 10);
-		break;
-	case ERarity::Legendary:
-		SetBackPackSlotsAmount(GetBackPackSlotsAmount() + 20);
-		break;
-	default:
-		break;
-	}
-	InventorySlots.SetNum(GetBackPackSlotsAmount());
-	UE_LOG(LogTemp, Warning, TEXT(" BackPackInitialized"));
-}
-
-bool ABackPackActor::EquipBackPack()
-{
-	return false;
-}
-
-*/
+ 

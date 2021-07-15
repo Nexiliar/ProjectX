@@ -52,9 +52,7 @@ public:
 	
 	AProjectXCharacter* Character = nullptr;
 
-	//TEST DEL!
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TEST")
-	int32 aa;
+
 
 	UPROPERTY(BlueprintReadOnly, Category = "AdditionalInfoForWidget")
 	bool isOverlapping =false;
@@ -86,7 +84,7 @@ public:
 	UFUNCTION()
 		virtual	void  StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
-		void ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory> InfoInSlotsOfBackPack);
+		void ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory> InfoInSlotsOfBackPack, FInventory DropedItem);
 	UFUNCTION()
 		void CheckRarity();
 	
@@ -111,6 +109,8 @@ public:
 	//BodyKit
 	UFUNCTION()
 		void InitBodyKit(bool ItemIsNew);
+	UFUNCTION()
+		void SetBodyKitInfo(TArray<FAmmoSlot> Ammo);
 	UFUNCTION()
 		bool EquipBodyKit();
 
