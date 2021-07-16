@@ -497,16 +497,14 @@ bool UProjectXInventoryComponent::UnequipBodyKit(int32 SlotIndex)
 }
 
 bool UProjectXInventoryComponent::EquipArmor(FInventory ItemInfo, float Coef)
-{
-	
+{	
 	bool isEquipArmorSucces = false;
 	
 		
 		for (int8 i = 0; i < EquipmentSlots.Num(); i++)
 		{
 			if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::Armor)
-			{
-				
+			{				
 				EquipmentSlots[i] = ItemInfo;
 				UProjectXHealthComponent* myHealth = Cast<UProjectXHealthComponent>(GetOwner()->GetComponentByClass(UProjectXHealthComponent::StaticClass()));
 				if (myHealth)
@@ -525,12 +523,9 @@ bool UProjectXInventoryComponent::EquipArmor(FInventory ItemInfo, float Coef)
 						OnEquipItem.Broadcast();
 						isEquipArmorSucces = true;
 						isArmorEquiped = true;
-					}
-				
+					}				
 				}
 			}
-	
-
 		}
 	
 	OnEquipItem.Broadcast();
@@ -589,10 +584,8 @@ bool UProjectXInventoryComponent::EquipBodyKit(FInventory BodyKitInfo, TArray<FA
 		{
 			if (isBodyKitEquiped)
 			{
-				UnequipBodyKit(i);
-				
+				UnequipBodyKit(i);				
 				EquipBodyKit(BodyKitInfo, BodyKitAmmoSlots);
-
 			}
 			else
 			{
@@ -606,7 +599,6 @@ bool UProjectXInventoryComponent::EquipBodyKit(FInventory BodyKitInfo, TArray<FA
 			}
 		}
 	}
-
 	OnEquipItem.Broadcast();
 	return true;
 }
