@@ -64,9 +64,9 @@ public:
 		int32 AmountItemsTospawn = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "ItemCFG", meta = (ExposeOnSpawn = "true"))
 		FName NameOfTheItem;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
+	UPROPERTY()
 		FWeaponInfo WeaponInfo;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
+	UPROPERTY()
 		TArray<FAmmoSlot> AmmoInfo;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
@@ -74,6 +74,9 @@ public:
 	
 	UPROPERTY()
 		bool isNewItem = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
+		float DefCoef = 0.0f;
 
 	//ItemInit
 

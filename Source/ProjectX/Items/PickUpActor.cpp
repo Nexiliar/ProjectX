@@ -287,6 +287,8 @@ void APickUpActor::TryToPickUpItem()
 				this->Destroy();
 			break;
 		case EEquipmentSlotType::Armor:
+			if(EquipArmor())
+			this->Destroy();
 			break;
 		case EEquipmentSlotType::BackPack:
 			
@@ -420,6 +422,7 @@ void APickUpActor::SetBodyKitInfo(TArray<FAmmoSlot> Ammo)
 
 void APickUpActor::InitBracer(bool ItemIsNew)
 {
+	
 	if (ItemIsNew)
 	{
 		CheckRarity();
@@ -429,19 +432,19 @@ void APickUpActor::InitBracer(bool ItemIsNew)
 		case ERarity::None:
 			break;
 		case ERarity::Common:
-
+			DefCoef = 0.95f;
 			break;
 		case ERarity::Uncommon:
-
+			DefCoef = 0.89f;
 			break;
 		case ERarity::Rare:
-
+			DefCoef = 0.77f;
 			break;
 		case ERarity::Epic:
-
+			DefCoef = 0.72f;
 			break;
 		case ERarity::Legendary:
-
+			DefCoef = 0.68f;
 			break;
 		default:
 			break;
@@ -460,6 +463,7 @@ bool APickUpActor::EquipBracer()
 }
 void APickUpActor::InitArmor(bool ItemIsNew)
 {
+	
 	if (ItemIsNew)
 	{
 		CheckRarity();
@@ -469,19 +473,19 @@ void APickUpActor::InitArmor(bool ItemIsNew)
 		case ERarity::None:
 			break;
 		case ERarity::Common:
-
+			DefCoef = 0.95f;
 			break;
 		case ERarity::Uncommon:
-
+			DefCoef = 0.89f;
 			break;
 		case ERarity::Rare:
-
+			DefCoef = 0.77f;
 			break;
 		case ERarity::Epic:
-
+			DefCoef = 0.72f;
 			break;
 		case ERarity::Legendary:
-
+			DefCoef = 0.68f;
 			break;
 		default:
 			break;
@@ -496,7 +500,10 @@ void APickUpActor::InitArmor(bool ItemIsNew)
 }
 bool APickUpActor::EquipArmor()
 {
-	return false;
+	bool bIsArmorEquipSuccess = true;
+	UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
+	myInventory->EquipArmor(ItemCFG, DefCoef); 	
+	return bIsArmorEquipSuccess;
 }
 void APickUpActor::InitWeapon(bool ItemIsNew)
 {

@@ -33,7 +33,82 @@ void UProjectXInventoryComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	// ...
 }
 
+//??? is it working? del comm if its
+void UProjectXInventoryComponent::SetCurrentAmmo(int32 IndexWeapon, int32 CurrentAmmo)
+{
+	if (WeaponSlotsInfo.IsValidIndex(IndexWeapon))
+	{
+		WeaponSlotsInfo[IndexWeapon].CurrentRound = CurrentAmmo;
+		OnWeaponEventAmmoChange.Broadcast(IndexWeapon, CurrentAmmo);
+	}
+	else
+		UE_LOG(LogTemp, Warning, TEXT("ProjectXInventoryComponent::SetAdditionalInfoWeapon = Not correct index weapon - % d"), IndexWeapon);
+}
 
+FWeaponInfo UProjectXInventoryComponent::GetWeaponInfo(int32 SlotIndex)
+{
+	FWeaponInfo WeaponInfoAtIndex = WeaponSlotsInfo[SlotIndex];
+
+	return WeaponInfoAtIndex;
+}
+
+bool UProjectXInventoryComponent::EquipWeapon(FInventory ItemInfo, FWeaponInfo InfoOfTheWeapon)
+{
+	int32 FreeSlotIndex;
+	bool isEquipWeapon = false;
+	if (CheckCanTakeWeapon(FreeSlotIndex))
+	{
+		WeaponSlotsInfo[FreeSlotIndex] = InfoOfTheWeapon;
+		isEquipWeapon = true;
+		ChangeCurrentWeight(ItemInfo, 1, true);
+		BodyKitInit(InfoOfTheWeapon);
+		//UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::EquipWeapon SUCCES"));
+
+	}
+	else
+	{
+		AProjectXCharacter* Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+		int32 CurrentSlot;
+		Character->GetCurrentSlot(CurrentSlot);
+		if (UnequipWeapon(CurrentSlot))
+		{
+			ChangeCurrentWeight(ItemInfo, 1, true);
+		}
+		EquipWeapon(ItemInfo, InfoOfTheWeapon);
+
+		Character->InitWeapon(InfoOfTheWeapon);
+		isEquipWeapon = true;
+
+	}
+
+	OnSwitchWeapon.Broadcast();
+	return isEquipWeapon;
+}
+
+bool UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
+{
+	bool isSucces = false;
+	FVector LocationToDropBackPack = VariableToSpawnEquip;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.Owner = GetOwner();
+	FRotator SpawnRotation(1, 1, 1);
+	APickUpActor* DropedWeapon = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
+	if (DropedWeapon)
+	{
+		//TempInv - del after reworkpickupweapon
+		FInventory TempInv;
+		DropedWeapon->ItemInit(WeaponSlotsInfo[SlotIndex].WeaponName, false, InventorySlots, TempInv);
+	}
+	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+	FInventory ItemInfo;
+	MyGI->GetItemInfoByName(WeaponSlotsInfo[SlotIndex].WeaponName, ItemInfo);
+	ChangeCurrentWeight(ItemInfo, 1, false);
+	BodyKitInit(WeaponSlotsInfo[SlotIndex]);
+	WeaponSlotsInfo[SlotIndex] = {};
+
+	return isSucces;
+}
 
 void UProjectXInventoryComponent::ChangeCurrentWeight(FInventory ItemInfo, int32 ItemsInSlot, bool Increase)
 {
@@ -155,17 +230,7 @@ void UProjectXInventoryComponent::BodyKitAmmoTypeChange(FAmmoSlot AmmoSlotInfo)
 	
 }
 
-//??? is it working? del comm if its
-void UProjectXInventoryComponent::SetCurrentAmmo(int32 IndexWeapon, int32 CurrentAmmo)
-{
-	if (WeaponSlotsInfo.IsValidIndex(IndexWeapon))
-	{	
-		WeaponSlotsInfo[IndexWeapon].CurrentRound = CurrentAmmo;		
-		OnWeaponEventAmmoChange.Broadcast(IndexWeapon, CurrentAmmo);
-	}
-	else
-		UE_LOG(LogTemp, Warning, TEXT("ProjectXInventoryComponent::SetAdditionalInfoWeapon = Not correct index weapon - % d"), IndexWeapon);
-}
+
 
 
 /* /DelIF NOT USE
@@ -190,12 +255,7 @@ void UProjectXInventoryComponent::AmmoSlotChangeValue(EWeaponType TypeWeapon, in
 	}
 }*/
 
-FWeaponInfo UProjectXInventoryComponent::GetWeaponInfo(int32 SlotIndex)
-{
-	FWeaponInfo WeaponInfoAtIndex = WeaponSlotsInfo[SlotIndex];
 
-	return WeaponInfoAtIndex;
-}
 //Check how much ammo is left 
 bool UProjectXInventoryComponent::CheckAmmoForWeapon(EWeaponType TypeWeapon, int32 &AviableAmmoForWeapon)
 {
@@ -279,6 +339,7 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 		UnequipBodyKit(SlotIndex);
 		break;
 	case EEquipmentSlotType::Armor:
+		UnEquipArmor(SlotIndex);
 		break;
 	case EEquipmentSlotType::BackPack:
 		UnequipBackPack(SlotIndex);
@@ -298,38 +359,7 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 	return bIsFind;
 }
 
-bool UProjectXInventoryComponent::EquipWeapon(FInventory ItemInfo,FWeaponInfo InfoOfTheWeapon)
-{
-	int32 FreeSlotIndex;
-	bool isEquipWeapon = false;
-			if (CheckCanTakeWeapon(FreeSlotIndex))
-			{
-				WeaponSlotsInfo[FreeSlotIndex] = InfoOfTheWeapon;
-				isEquipWeapon = true;
-				ChangeCurrentWeight(ItemInfo, 1, true);
-				BodyKitInit(InfoOfTheWeapon);
-				//UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::EquipWeapon SUCCES"));
-				
-			}
-			else
-			{
-				AProjectXCharacter* Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-				int32 CurrentSlot;
-				Character->GetCurrentSlot(CurrentSlot);
-				if (UnequipWeapon(CurrentSlot))
-				{
-					ChangeCurrentWeight(ItemInfo, 1, true);
-				}
-				EquipWeapon(ItemInfo, InfoOfTheWeapon);
 
-				Character->InitWeapon(InfoOfTheWeapon);
-				isEquipWeapon = true;
-				
-			}
-			
-			OnSwitchWeapon.Broadcast();
-	return isEquipWeapon;
-}
 
 
 void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<FInventory> InventorySlotsInfo, int32 InventorySize, bool& EquipSuccessfuly)
@@ -363,30 +393,7 @@ void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<
 	ChangeCurrentWeight(BackPackInfo, 1, true);
 	OnEquipItem.Broadcast();	
 }
-bool UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
-{
-	bool isSucces = false;
-	FVector LocationToDropBackPack = VariableToSpawnEquip;
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	SpawnParams.Owner = GetOwner();
-	FRotator SpawnRotation(1, 1, 1);
-	APickUpActor* DropedWeapon = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
-	if (DropedWeapon)
-	{	
-		//TempInv - del after reworkpickupweapon
-		FInventory TempInv;
-		DropedWeapon->ItemInit(WeaponSlotsInfo[SlotIndex].WeaponName, false, InventorySlots, TempInv);
-	}
-	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
-	FInventory ItemInfo;
-	MyGI->GetItemInfoByName(WeaponSlotsInfo[SlotIndex].WeaponName, ItemInfo);
-	ChangeCurrentWeight(ItemInfo, 1, false);
-	BodyKitInit(WeaponSlotsInfo[SlotIndex]);
-	WeaponSlotsInfo[SlotIndex] = {};
-	
-	return isSucces;
-}
+
 
 void UProjectXInventoryComponent::UnequipBackPack(int32 SlotIndex)
 {
@@ -487,6 +494,89 @@ bool UProjectXInventoryComponent::UnequipBodyKit(int32 SlotIndex)
 	BodyKitAmmoSlotsInfo = {};
 	OnEquipItem.Broadcast();
 	return UnequipSuccess;
+}
+
+bool UProjectXInventoryComponent::EquipArmor(FInventory ItemInfo, float Coef)
+{
+	
+	bool isEquipArmorSucces = false;
+	
+		
+		for (int8 i = 0; i < EquipmentSlots.Num(); i++)
+		{
+			if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::Armor)
+			{
+				
+				EquipmentSlots[i] = ItemInfo;
+				UProjectXHealthComponent* myHealth = Cast<UProjectXHealthComponent>(GetOwner()->GetComponentByClass(UProjectXHealthComponent::StaticClass()));
+				if (myHealth)
+				{
+					if (isArmorEquiped)
+					{
+						UnEquipArmor(i);
+						CoefForArmor = 0.0f;
+						EquipArmor(ItemInfo,Coef);
+					}
+					else
+					{
+						CoefForArmor = Coef;
+						myHealth->CoefDamage = Coef;
+						ChangeCurrentWeight(ItemInfo, 1, true);
+						OnEquipItem.Broadcast();
+						isEquipArmorSucces = true;
+						isArmorEquiped = true;
+					}
+				
+				}
+			}
+	
+
+		}
+	
+	OnEquipItem.Broadcast();
+	return isEquipArmorSucces;
+}
+
+void UProjectXInventoryComponent::UnEquipArmor(int32 SlotIndex)
+{
+	UProjectXHealthComponent* myHealth = Cast<UProjectXHealthComponent>(GetOwner()->GetComponentByClass(UProjectXHealthComponent::StaticClass()));
+	if (myHealth)
+	{
+		myHealth->CoefDamage = 1.0f;
+		isArmorEquiped = false;
+	}	
+	FVector LocationToDropBackPack = VariableToSpawnEquip;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.Owner = GetOwner();
+	FRotator SpawnRotation(1, 1, 1);
+	APickUpActor* SpawnedItemCFG = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
+
+	if (SpawnedItemCFG)
+	{
+		SpawnedItemCFG->DefCoef = CoefForArmor;
+		SpawnedItemCFG->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots, EquipmentSlots[SlotIndex]);
+		UE_LOG(LogTemp, Warning, TEXT(" UnEquipArmor SPAWNEDITEMCFG"));
+	}
+	EquipmentSlots[SlotIndex] = {};
+	EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::Armor;
+	OnEquipItem.Broadcast();
+}
+
+bool UProjectXInventoryComponent::DropItemCFG(APickUpActor*& ItemCFG)
+{
+	bool DropedItemSpawned = false;
+	FVector LocationToDropBackPack = VariableToSpawnEquip;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.Owner = GetOwner();
+	FRotator SpawnRotation(1, 1, 1);
+	APickUpActor* DropedItem = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
+	if (DropedItem)
+	{
+		DropedItemSpawned = true;
+	}
+	return DropedItemSpawned;
 }
 
 bool UProjectXInventoryComponent::EquipBodyKit(FInventory BodyKitInfo, TArray<FAmmoSlot> BodyKitAmmoSlots)
