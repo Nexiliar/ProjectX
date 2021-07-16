@@ -13,9 +13,11 @@ APickUpActor::APickUpActor()
 	StaticMesh->SetGenerateOverlapEvents(true);
 	StaticMesh->SetSimulatePhysics(true);	
 	StaticMesh->SetEnableGravity(true);
+	StaticMesh->SetWorldScale3D(ScaleForMesh);
 	StaticMesh->SetCollisionProfileName(TEXT("Query and Physics"));
 	RootComponent = StaticMesh;
 
+	
 
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	BoxComponent->SetupAttachment(RootComponent);
@@ -398,7 +400,7 @@ void APickUpActor::InitBodyKit(bool ItemIsNew)
 	}
 	else
 	{
-		UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
+		//UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
 		//AmmoInfo = myInventory->GetAmmoSlotsInfo();
 	}
 }
@@ -413,6 +415,7 @@ bool APickUpActor::EquipBodyKit()
 void APickUpActor::SetBodyKitInfo(TArray<FAmmoSlot> Ammo)
 {
 	AmmoInfo = Ammo;
+	
 }
 
 void APickUpActor::InitBracer(bool ItemIsNew)

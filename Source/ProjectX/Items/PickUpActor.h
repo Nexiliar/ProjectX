@@ -51,8 +51,8 @@ public:
 	FOnWeaponTaken OnWeaponTaken;
 	
 	AProjectXCharacter* Character = nullptr;
-
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TESTSCALEVAR")
+	FVector ScaleForMesh;
 
 	UPROPERTY(BlueprintReadOnly, Category = "AdditionalInfoForWidget")
 	bool isOverlapping =false;
