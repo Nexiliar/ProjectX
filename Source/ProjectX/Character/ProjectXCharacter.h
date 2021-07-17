@@ -9,6 +9,7 @@
 #include "ProjectX/Weapons/ProjectX_StateEffect.h"
 #include "ProjectX/Weapons/WeaponDefault.h"
 #include "ProjectX/Character/ProjectXInventoryComponent.h"
+#include "ProjectX/Character/ProjectXSkillComponent.h"
 #include "ProjectX/FunctionLibrary/Types.h"
 #include "ProjectX/Character/ProjectXCharacterHealthComponent.h"
 #include "ProjectX/Interfaces/ProjectX_Interface_GameActor.h"
@@ -65,6 +66,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Spawn, meta = (AllowPrivateAccess = "true"))
 		class USphereComponent* DropSpawnSphere;
 
+
 	/** A decal that projects to the cursor location. */
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	//class UDecalComponent* CursorToWorld;
@@ -77,7 +79,8 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UProjectXCharacterHealthComponent* CharHealthComponent;
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Spawn, meta = (AllowPrivateAccess = "true"))
+		class UProjectXSkillComponent* SkillComponent;
 	
 	//Cursor
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
@@ -132,6 +135,9 @@ public:
 	TArray<UProjectX_StateEffect*> Effects;
 	
 
+	//Skills
+	UPROPERTY()
+	ESkillList CurrentSkill = ESkillList::Teleport;
 
 	UPROPERTY()
 	bool isCharacterOverlapingItem = false;

@@ -53,7 +53,9 @@ AProjectXCharacter::AProjectXCharacter()
 	DropSpawnSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DropWeaponPoint"));
 	
 	CharHealthComponent = CreateDefaultSubobject<UProjectXCharacterHealthComponent>(TEXT("HealthComponent"));
-	
+
+	SkillComponent = CreateDefaultSubobject<UProjectXSkillComponent>(TEXT("SkillComponent"));
+		
 	if (CharHealthComponent)
 	{
 		CharHealthComponent->OnDead.AddDynamic(this, &AProjectXCharacter::CharDead);
@@ -656,6 +658,23 @@ void AProjectXCharacter::TrySwitchPreviosWeapon()
 */
 void AProjectXCharacter::TryUseAbillity()
 {
+	switch (CurrentSkill)
+	{
+	case ESkillList::Teleport:
+		SkillComponent->Teleport(true);
+		break;
+	case ESkillList::SlowMode:
+		SkillComponent->SlowMode();
+		break;
+	case ESkillList::Recall:
+		SkillComponent->Recall();
+		break;
+	default:
+		break;
+	}
+
+	
+	/*
 	if (AbillityEffect)//to do colldown
 	{
 		UProjectX_StateEffect* NewEffect = NewObject<UProjectX_StateEffect>(this, AbillityEffect);
@@ -663,7 +682,8 @@ void AProjectXCharacter::TryUseAbillity()
 		{
 			NewEffect->InitObject(this);
 		}
-	}
+	} */
+
 }
 
 EPhysicalSurface AProjectXCharacter::GetSurfaceType()

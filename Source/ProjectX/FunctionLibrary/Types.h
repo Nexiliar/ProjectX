@@ -32,6 +32,14 @@ enum class EConsumableItemsList : uint8
 };
 
 UENUM(BlueprintType)
+enum class ESkillList : uint8
+{
+	Teleport UMETA(DisplayName = "Teleport"),
+	SlowMode UMETA(DisplayName = "SlowMode"),
+	Recall UMETA(DisplayName = "Recall"),	
+};
+
+UENUM(BlueprintType)
 enum class ERarity : uint8
 {
 	None UMETA(DisplayName = "None"),
