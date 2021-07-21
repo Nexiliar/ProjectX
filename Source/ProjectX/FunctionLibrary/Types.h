@@ -357,7 +357,7 @@ struct FWeaponInfo : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
 		FName WeaponName;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentLogicForSlotDoNotModify")
 		bool CanUseSlot = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
@@ -370,7 +370,12 @@ struct FWeaponInfo : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 		int32 CurrentRound;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+		bool BurstFire;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 		int32 NumberProjectileByShot = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+		float BurstRate = 0.1f;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
 		FWeaponDispersion DispersionWeapon;
@@ -470,6 +475,10 @@ struct FItemsInfo
 		UTexture2D* ItemIcon = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
 		UStaticMesh* ItemMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		USoundBase* SoundUse = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		USoundBase* SoundEquip = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
 		bool ItemcanBeUsed = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")

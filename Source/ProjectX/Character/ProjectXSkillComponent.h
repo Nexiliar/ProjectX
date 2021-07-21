@@ -35,15 +35,15 @@ public:
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 		FOnTimerStarted OnTimerStarted;
 	bool isSkillOnCoolDown = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill Config")
-		float TeleportCoolDown = 3;
-	UPROPERTY(EditAnywhere, Category = "Skill Config")
-		float RecallCoolDown = 3;
-	UPROPERTY(EditAnywhere, Category = "Skill Config")
-		float SlowMoCoolDown = 3;
+	UPROPERTY(BlueprintReadOnly,Category = "Skill Config")
+		float CoolDown;
+	//UPROPERTY(EditAnywhere, Category = "Skill Config")
+	//	float RecallCoolDown = 3;
+	//UPROPERTY(EditAnywhere, Category = "Skill Config")
+	//	float SlowMoCoolDown = 3;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
-		float TimerRemain;
+		float TimerForWIdgetUpdateInfo;
 
 	
 
@@ -62,12 +62,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Teleport")
 		USoundBase* TeleportSound = nullptr;
 	UFUNCTION(BlueprintCallable, Category = "Teleport")
-		void Teleport(bool isTpBlocked);
+		void Teleport(float TeleportCoolDown);
 	//SlowModeSkill
 	UPROPERTY(EditAnywhere, Category = "SlowMode")
 		float SlowModeTime = 5.0f;
 	UFUNCTION(BlueprintCallable, Category = "SlowMode")
-		void SlowMode();
+		void SlowMode(float SlowMoCooldown, float TimerRemain);
 	UFUNCTION(BlueprintCallable, Category = "SlowMode")
 		void SlowModeEnd();
 
@@ -79,7 +79,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Recall")
 		USoundBase* RecallSound = nullptr;
 	UFUNCTION(BlueprintCallable, Category = "Recall")
-		void Recall();
+		void Recall(float RecallCoolDown);
 	
 		
 };

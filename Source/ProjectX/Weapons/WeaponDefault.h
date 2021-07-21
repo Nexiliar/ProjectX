@@ -55,6 +55,8 @@ public:
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
 	//	FAddicionalWeaponInfo WeaponInfo;
 
+	FTimerHandle TimerHandle_BurstFire;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -86,6 +88,12 @@ public:
 	FProjectileInfo GetProjectile();
 	UFUNCTION()
 		void Fire();
+	UFUNCTION()
+		void BurstFire();
+	UPROPERTY()
+		int8 TempVarForBurst = 0;
+	UPROPERTY()
+		bool isBurst = false;
 		
 	UFUNCTION()
 		void DropBulletEmptyShell(UStaticMesh* shell, FVector scale, FQuat rotation, float impulsepower);
@@ -98,7 +106,7 @@ public:
 		bool DropClipFlag = false;
 		float DropClipTimer = -1.0;
 
-	void UpdateStateWeapon(EMovementState NewMovementState);
+	void UpdateStateWeapon(EMovementState NewMovementState, float StatsAdjust);
 	void ChangeDispersionByShot();
 	float GetCurrentDispersion() const;
 	
@@ -116,7 +124,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CheckFireLogic")
 		bool BlockFire = false;
 
-	
+	UPROPERTY()
+		float FireRateStatAdjust = 0.0f;
 		
 	
 	//Dispersion

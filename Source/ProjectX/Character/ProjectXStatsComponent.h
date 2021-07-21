@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ProjectX/Game/ProjectXGameInstance.h"
 #include "ProjectX/Character/ProjectXHealthComponent.h"
+#include "ProjectX/Character/ProjectXInventoryComponent.h"
 #include "ProjectX/FunctionLibrary/Types.h"
 #include "ProjectXStatsComponent.generated.h"
 
@@ -42,6 +44,9 @@ public:
 		TArray<float>  AmountOfExpirienceNeedForLvlUpPerLevel;
 	
 	UProjectXHealthComponent* HealthComponent;
+	UProjectXInventoryComponent* Inventory;
+	
+	
 
 	//Function to gain expirience for level up
 	UFUNCTION(BlueprintCallable, Category = "Expirience")
@@ -63,11 +68,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
 		bool RiseStat(EStatTypesName StatName);
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
-		void StatDependance();
+		void ConRiseResult(bool Init);
+	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
+		void StrRiseResult();
+	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
+		bool IsSlotUnlocked();
+
+	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
+		void ReactionRiseResult();
 	UFUNCTION(BlueprintCallable, Category = "Info")
 		FStatsInfo GetEveryStat(int32& level, int32& skillpoints, int32& att);
 	UFUNCTION(BlueprintCallable, Category = "Init")
 		void StatsInit(int32 level, int32 skillpoints, int32 att, FStatsInfo stats);
+	UFUNCTION(Category = "BasicInit")
+		void BasicCompsInit();
 
 	/* Delete if not used
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")

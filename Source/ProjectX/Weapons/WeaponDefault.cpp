@@ -148,7 +148,8 @@ void AWeaponDefault::ShellDropTick(float DeltaTime)
 
 void AWeaponDefault::WeaponInit()
 {
-	FireTimer = WeaponSetting.RateOfFire;
+	
+	FireTimer = WeaponSetting.RateOfFire;	
 	
 	if (SkeletalMeshWeapon && !SkeletalMeshWeapon->SkeletalMesh)
 	{
@@ -160,7 +161,7 @@ void AWeaponDefault::WeaponInit()
 		StaticMeshWeapon->DestroyComponent();
 	}
 	//WeaponSetting.CurrentRound = WeaponSetting.MaxRound;
-	UpdateStateWeapon(EMovementState::Run_State);
+	UpdateStateWeapon(EMovementState::Run_State, 0.0f);
 	
 }
 
@@ -190,53 +191,205 @@ void AWeaponDefault::Fire()
 		AnimToPlay = WeaponSetting.AnimWeaponInfo.AnimCharFireAim;
 	else
 		AnimToPlay = WeaponSetting.AnimWeaponInfo.AnimCharFire;
-	if (WeaponSetting.AnimWeaponInfo.AnimWeaponFire && SkeletalMeshWeapon && SkeletalMeshWeapon->GetAnimInstance())
-	{
-		SkeletalMeshWeapon->GetAnimInstance()->Montage_Play(WeaponSetting.AnimWeaponInfo.AnimWeaponFire);
-		
-	}
-	if (WeaponSetting.Shell.Mesh)
-	{
-		if (WeaponSetting.Shell.DropMeshTime< 0.0f)
-		{
-			DropBulletEmptyShell(WeaponSetting.Shell.Mesh, WeaponSetting.Shell.Scale, WeaponSetting.Shell.Rotation, WeaponSetting.Shell.Power);
-		}
-		else
-		{
-			DropShellFlag = true;
-			DropShellTimer = WeaponSetting.Shell.DropMeshTime;
-		}
-	}
-	
 
 	int8 NumberProjectile = GetNumberProjectileByShot();
 	
-	FireTimer = WeaponSetting.RateOfFire;
-	WeaponSetting.CurrentRound = WeaponSetting.CurrentRound - NumberProjectile;
-	//OnFireEvent.Broadcast(WeaponSetting.CurrentRound);
-	if (WeaponSetting.CurrentRound == 0)
+	if (WeaponSetting.BurstFire)
 	{
-		EmptyMagTryToShoot();
+		if (isBurst)
+		{
+
+		}
+		else
+		{
+			isBurst = true;
+			GetWorldTimerManager().SetTimer(TimerHandle_BurstFire, this, &AWeaponDefault::BurstFire, WeaponSetting.BurstRate, true);
+		}
+				
+	}
+	else
+	{
+		
+		if (WeaponSetting.AnimWeaponInfo.AnimWeaponFire && SkeletalMeshWeapon && SkeletalMeshWeapon->GetAnimInstance())
+		{
+			SkeletalMeshWeapon->GetAnimInstance()->Montage_Play(WeaponSetting.AnimWeaponInfo.AnimWeaponFire);
+
+		}
+		if (WeaponSetting.Shell.Mesh)
+		{
+			if (WeaponSetting.Shell.DropMeshTime < 0.0f)
+			{
+				DropBulletEmptyShell(WeaponSetting.Shell.Mesh, WeaponSetting.Shell.Scale, WeaponSetting.Shell.Rotation, WeaponSetting.Shell.Power);
+			}
+			else
+			{
+				DropShellFlag = true;
+				DropShellTimer = WeaponSetting.Shell.DropMeshTime;
+			}
+		}
+
+		FireTimer = WeaponSetting.RateOfFire - FireRateStatAdjust;
+		WeaponSetting.CurrentRound = WeaponSetting.CurrentRound - NumberProjectile;
+		
+		if (WeaponSetting.CurrentRound == 0)
+		{
+			EmptyMagTryToShoot();
+		}
+
+		ChangeDispersionByShot();
+
+		OnWeaponFireStart.Broadcast(AnimToPlay);
+
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSetting.EffectFireWeapon, ShootLocation->GetComponentTransform());
+
+
+
+		if (ShootLocation)
+		{
+			FVector SpawnLocation = ShootLocation->GetComponentLocation();
+			FProjectileInfo ProjectileInfo;
+			ProjectileInfo = GetProjectile();
+
+
+			for (int8 i = 0; i < NumberProjectile; i++)//ShotGunLogic spawn more then 1 bullet
+			{
+				FVector EndLocation = GetFireEndLocation();
+				//¬ычисл€ем вектор между спавном и конечной точкой выстрела, нормализуем его
+				FVector Dir = EndLocation - SpawnLocation;
+				Dir.Normalize();
+				//—оздаем матрицу, из которой получаем rotation дл€ спавна пули
+				FMatrix myMatrix(Dir, FVector(0, 1, 0), FVector(0, 0, 1), FVector::ZeroVector);
+				FRotator SpawnRotation = myMatrix.Rotator();
+
+				if (ProjectileInfo.Projectile)
+				{
+					//Projectile Init ballistic fire
+
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+					SpawnParams.Owner = this;
+					SpawnParams.Instigator = GetInstigator();
+
+					AProjectileDefault* myProjectile = Cast<AProjectileDefault>(GetWorld()->SpawnActor(ProjectileInfo.Projectile, &SpawnLocation, &SpawnRotation, SpawnParams));
+					if (myProjectile)
+					{
+						myProjectile->InitProjectile(WeaponSetting.ProjectileSetting);
+					}
+				}
+				else
+				{
+					//ToDo Projectile null Init trace fire			
+					FHitResult Hit;
+					FVector Forward = ShootLocation->GetForwardVector() * 1000 + SpawnLocation;
+
+					GetWorld()->LineTraceSingleByChannel(Hit, SpawnLocation, Forward, ECollisionChannel::ECC_Visibility, FCollisionQueryParams::DefaultQueryParam);
+					DrawDebugLine(GetWorld(), SpawnLocation, Forward, FColor::Blue, false, 5.f, (uint8)'\000', 0.8f);
+
+					EPhysicalSurface mySurfacetype = UGameplayStatics::GetSurfaceType(Hit);
+
+					if (WeaponSetting.ProjectileSetting.HitDecals.Contains(mySurfacetype))
+					{
+						UMaterialInterface* myMaterial = WeaponSetting.ProjectileSetting.HitDecals[mySurfacetype];
+
+						if (myMaterial && Hit.GetComponent())
+						{
+							UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(0.5f), Hit.GetComponent(), NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition, 10.0f);
+						}
+					}
+					if (WeaponSetting.ProjectileSetting.HitFXs.Contains(mySurfacetype))
+					{
+						UParticleSystem* myParticle = WeaponSetting.ProjectileSetting.HitFXs[mySurfacetype];
+						if (myParticle)
+						{
+							UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParticle, FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(1.0f)));
+						}
+					}
+
+					if (WeaponSetting.ProjectileSetting.HitSound)
+					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponSetting.ProjectileSetting.HitSound, Hit.ImpactPoint);
+					}
+
+
+					UTypes::AddEffectBySurfaceType(Hit.GetActor(), ProjectileInfo.Effect, mySurfacetype);
+
+
+					/* ≈сли вызов происходит из BP
+					if (Hit.GetActor()->GetClass()->ImplementsInterface(UProjectX_Interface_GameActor::StaticClass()))
+					{
+						IProjectX_Interface_GameActor::Execute_AvailableForEffects(Hit.GetActor());
+
+						IProjectX_Interface_GameActor::Execute_AvailableForEffectsBP(Hit.GetActor());
+					}
+					*/
+					//	UProjectX_StateEffect* NewEffect = NewObject<UProjectX_StateEffect>(Hit.GetActor(), FName("Effect"));
+
+					UGameplayStatics::ApplyDamage(Hit.GetActor(), WeaponSetting.ProjectileSetting.ProjectileDamage, GetInstigatorController(), this, NULL);
+
+				}
+			}
+
+
+		}
 	}
 
-	ChangeDispersionByShot();
+	
+//	if(inventoryComponent)
+	OnFireEvent.Broadcast(GetWeaponRound());
+}
 
-	OnWeaponFireStart.Broadcast(AnimToPlay);
-	
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSetting.EffectFireWeapon, ShootLocation->GetComponentTransform());
-	
-	
-	
-	if (ShootLocation)
+void AWeaponDefault::BurstFire()
+{	
+	UAnimMontage* AnimToPlay = nullptr;
+	if (WeaponAiming)
+		AnimToPlay = WeaponSetting.AnimWeaponInfo.AnimCharFireAim;
+	else
+		AnimToPlay = WeaponSetting.AnimWeaponInfo.AnimCharFire;
+
+	if (TempVarForBurst < WeaponSetting.NumberProjectileByShot)
 	{
-		FVector SpawnLocation = ShootLocation->GetComponentLocation();
-		FProjectileInfo ProjectileInfo;
-		ProjectileInfo = GetProjectile();
-		
-
-		for (int8 i = 0; i < NumberProjectile; i++)//ShotGunLogic spawn more then 1 bullet
+		if (WeaponSetting.AnimWeaponInfo.AnimWeaponFire && SkeletalMeshWeapon && SkeletalMeshWeapon->GetAnimInstance())
 		{
+			SkeletalMeshWeapon->GetAnimInstance()->Montage_Play(WeaponSetting.AnimWeaponInfo.AnimWeaponFire);
+		}
+		if (WeaponSetting.Shell.Mesh)
+		{
+			if (WeaponSetting.Shell.DropMeshTime < 0.0f)
+			{
+				DropBulletEmptyShell(WeaponSetting.Shell.Mesh, WeaponSetting.Shell.Scale, WeaponSetting.Shell.Rotation, WeaponSetting.Shell.Power);
+			}
+			else
+			{
+				DropShellFlag = true;
+				DropShellTimer = WeaponSetting.Shell.DropMeshTime;
+			}
+		}
+
+		TempVarForBurst += 1;
+		OnWeaponFireStart.Broadcast(AnimToPlay);
+		WeaponSetting.CurrentRound = WeaponSetting.CurrentRound - 1;
+		//OnFireEvent.Broadcast(GetWeaponRound());
+		//OnFireEvent.Broadcast(WeaponSetting.CurrentRound);
+		if (WeaponSetting.CurrentRound == 0)
+		{
+			EmptyMagTryToShoot();
+		}
+
+		//ChangeDispersionByShot();
+
+		//OnWeaponFireStart.Broadcast(AnimToPlay);
+
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSetting.EffectFireWeapon, ShootLocation->GetComponentTransform());
+
+
+		if (ShootLocation)
+		{
+			FVector SpawnLocation = ShootLocation->GetComponentLocation();
+			FProjectileInfo ProjectileInfo;
+			ProjectileInfo = GetProjectile();
+
 			FVector EndLocation = GetFireEndLocation();
 			//¬ычисл€ем вектор между спавном и конечной точкой выстрела, нормализуем его
 			FVector Dir = EndLocation - SpawnLocation;
@@ -247,11 +400,9 @@ void AWeaponDefault::Fire()
 
 			if (ProjectileInfo.Projectile)
 			{
-				//Projectile Init ballistic fire
-
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-				SpawnParams.Owner =this;
+				SpawnParams.Owner = this;
 				SpawnParams.Instigator = GetInstigator();
 
 				AProjectileDefault* myProjectile = Cast<AProjectileDefault>(GetWorld()->SpawnActor(ProjectileInfo.Projectile, &SpawnLocation, &SpawnRotation, SpawnParams));
@@ -260,63 +411,15 @@ void AWeaponDefault::Fire()
 					myProjectile->InitProjectile(WeaponSetting.ProjectileSetting);
 				}
 			}
-			else
-			{
-				//ToDo Projectile null Init trace fire			
-				FHitResult Hit;
-				FVector Forward = ShootLocation->GetForwardVector() * 1000+ SpawnLocation;
-				
-				GetWorld()->LineTraceSingleByChannel(Hit, SpawnLocation, Forward, ECollisionChannel::ECC_Visibility,FCollisionQueryParams::DefaultQueryParam);
-				DrawDebugLine(GetWorld(), SpawnLocation, Forward, FColor::Blue, false, 5.f, (uint8)'\000', 0.8f);
-												
-						EPhysicalSurface mySurfacetype = UGameplayStatics::GetSurfaceType(Hit);
-
-						if (WeaponSetting.ProjectileSetting.HitDecals.Contains(mySurfacetype))
-						{
-							UMaterialInterface* myMaterial = WeaponSetting.ProjectileSetting.HitDecals[mySurfacetype];
-
-							if (myMaterial && Hit.GetComponent())
-							{
-								UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(0.5f), Hit.GetComponent(), NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition, 10.0f);
-							}
-						}
-						if (WeaponSetting.ProjectileSetting.HitFXs.Contains(mySurfacetype))
-						{
-							UParticleSystem* myParticle = WeaponSetting.ProjectileSetting.HitFXs[mySurfacetype];
-							if (myParticle)
-							{
-								UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParticle, FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(1.0f)));
-							}
-						}
-
-						if (WeaponSetting.ProjectileSetting.HitSound)
-						{
-							UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponSetting.ProjectileSetting.HitSound, Hit.ImpactPoint);
-						}
-
-
-							UTypes::AddEffectBySurfaceType(Hit.GetActor(), ProjectileInfo.Effect, mySurfacetype);
-
-						
-						/* ≈сли вызов происходит из BP
-						if (Hit.GetActor()->GetClass()->ImplementsInterface(UProjectX_Interface_GameActor::StaticClass()))
-						{
-							IProjectX_Interface_GameActor::Execute_AvailableForEffects(Hit.GetActor());
-
-							IProjectX_Interface_GameActor::Execute_AvailableForEffectsBP(Hit.GetActor());
-						}
-						*/
-					//	UProjectX_StateEffect* NewEffect = NewObject<UProjectX_StateEffect>(Hit.GetActor(), FName("Effect"));
-
-					UGameplayStatics::ApplyDamage(Hit.GetActor(), WeaponSetting.ProjectileSetting.ProjectileDamage, GetInstigatorController(), this, NULL);
-				
-			}
-		}
-		
-		
+		}	
 	}
-//	if(inventoryComponent)
-	OnFireEvent.Broadcast(GetWeaponRound());
+	else
+	{
+		isBurst = false;
+		GetWorldTimerManager().ClearTimer(TimerHandle_BurstFire);
+		TempVarForBurst = 0;
+	}
+
 }
 
 
@@ -357,45 +460,45 @@ void AWeaponDefault::DropEmptyMagazin(UStaticMesh* magazin, FVector scale, FQuat
 	
 }
 
-void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState)
+void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState, float StatsAdjust)
 {
 	//ToDo Dispersion
 	BlockFire = false;
 	switch (NewMovementState)
 	{
 	case EMovementState::Aim_State:
-		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Aim_StateDispersionAimMax;
-		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Aim_StateDispersionAimMin;
+		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Aim_StateDispersionAimMax -StatsAdjust;
+		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Aim_StateDispersionAimMin - -StatsAdjust;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.Aim_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Aim_StateDispersionReduction;
 		break;
 	case EMovementState::AimWalk_State:
-		CurrentDispersionMax = WeaponSetting.DispersionWeapon.AimWalk_StateDispersionAimMax;
-		CurrentDispersionMin = WeaponSetting.DispersionWeapon.AimWalk_StateDispersionAimMin;
+		CurrentDispersionMax = WeaponSetting.DispersionWeapon.AimWalk_StateDispersionAimMax - -StatsAdjust;
+		CurrentDispersionMin = WeaponSetting.DispersionWeapon.AimWalk_StateDispersionAimMin - -StatsAdjust;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.AimWalk_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Aim_StateDispersionReduction;
 		break;
 	case EMovementState::AimCrouch_State:
-		CurrentDispersionMax = WeaponSetting.DispersionWeapon.CrouchAim_StateDispersionMax;
-		CurrentDispersionMin = WeaponSetting.DispersionWeapon.CrouchAim_StateDispersionMin;
+		CurrentDispersionMax = WeaponSetting.DispersionWeapon.CrouchAim_StateDispersionMax - -StatsAdjust;
+		CurrentDispersionMin = WeaponSetting.DispersionWeapon.CrouchAim_StateDispersionMin - -StatsAdjust;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.CrouchAim_StateDispersionRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.CrouchAim_StateDispersionReduction;
 		break;
 	case EMovementState::Walk_State:
-		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Walk_StateDispersionAimMax;
-		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Walk_StateDispersionAimMin;
+		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Walk_StateDispersionAimMax - -StatsAdjust;
+		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Walk_StateDispersionAimMin -StatsAdjust;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.Walk_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Aim_StateDispersionReduction;
 		break;
 	case EMovementState::Crouch_State:
-		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Crouch_StateDispersionMax;
-		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Crouch_StateDispersionMin;
+		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Crouch_StateDispersionMax -StatsAdjust;
+		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Crouch_StateDispersionMin - StatsAdjust;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.Crouch_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Crouch_StateDispersionReduction;
 		break;
 	case EMovementState::Run_State:
-		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Run_StateDispersionAimMax;
-		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Run_StateDispersionAimMin;
+		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Run_StateDispersionAimMax - StatsAdjust;
+		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Run_StateDispersionAimMin -StatsAdjust;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.Run_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Aim_StateDispersionReduction;
 		break;

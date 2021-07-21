@@ -10,6 +10,7 @@
 #include "ProjectX/Weapons/WeaponDefault.h"
 #include "ProjectX/Character/ProjectXInventoryComponent.h"
 #include "ProjectX/Character/ProjectXSkillComponent.h"
+#include "ProjectX/Character/ProjectXStatsComponent.h"
 #include "ProjectX/FunctionLibrary/Types.h"
 #include "ProjectX/Character/ProjectXCharacterHealthComponent.h"
 #include "ProjectX/Interfaces/ProjectX_Interface_GameActor.h"
@@ -18,6 +19,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnIterractButtonPressed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponUnequip);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFailedToreload);
 
 
 
@@ -37,6 +39,8 @@ public:
 		FOnIterractButtonPressed OnIterractButtonPressed;
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 		FOnWeaponUnequip WeaponUnequip;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+		FOnFailedToreload OnFailedToReload;
 
 
 	virtual void BeginPlay() override;
@@ -81,6 +85,8 @@ public:
 		class UProjectXCharacterHealthComponent* CharHealthComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Spawn, meta = (AllowPrivateAccess = "true"))
 		class UProjectXSkillComponent* SkillComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Spawn, meta = (AllowPrivateAccess = "true"))
+		class UProjectXStatsComponent* StatsComponent;
 	
 	//Cursor
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
@@ -137,7 +143,7 @@ public:
 
 	//Skills
 	UPROPERTY()
-	ESkillList CurrentSkill = ESkillList::Teleport;
+	ESkillList CurrentSkill = ESkillList::SlowMode;
 
 	UPROPERTY()
 	bool isCharacterOverlapingItem = false;
@@ -219,6 +225,10 @@ public:
 		void TryUseAbillity();
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 		int32 CurrentIndexWeapon = 0;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+		float CorrectAccuracyOnStatUp = 0.0f;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+		float CorrectFireRateOnStatUp = 0.0f;
 
 	//Interface
 	EPhysicalSurface GetSurfaceType() override;

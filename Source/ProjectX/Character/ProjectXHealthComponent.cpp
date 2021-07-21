@@ -78,4 +78,10 @@ void UProjectXHealthComponent::ChangeHealthValue(float ChangeValue)
 	
 }
 
+void UProjectXHealthComponent::AddMaxHealthValue(float NewHealth)
+{
+	MaxHealth += NewHealth;
+	OnHealthChange.Broadcast(Health, 0);
+}
+
 

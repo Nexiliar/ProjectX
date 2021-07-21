@@ -31,7 +31,6 @@ void UProjectXSkillComponent::BeginPlay()
 void UProjectXSkillComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
 	// ...
 }
 
@@ -40,13 +39,13 @@ void UProjectXSkillComponent::SkillIsEnable()
 	isSkillOnCoolDown = false;
 	GetWorld()->GetTimerManager().ClearTimer(TimerHandle_CoolDownTimer);
 	GetWorld()->GetTimerManager().ClearTimer(TimerHandle_CheckTimerValue);
-	TimerRemain = 0.0f;
+	TimerForWIdgetUpdateInfo = 0.0f;
 }
 
 void UProjectXSkillComponent::CheckTimeRemainingOnCoolDown()
 {
-	TimerRemain = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_CoolDownTimer);
-	OnTimerStarted.Broadcast(TimerRemain);
+	TimerForWIdgetUpdateInfo = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_CoolDownTimer);
+	OnTimerStarted.Broadcast(TimerForWIdgetUpdateInfo);
 }
 
 void UProjectXSkillComponent::InitTimerRemainingCooldown()
@@ -54,7 +53,7 @@ void UProjectXSkillComponent::InitTimerRemainingCooldown()
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_CheckTimerValue, this, &UProjectXSkillComponent::CheckTimeRemainingOnCoolDown, 0.1f, true);	
 }
 
-void UProjectXSkillComponent::Teleport(bool isTpBlocked)
+void UProjectXSkillComponent::Teleport(float TeleportCoolDown)
 {	
 	if (isSkillOnCoolDown)
 	{
@@ -78,13 +77,11 @@ void UProjectXSkillComponent::Teleport(bool isTpBlocked)
 		DrawDebugLine(GetWorld(), ActorLocation, Forward, FColor::Red, false, 5.f, (uint8)'\000', 0.8f);
 		if (Hit.bBlockingHit)
 		{
-
 			GetOwner()->SetActorLocation(Hit.Location);
 			//UE_LOG(LogTemp, Warning, TEXT("Vector: X = %f. Y = %f. Size = %f"), ActorLocation.X, ActorLocation.Y, ActorLocation.Size());
 		}
 		else
 		{
-
 			GetOwner()->SetActorLocation(Forward);
 		}
 
@@ -95,26 +92,27 @@ void UProjectXSkillComponent::Teleport(bool isTpBlocked)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EndTeleportPoint, GetOwner()->GetTransform());
 		}
+		CoolDown = TeleportCoolDown;
 	}
 	
 }
 
-void UProjectXSkillComponent::SlowMode()
+void UProjectXSkillComponent::SlowMode(float SlowMoCooldown, float TimerRemain)
 {	
 	if (isSkillOnCoolDown)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UProjectXSkillComponent::SlowMode COOLDOWN"));
+		
 	}
 	else
 	{
 		isSkillOnCoolDown = true;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_CoolDownTimer, this, &UProjectXSkillComponent::SkillIsEnable, SlowMoCoolDown, false);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_CoolDownTimer, this, &UProjectXSkillComponent::SkillIsEnable, SlowMoCooldown, false);
 		InitTimerRemainingCooldown();
 
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.5f);
 
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_SlowMoTimer, this, &UProjectXSkillComponent::SlowModeEnd, SlowModeTime, false);
-		
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_SlowMoTimer, this, &UProjectXSkillComponent::SlowModeEnd, TimerRemain, false);
+		CoolDown = SlowMoCooldown;
 	}
 }
 
@@ -123,11 +121,11 @@ void UProjectXSkillComponent::SlowModeEnd()
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 }
 
-void UProjectXSkillComponent::Recall()
+void UProjectXSkillComponent::Recall(float RecallCoolDown)
 {
 	if (isSkillOnCoolDown)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UProjectXSkillComponent::Recall()"));
+		
 	}
 	else
 	{
@@ -154,6 +152,7 @@ void UProjectXSkillComponent::Recall()
 		
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_CoolDownTimer, this, &UProjectXSkillComponent::SkillIsEnable, RecallCoolDown, false);
 		InitTimerRemainingCooldown();
+		CoolDown = RecallCoolDown;
 	}
 	
 

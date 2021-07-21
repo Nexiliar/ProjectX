@@ -53,6 +53,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		virtual void ChangeHealthValue(float ChangeValue);
 	
+	UFUNCTION(BlueprintCallable, Category = "Health")
+		void AddMaxHealthValue(float NewHealth);
 	//UFUNCTION(BlueprintCallable, Category = "Health")
 		//virtual void ChangeHealthValue(float ChangeValue);
 

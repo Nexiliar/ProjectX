@@ -80,6 +80,11 @@ bool UProjectXInventoryComponent::EquipWeapon(FInventory ItemInfo, FWeaponInfo I
 		isEquipWeapon = true;
 
 	}
+	if (ItemInfo.ItemsInfo.SoundEquip)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ItemInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
+	}
+	
 
 	OnSwitchWeapon.Broadcast();
 	return isEquipWeapon;
@@ -112,6 +117,7 @@ bool UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
 
 void UProjectXInventoryComponent::ChangeCurrentWeight(FInventory ItemInfo, int32 ItemsInSlot, bool Increase)
 {
+	AProjectXCharacter* Char = Cast<AProjectXCharacter>(GetOwner());
 	if (Increase)
 	{
 		if(CurrentWeight < MaxWeightLimit)		
@@ -122,7 +128,19 @@ void UProjectXInventoryComponent::ChangeCurrentWeight(FInventory ItemInfo, int32
 		//if (CurrentWeight >= 0)
 		CurrentWeight -= ItemInfo.ItemsInfo.ItemWeight* ItemsInSlot;
 	}
-	OnCurrentWeightChange.Broadcast(CurrentWeight);
+	if (CurrentWeight / MaxWeightLimit * 100 >= 70 )
+	{
+		if(Char)
+		Char->isOverloaded = true;
+		UE_LOG(LogTemp, Warning, TEXT(" ChangeCurrentWeight OVERLOADED"));
+	}
+	else
+	{
+		if (Char)
+			Char->isOverloaded = false;
+		UE_LOG(LogTemp, Warning, TEXT(" ChangeCurrentWeight NOTOVERLOADED"));
+	}
+	OnCurrentWeightChange.Broadcast(CurrentWeight, MaxWeightLimit);
 }
 
 TArray<FAmmoSlot> UProjectXInventoryComponent::GetAmmoSlotsInfo()
@@ -334,6 +352,7 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 		OnUnEquipItem.Broadcast();
 		break;
 	case EEquipmentSlotType::Bracer:
+		UnequipBracer(SlotIndex);
 		break;
 	case EEquipmentSlotType::BodyKit:
 		UnequipBodyKit(SlotIndex);
@@ -390,6 +409,12 @@ void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<
 				
 		}		
 	}
+
+	if (BackPackInfo.ItemsInfo.SoundEquip)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), BackPackInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
+	}
+
 	ChangeCurrentWeight(BackPackInfo, 1, true);
 	OnEquipItem.Broadcast();	
 }
@@ -512,13 +537,13 @@ bool UProjectXInventoryComponent::EquipArmor(FInventory ItemInfo, float Coef)
 					if (isArmorEquiped)
 					{
 						UnEquipArmor(i);
-						CoefForArmor = 0.0f;
+						
 						EquipArmor(ItemInfo,Coef);
 					}
 					else
 					{
 						CoefForArmor = Coef;
-						myHealth->CoefDamage = Coef;
+						myHealth->CoefDamage -= CoefForArmor;
 						ChangeCurrentWeight(ItemInfo, 1, true);
 						OnEquipItem.Broadcast();
 						isEquipArmorSucces = true;
@@ -526,6 +551,12 @@ bool UProjectXInventoryComponent::EquipArmor(FInventory ItemInfo, float Coef)
 					}				
 				}
 			}
+		}
+
+
+		if (ItemInfo.ItemsInfo.SoundEquip)
+		{
+			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ItemInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
 		}
 	
 	OnEquipItem.Broadcast();
@@ -537,8 +568,9 @@ void UProjectXInventoryComponent::UnEquipArmor(int32 SlotIndex)
 	UProjectXHealthComponent* myHealth = Cast<UProjectXHealthComponent>(GetOwner()->GetComponentByClass(UProjectXHealthComponent::StaticClass()));
 	if (myHealth)
 	{
-		myHealth->CoefDamage = 1.0f;
+		myHealth->CoefDamage += CoefForArmor;
 		isArmorEquiped = false;
+		CoefForArmor = 0.0f;
 	}	
 	FVector LocationToDropBackPack = VariableToSpawnEquip;
 	FActorSpawnParameters SpawnParams;
@@ -556,6 +588,77 @@ void UProjectXInventoryComponent::UnEquipArmor(int32 SlotIndex)
 	EquipmentSlots[SlotIndex] = {};
 	EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::Armor;
 	OnEquipItem.Broadcast();
+}
+
+bool UProjectXInventoryComponent::EquipBracer(FInventory ItemInfo, float BracerSkillCoolDown, float BracerSkillTimer, ESkillList CurrentSkillInBracer)
+{
+	bool isBracerEquipSucces = false;
+	//isBracerEquiped = false;
+
+	for (int8 i = 0; i < EquipmentSlots.Num(); i++)
+	{
+		if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::Bracer)
+		{
+			EquipmentSlots[i] = ItemInfo;
+			
+
+			UProjectXSkillComponent* mySkills = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+			if (mySkills)
+			{
+				if (isBracerEquiped)
+				{
+					UnequipBracer(i);
+					CoolDown = 0.0f;
+					TimeRemaining = 0.0f;
+					EquipBracer(ItemInfo, BracerSkillCoolDown, BracerSkillTimer, CurrentSkillInBracer);
+				}
+				else
+				{
+					CoolDown = BracerSkillCoolDown;
+					TimeRemaining = BracerSkillTimer;
+					EquipedBracerSkill = CurrentSkillInBracer;		
+													
+					ChangeCurrentWeight(ItemInfo, 1, true);
+					OnEquipItem.Broadcast();
+					isBracerEquipSucces = true;
+					isBracerEquiped = true;
+				}
+			}
+		}
+	}
+
+
+	if (ItemInfo.ItemsInfo.SoundEquip)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ItemInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
+	}
+	OnEquipItem.Broadcast();
+	return isBracerEquiped;
+}
+
+bool UProjectXInventoryComponent::UnequipBracer(int32 SlotIndex)
+{
+	isBracerEquiped = false;
+
+	FVector LocationToDropBackPack = VariableToSpawnEquip;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.Owner = GetOwner();
+	FRotator SpawnRotation(1, 1, 1);
+	APickUpActor* SpawnedItemCFG = Cast<APickUpActor>(GetWorld()->SpawnActor(PickUpActor, &LocationToDropBackPack, &SpawnRotation, SpawnParams));
+	if (SpawnedItemCFG)
+	{
+		SpawnedItemCFG->CoolDown = CoolDown;
+		SpawnedItemCFG->AbilityTimer = TimeRemaining;
+		SpawnedItemCFG->CurrentBracerSkill = EquipedBracerSkill;
+		SpawnedItemCFG->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots, EquipmentSlots[SlotIndex]);
+		UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::UnequipBracer SPAWNEDITEMCFG"));
+	}
+	EquipmentSlots[SlotIndex] = {};
+	EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::Bracer;
+	OnEquipItem.Broadcast();
+
+	return true;
 }
 
 bool UProjectXInventoryComponent::DropItemCFG(APickUpActor*& ItemCFG)
@@ -598,6 +701,11 @@ bool UProjectXInventoryComponent::EquipBodyKit(FInventory BodyKitInfo, TArray<FA
 				ChangeCurrentWeight(BodyKitInfo, 1, true);
 			}
 		}
+	}
+
+	if (BodyKitInfo.ItemsInfo.SoundEquip)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), BodyKitInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
 	}
 	OnEquipItem.Broadcast();
 	return true;
@@ -736,7 +844,11 @@ bool UProjectXInventoryComponent::AddItem(FInventory InventoryInfo, int32 Amount
 		}
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("ADD SUCCES"));
-	
+	//EquipSound
+	if (InventoryInfo.ItemsInfo.SoundEquip)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), InventoryInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
+	}	
 	OnAmountOfItemsChanged.Broadcast();
 	return bIsSuccess;
 }
@@ -797,9 +909,13 @@ bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOf
 				InventorySlots[ItemIndex].ItemsInfo.AmountOfItemsInSlot -= AmountOfItems;
 				bIsSucces = true;
 			}
+				if(InventorySlots[ItemIndex].ItemsInfo.SoundUse)
+				{
+					UGameplayStatics::SpawnSoundAtLocation(GetWorld(), InventorySlots[ItemIndex].ItemsInfo.SoundUse, GetOwner()->GetActorLocation());
+				}
 		OnAmountOfItemsChanged.Broadcast();
 		OnItemUsed.Broadcast(AmountOfItems,InventorySlots[ItemIndex]);	
-	}	
+	}
 	return bIsSucces;
 }
 

@@ -34,7 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryWidgetCreate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUsed, int32, AmountOfItemsToUse, FInventory, InventorySlotInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipItem);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnEquipItem);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentWeightChange, float, CurrentWeight);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentWeightChange, float, CurrentWeight, float, MaxWeight);
 
 
 
@@ -153,7 +153,17 @@ public:
 		void UnEquipArmor(int32 SlotIndex);
 
 
-
+	//Bracer
+	UPROPERTY(BlueprintReadOnly)
+		float CoolDown;
+	UPROPERTY(BlueprintReadOnly)
+		float TimeRemaining;
+	UPROPERTY(BlueprintReadOnly)
+		ESkillList EquipedBracerSkill;
+	UFUNCTION(BlueprintCallable, Category = "Bracer")
+		bool EquipBracer(FInventory ItemInfo, float BracerSkillCoolDown, float BracerSkillTimer, ESkillList CurrentSkillInBracer);
+	UFUNCTION()
+		bool UnequipBracer(int32 SlotIndex);
 
 
 	
@@ -179,6 +189,8 @@ public:
 		bool isBackPackEquiped = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
 		bool isArmorEquiped = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
+		bool isBracerEquiped = false;
 
 	UFUNCTION(BlueprintCallable)
 		bool UnequipItem(int32 SlotIndex, FInventory& IventorySlotInfo);

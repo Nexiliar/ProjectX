@@ -55,7 +55,8 @@ AProjectXCharacter::AProjectXCharacter()
 	CharHealthComponent = CreateDefaultSubobject<UProjectXCharacterHealthComponent>(TEXT("HealthComponent"));
 
 	SkillComponent = CreateDefaultSubobject<UProjectXSkillComponent>(TEXT("SkillComponent"));
-		
+	
+	StatsComponent = CreateDefaultSubobject<UProjectXStatsComponent>(TEXT("StatsComponent"));
 	if (CharHealthComponent)
 	{
 		CharHealthComponent->OnDead.AddDynamic(this, &AProjectXCharacter::CharDead);
@@ -360,7 +361,7 @@ void AProjectXCharacter::ChangeMovementState()
 	AWeaponDefault* myWeapon = GetCurrentWeapon();
 	if (myWeapon)
 	{		
-		myWeapon->UpdateStateWeapon(MovementState);
+		myWeapon->UpdateStateWeapon(MovementState, CorrectAccuracyOnStatUp);
 	}
 }
 
@@ -423,10 +424,9 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 								
 				myWeapon->WeaponSetting = InfoOfWeaponToInit;
 				
-				//myWeapon->WeaponInfo.Round = myWeapon->WeaponSetting.MaxRound;
-				//Remove DEBUG!
-				//myWeapon->ReloadTime = InfoOfWeaponToInit.ReloadTime;
-				myWeapon->UpdateStateWeapon(MovementState);
+				//StatsSysManage
+				myWeapon->UpdateStateWeapon(MovementState, CorrectAccuracyOnStatUp);
+				myWeapon->FireRateStatAdjust = CorrectFireRateOnStatUp;
 					
 				//myWeapon->WeaponInfo = WeaponAdditionalInfo;
 				//if (InventoryComponent)
@@ -462,12 +462,20 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 }
 
 void AProjectXCharacter::TryReloadWeapon()
-{
+{		
 	if (bIsAlive && CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	{
-		if (CurrentWeapon->GetWeaponRound() < CurrentWeapon->WeaponSetting.MaxRound && CurrentWeapon->CheckCanWeaponReload())
-			
-			CurrentWeapon->InitReload();
+		if (CurrentWeapon->GetWeaponRound() < CurrentWeapon->WeaponSetting.MaxRound)
+		{
+			if (CurrentWeapon->CheckCanWeaponReload())
+			{
+				CurrentWeapon->InitReload();
+			}
+			else
+			{
+				OnFailedToReload.Broadcast();
+			}
+		}			
 	}
 }
 
@@ -658,21 +666,28 @@ void AProjectXCharacter::TrySwitchPreviosWeapon()
 */
 void AProjectXCharacter::TryUseAbillity()
 {
-	switch (CurrentSkill)
+	if (InventoryComponent && InventoryComponent->isBracerEquiped)
 	{
-	case ESkillList::Teleport:
-		SkillComponent->Teleport(true);
-		break;
-	case ESkillList::SlowMode:
-		SkillComponent->SlowMode();
-		break;
-	case ESkillList::Recall:
-		SkillComponent->Recall();
-		break;
-	default:
-		break;
-	}
+		CurrentSkill = InventoryComponent->EquipedBracerSkill;
 
+		switch (CurrentSkill)
+		{
+		case ESkillList::Teleport:
+			SkillComponent->Teleport(InventoryComponent->CoolDown);
+			break;
+		case ESkillList::SlowMode:
+			SkillComponent->SlowMode(InventoryComponent->CoolDown, InventoryComponent->TimeRemaining);
+			break;
+		case ESkillList::Recall:
+			SkillComponent->Recall(InventoryComponent->CoolDown);
+			break;
+		default:
+			break;
+		}
+	}
+	 
+
+	
 	
 	/*
 	if (AbillityEffect)//to do colldown

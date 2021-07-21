@@ -75,8 +75,16 @@ public:
 	UPROPERTY()
 		bool isNewItem = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemCFG")
+	UPROPERTY()
 		float DefCoef = 0.0f;
+
+	//BracerInitVar
+	UPROPERTY(BlueprintReadWrite)
+		float CoolDown = 0.0f;
+	UPROPERTY(BlueprintReadWrite)
+		float AbilityTimer = 0.0f;
+	UPROPERTY(BlueprintReadWrite)
+	ESkillList CurrentBracerSkill;
 
 	//ItemInit
 

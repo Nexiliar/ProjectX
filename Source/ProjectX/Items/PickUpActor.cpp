@@ -281,6 +281,8 @@ void APickUpActor::TryToPickUpItem()
 				this->Destroy();
 			break;
 		case EEquipmentSlotType::Bracer:
+			if (EquipBracer())
+				this->Destroy();
 			break;
 		case EEquipmentSlotType::BodyKit:
 			if (EquipBodyKit())
@@ -422,9 +424,27 @@ void APickUpActor::SetBodyKitInfo(TArray<FAmmoSlot> Ammo)
 
 void APickUpActor::InitBracer(bool ItemIsNew)
 {
-	
 	if (ItemIsNew)
 	{
+
+		int8 Random = FMath::RandRange(1, 3);
+		if (Random == 1)
+		{
+			CurrentBracerSkill = ESkillList::Teleport;
+			CoolDown = 30.0f;
+		}
+		else if (Random == 2)
+		{
+			CurrentBracerSkill = ESkillList::Recall;
+			CoolDown = 180.0f;
+		}
+		else if (Random == 3)
+		{
+			CurrentBracerSkill = ESkillList::SlowMode;
+			CoolDown = 50.0f;
+			AbilityTimer = 5.0f;
+		}
+		
 		CheckRarity();
 		ERarity ItemRarity = ItemCFG.EquipmentInfo.ItemRarity;
 		switch (ItemRarity)
@@ -432,19 +452,23 @@ void APickUpActor::InitBracer(bool ItemIsNew)
 		case ERarity::None:
 			break;
 		case ERarity::Common:
-			DefCoef = 0.95f;
+		
 			break;
 		case ERarity::Uncommon:
-			DefCoef = 0.89f;
+			CoolDown -= 2.0f;
+			AbilityTimer += 1.0f;
 			break;
 		case ERarity::Rare:
-			DefCoef = 0.77f;
+			CoolDown -= 4.0f;
+			AbilityTimer += 2.0f;
 			break;
 		case ERarity::Epic:
-			DefCoef = 0.72f;
+			CoolDown -= 8.0f;
+			AbilityTimer += 4.0f;
 			break;
 		case ERarity::Legendary:
-			DefCoef = 0.68f;
+			CoolDown -= 16.0f;
+			AbilityTimer += 8.0f;
 			break;
 		default:
 			break;
@@ -459,7 +483,11 @@ void APickUpActor::InitBracer(bool ItemIsNew)
 }
 bool APickUpActor::EquipBracer()
 {
-	return false;
+	bool bIsBracerEquipSuccess = false;
+	UProjectXInventoryComponent* myInventory = Cast<UProjectXInventoryComponent>(Character->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
+	bIsBracerEquipSuccess = myInventory->EquipBracer(ItemCFG,CoolDown, AbilityTimer,CurrentBracerSkill);
+	return bIsBracerEquipSuccess;
+
 }
 void APickUpActor::InitArmor(bool ItemIsNew)
 {
@@ -473,19 +501,19 @@ void APickUpActor::InitArmor(bool ItemIsNew)
 		case ERarity::None:
 			break;
 		case ERarity::Common:
-			DefCoef = 0.95f;
+			DefCoef = 0.5f;
 			break;
 		case ERarity::Uncommon:
-			DefCoef = 0.89f;
+			DefCoef = 0.11f;
 			break;
 		case ERarity::Rare:
-			DefCoef = 0.77f;
+			DefCoef = 0.23f;
 			break;
 		case ERarity::Epic:
-			DefCoef = 0.72f;
+			DefCoef = 0.28f;
 			break;
 		case ERarity::Legendary:
-			DefCoef = 0.68f;
+			DefCoef = 0.32f;
 			break;
 		default:
 			break;
