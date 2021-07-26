@@ -591,54 +591,66 @@ void UProjectXInventoryComponent::UnEquipArmor(int32 SlotIndex)
 }
 
 bool UProjectXInventoryComponent::EquipBracer(FInventory ItemInfo, float BracerSkillCoolDown, float BracerSkillTimer, ESkillList CurrentSkillInBracer)
-{
-	bool isBracerEquipSucces = false;
-	//isBracerEquiped = false;
-
-	for (int8 i = 0; i < EquipmentSlots.Num(); i++)
+{	
+	bool BracerCanEquip = true;
+	UProjectXSkillComponent* mySkills = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+	if (mySkills)
 	{
-		if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::Bracer)
+		if (mySkills->isSkillOnCoolDown)
 		{
-			EquipmentSlots[i] = ItemInfo;
-			
-
-			UProjectXSkillComponent* mySkills = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
-			if (mySkills)
+			if (ItemInfo.ItemsInfo.FailedEquip)
+			{	
+				//isBracerEquiped = false;
+				BracerCanEquip = false;
+				UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ItemInfo.ItemsInfo.FailedEquip, GetOwner()->GetActorLocation());
+			}			
+		}
+		else
+		{
+			for (int8 i = 0; i < EquipmentSlots.Num(); i++)
 			{
-				if (isBracerEquiped)
+				if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::Bracer)
 				{
-					UnequipBracer(i);
-					CoolDown = 0.0f;
-					TimeRemaining = 0.0f;
-					EquipBracer(ItemInfo, BracerSkillCoolDown, BracerSkillTimer, CurrentSkillInBracer);
-				}
-				else
-				{
-					CoolDown = BracerSkillCoolDown;
-					TimeRemaining = BracerSkillTimer;
-					EquipedBracerSkill = CurrentSkillInBracer;		
-													
-					ChangeCurrentWeight(ItemInfo, 1, true);
-					OnEquipItem.Broadcast();
-					isBracerEquipSucces = true;
-					isBracerEquiped = true;
+					EquipmentSlots[i] = ItemInfo;
+					if (isBracerEquiped)
+					{						
+						UnequipBracer(i);
+						CoolDown = 0.0f;
+						TimeRemaining = 0.0f;
+						//BracerEquipSuccess = false;
+						EquipBracer(ItemInfo, BracerSkillCoolDown, BracerSkillTimer, CurrentSkillInBracer);
+					}
+					else
+					{
+						CoolDown = BracerSkillCoolDown;
+						TimeRemaining = BracerSkillTimer;
+						EquipedBracerSkill = CurrentSkillInBracer;
+
+						UProjectXSkillComponent* SkillComp = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));						
+						if (SkillComp)
+						{
+							SkillComp->CurrentSkill = CurrentSkillInBracer;
+						}
+						ChangeCurrentWeight(ItemInfo, 1, true);
+						OnEquipItem.Broadcast();
+						
+						isBracerEquiped = true;
+					}
 				}
 			}
 		}
+		if (ItemInfo.ItemsInfo.SoundEquip && !mySkills->isSkillOnCoolDown)
+		{
+			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ItemInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
+		}
+		OnEquipItem.Broadcast();		
 	}
-
-
-	if (ItemInfo.ItemsInfo.SoundEquip)
-	{
-		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ItemInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
-	}
-	OnEquipItem.Broadcast();
-	return isBracerEquiped;
+	return BracerCanEquip;
 }
 
 bool UProjectXInventoryComponent::UnequipBracer(int32 SlotIndex)
 {
-	isBracerEquiped = false;
+	
 
 	FVector LocationToDropBackPack = VariableToSpawnEquip;
 	FActorSpawnParameters SpawnParams;
@@ -656,8 +668,8 @@ bool UProjectXInventoryComponent::UnequipBracer(int32 SlotIndex)
 	}
 	EquipmentSlots[SlotIndex] = {};
 	EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::Bracer;
-	OnEquipItem.Broadcast();
-
+	isBracerEquiped = false;
+	OnEquipItem.Broadcast();	
 	return true;
 }
 

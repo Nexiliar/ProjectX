@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ProjectX/Character/ProjectXCharacter.h"
 #include "ProjectX/Character/ProjectXStatsComponent.h"
+#include "ProjectX/Character/ProjectXCharacter.h"
+
 
 
 // Sets default values for this component's properties
@@ -23,6 +24,8 @@ void UProjectXStatsComponent::BeginPlay()
 	OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, SkillPoints, AttributePoints);
 	//StatDependance();
 	// ...
+
+	AmountOfExpirienceNeedForLvlUpPerLevel.SetNum(MaxLevel);
 	BasicCompsInit();
 	ConRiseResult(true);
 	ReactionRiseResult();
@@ -63,8 +66,12 @@ float UProjectXStatsComponent::GetExpInfo(float& CurrentMaxExp)
 {
 	for (int i = 0; i < CurrentLevel; i++)
 	{
-		LevelExpirience = AmountOfExpirienceNeedForLvlUpPerLevel[i];
-		CurrentMaxExp = LevelExpirience;
+		if (AmountOfExpirienceNeedForLvlUpPerLevel[i] != NULL)
+		{
+			LevelExpirience = AmountOfExpirienceNeedForLvlUpPerLevel[i];
+			CurrentMaxExp = LevelExpirience;
+		}
+
 	}
 	
 	return CurrentExpirience;
@@ -74,14 +81,20 @@ float UProjectXStatsComponent::GetExpInfo(float& CurrentMaxExp)
 
 void UProjectXStatsComponent::LevelUpEvent()
 {
-	CurrentLevel = CurrentLevel + 1;
-	SkillPoints = SkillPoints + 1;
-	AttributePoints = AttributePoints + 1;
+	if (CurrentLevel == MaxLevel)
+	{
 
-	
-	Inventory->MaxWeightLimit += 5;
-	OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, SkillPoints, AttributePoints);
+	}
+	else
+	{
+		CurrentLevel = CurrentLevel + 1;
+		SkillPoints = SkillPoints + 1;
+		AttributePoints = AttributePoints + 1;
 
+
+		Inventory->MaxWeightLimit += 5;
+		OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, SkillPoints, AttributePoints);
+	}
 	
 }
 
@@ -151,7 +164,7 @@ void UProjectXStatsComponent::ConRiseResult(bool Init)
 }
 void UProjectXStatsComponent::StrRiseResult()
 {
-	//DO INIT FROM START
+	
 	if (Inventory)
 	{
 		Inventory->MaxWeightLimit += 2;
@@ -169,7 +182,17 @@ void UProjectXStatsComponent::StrRiseResult()
 		{
 			IsSlotUnlocked();
 			HealthComponent->CoefDamage -= 0.5f;
-			//Skill
+
+			UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+			if (Skill)
+			{
+				Skill->isRageModeAvailable = true;
+				//if (Skill->isBastionModeAvailable || Skill->isSnakeModeAvailable)
+				//{
+					Skill->BonusSkill = ESkillList::RageMode;
+				//}
+
+			}
 		}
 	}
 

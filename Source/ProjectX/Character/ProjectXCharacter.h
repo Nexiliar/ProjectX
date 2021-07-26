@@ -12,6 +12,7 @@
 #include "ProjectX/Character/ProjectXSkillComponent.h"
 #include "ProjectX/Character/ProjectXStatsComponent.h"
 #include "ProjectX/FunctionLibrary/Types.h"
+#include "ProjectX/Weapons/Projectiles/MyProjectileDefault_Grenade1.h"
 #include "ProjectX/Character/ProjectXCharacterHealthComponent.h"
 #include "ProjectX/Interfaces/ProjectX_Interface_GameActor.h"
 
@@ -41,7 +42,6 @@ public:
 		FOnWeaponUnequip WeaponUnequip;
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 		FOnFailedToreload OnFailedToReload;
-
 
 	virtual void BeginPlay() override;
 	// Called every frame.
@@ -141,9 +141,16 @@ public:
 	TArray<UProjectX_StateEffect*> Effects;
 	
 
-	//Skills
+
+
+	UFUNCTION()
+		void DropTheBomb();
 	UPROPERTY()
-	ESkillList CurrentSkill = ESkillList::SlowMode;
+		bool IsBombDropped = false;
+	UFUNCTION()
+		void SwitchSkills();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BombClass")
+		TSubclassOf<class AMyProjectileDefault_Grenade1> BombNade;
 
 	UPROPERTY()
 	bool isCharacterOverlapingItem = false;
@@ -163,7 +170,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AnimLogic")
 	bool IsArmed;
 
-
+	 
 	
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;

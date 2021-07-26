@@ -7,6 +7,7 @@
 #include "ProjectX/Game/ProjectXGameInstance.h"
 #include "ProjectX/Character/ProjectXHealthComponent.h"
 #include "ProjectX/Character/ProjectXInventoryComponent.h"
+#include "ProjectX/Character/ProjectXSkillComponent.h"
 #include "ProjectX/FunctionLibrary/Types.h"
 #include "ProjectXStatsComponent.generated.h"
 
@@ -43,6 +44,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Expirience")
 		TArray<float>  AmountOfExpirienceNeedForLvlUpPerLevel;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
+		int32 MaxLevel = 30;
 	UProjectXHealthComponent* HealthComponent;
 	UProjectXInventoryComponent* Inventory;
 	

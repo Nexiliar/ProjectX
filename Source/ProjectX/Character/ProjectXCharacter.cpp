@@ -111,9 +111,10 @@ void AProjectXCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComp
 	NewInputComponent->BindAction(TEXT("ReloadEvent"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TryReloadWeapon);
 	
 	NewInputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TryToInterractWithObject);
+	NewInputComponent->BindAction(TEXT("DropDaBomb"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::DropTheBomb);
 	//Old switch sys del if not use
-	//NewInputComponent->BindAction(TEXT("SwitchNextWeapon"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TrySwicthNextWeapon);
-	//NewInputComponent->BindAction(TEXT("SwitchPrevioseWeapon"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TrySwitchPreviosWeapon);
+	NewInputComponent->BindAction(TEXT("SwitchNextSkill"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::SwitchSkills);
+	//NewInputComponent->BindAction(TEXT("SwitchPrevioseSkill"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TrySwitchPreviosWeapon);
 	NewInputComponent->BindAction(TEXT("AbillityAction"), EInputEvent::IE_Pressed, this, &AProjectXCharacter::TryUseAbillity);
 	
 	
@@ -129,6 +130,30 @@ void AProjectXCharacter::InputAxisX(float Value)
 }
 
 
+
+void AProjectXCharacter::DropTheBomb()
+{
+	if (SkillComponent->isRageModeOn && !IsBombDropped)
+	{
+		FVector SpawnLocation = GetMesh()->GetSocketLocation("SpawnItemSocket");;
+		FActorSpawnParameters SpawnParams;
+		FRotator SpawnRotation(1, 1, 1);
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+		IsBombDropped = true;
+		AMyProjectileDefault_Grenade1* Bomb = Cast<AMyProjectileDefault_Grenade1>(GetWorld()->SpawnActor(BombNade, &SpawnLocation, &SpawnRotation, SpawnParams));
+			if (Bomb)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
+			}
+	}
+}
+
+void AProjectXCharacter::SwitchSkills()
+{
+	SkillComponent->SwitchSkills();
+}
 
 void AProjectXCharacter::InputAxisY(float Value)
 {
@@ -614,62 +639,15 @@ ESlotType AProjectXCharacter::GetCurrentSlot(int32& IndexOfEnum)
 	
 	return SlotVar;
 }
-/* OldSwitchSystem Del if not used
-void AProjectXCharacter::TrySwicthNextWeapon()
-{
-	if (InventoryComponent->WeaponSlots.Num() > 1)
-	{
-		//We have more then one weapon go switch
-		int8 OldIndex = CurrentIndexWeapon;
-		FAddicionalWeaponInfo OldInfo;
-		if (CurrentWeapon)
-		{
-			//OldInfo = CurrentWeapon->WeaponInfo;
-			if (CurrentWeapon->WeaponReloading)
-				CurrentWeapon->CancelReload();
-		}
 
-		if (InventoryComponent)
-		{
-			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon + 1, OldIndex, OldInfo, true))
-			{
-			}
-		}
-	}
-}
-*/
 
-/* OldSwitchSystem Del if not used
-void AProjectXCharacter::TrySwitchPreviosWeapon()
-{
-	if (InventoryComponent->WeaponSlots.Num() > 1)
-	{
-		//We have more then one weapon go switch
-		int8 OldIndex = CurrentIndexWeapon;
-		FAddicionalWeaponInfo OldInfo;
-		if (CurrentWeapon)
-		{
-			//OldInfo = CurrentWeapon->WeaponInfo;
-			if (CurrentWeapon->WeaponReloading)
-				CurrentWeapon->CancelReload();
-		}
 
-		if (InventoryComponent)
-		{
-			
-			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon - 1, OldIndex, OldInfo,false))
-			{
-			}
-		}
-	}
-}
-*/
 void AProjectXCharacter::TryUseAbillity()
 {
 	if (InventoryComponent && InventoryComponent->isBracerEquiped)
 	{
-		CurrentSkill = InventoryComponent->EquipedBracerSkill;
-
+		ESkillList CurrentSkill = SkillComponent->CurrentSkill;
+		
 		switch (CurrentSkill)
 		{
 		case ESkillList::Teleport:
@@ -680,6 +658,13 @@ void AProjectXCharacter::TryUseAbillity()
 			break;
 		case ESkillList::Recall:
 			SkillComponent->Recall(InventoryComponent->CoolDown);
+			break;
+		case ESkillList::RageMode:
+			IsBombDropped = false;
+			SkillComponent->RageMode();
+			break;
+		case ESkillList::SnakeMode:
+			//SkillComponent->Recall(InventoryComponent->CoolDown);
 			break;
 		default:
 			break;

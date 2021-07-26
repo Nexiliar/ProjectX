@@ -36,7 +36,10 @@ enum class ESkillList : uint8
 {
 	Teleport UMETA(DisplayName = "Teleport"),
 	SlowMode UMETA(DisplayName = "SlowMode"),
-	Recall UMETA(DisplayName = "Recall"),	
+	Recall UMETA(DisplayName = "Recall"),
+	RageMode UMETA(DisplayName = "RageMode"),
+	SnakeMode UMETA(DisplayName = "SnakeMode"),
+	BastionMode UMETA(DisplayName = "BastionMode"),
 };
 
 UENUM(BlueprintType)
@@ -479,6 +482,9 @@ struct FItemsInfo
 		USoundBase* SoundUse = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
 		USoundBase* SoundEquip = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
+		USoundBase* FailedEquip = nullptr;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")
 		bool ItemcanBeUsed = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InventoryItemInfo")

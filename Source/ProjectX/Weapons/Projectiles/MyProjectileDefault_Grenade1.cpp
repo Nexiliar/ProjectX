@@ -23,8 +23,16 @@ void AMyProjectileDefault_Grenade1::TimerExplose(float DeltaTime)
 	{
 		if (TimerToExplose > TimeToExplose)
 		{
-			//Explose
-			Explose();
+			if (isABomb)
+			{
+				BombExplosion();
+			}
+			else
+			{
+				Explose();
+			}
+			
+			
 
 		}
 		else
@@ -70,5 +78,33 @@ void AMyProjectileDefault_Grenade1::Explose()
 	
 	DrawDebugSphere(GetWorld(), GetActorLocation(), ProjectileSetting.MaxRadius, 8, FColor::White, false, 5.0f);
 	DrawDebugSphere(GetWorld(), GetActorLocation(), ProjectileSetting.MinRadius, 16, FColor::Red, false, 5.0f);
+	this->Destroy();
+}
+
+void AMyProjectileDefault_Grenade1::BombExplosion()
+{
+	TimerEnabled = false;
+	if (ExplodeFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplodeFX, GetActorLocation(), GetActorRotation(), FVector(1.0f));
+	}
+	if (ExplodeSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplodeSound, GetActorLocation());
+	}
+
+	TArray<AActor*> IgnoredActor;
+	UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(),
+		ExloseDamage,
+		ExloseDamage * 0.3f,
+		GetActorLocation(),
+		MinRadius,
+		MaxRadius,
+		ProjectileSetting.DamageDecayFromCenter,
+		NULL, IgnoredActor, this, nullptr);
+
+
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), MaxRadius, 8, FColor::White, false, 5.0f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), MinRadius, 16, FColor::Red, false, 5.0f);
 	this->Destroy();
 }

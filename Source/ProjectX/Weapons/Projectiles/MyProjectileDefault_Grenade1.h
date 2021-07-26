@@ -30,7 +30,26 @@ public:
 
 	void Explose();
 
+	void BombExplosion();
+
 	bool TimerEnabled = false;
+	
+	
 	float TimerToExplose = 0.0f;
-	float TimeToExplose = 5.0f;
+	//CustomBomb
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BombCustomize")
+		float TimeToExplose = 5.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BombCustomize")
+		bool isABomb = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BombCustomize")
+		UParticleSystem* ExplodeFX = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BombCustomize")
+		USoundBase* ExplodeSound = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BombCustomize")
+		float MaxRadius = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BombCustomize")
+		float MinRadius = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BombCustomize")
+		float ExloseDamage = 0.0f;
+
 };

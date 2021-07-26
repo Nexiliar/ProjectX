@@ -283,6 +283,7 @@ void APickUpActor::TryToPickUpItem()
 		case EEquipmentSlotType::Bracer:
 			if (EquipBracer())
 				this->Destroy();
+				
 			break;
 		case EEquipmentSlotType::BodyKit:
 			if (EquipBodyKit())

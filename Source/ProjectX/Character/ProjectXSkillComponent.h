@@ -5,11 +5,14 @@
 #include "CoreMinimal.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetArrayLibrary.h"
+#include "ProjectX/Character/ProjectXHealthComponent.h"
 #include "ProjectX/FunctionLibrary/Types.h"
 #include "Components/ActorComponent.h"
 #include "ProjectXSkillComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimerStarted, float, TimerTick);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBonusTimerStarted, float, TimerTick);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillSwitched);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PROJECTX_API UProjectXSkillComponent : public UActorComponent
@@ -27,30 +30,60 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	
+	//CurrentSkill
 	FTimerHandle TimerHandle_SlowMoTimer;
 	FTimerHandle TimerHandle_CoolDownTimer;
 	FTimerHandle TimerHandle_CheckTimerValue;
+	
+	//BonusSkill	
+	FTimerHandle TimerHanlde_BonusSkillCooldown;
+	FTimerHandle TimerHandle_CheckBonusTimerValue;
+	
+	//Rage
+	FTimerHandle TimerHandle_RageTimer;
 
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 		FOnTimerStarted OnTimerStarted;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+		FOnBonusTimerStarted OnBonusTimerStarted;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+		FOnSkillSwitched OnSkillSwitched;
+	
 	bool isSkillOnCoolDown = false;
+	UPROPERTY(BlueprintReadWrite, Category = "CoolDown")
+		bool isBonusSkillOnCoolDown = false;
+
 	UPROPERTY(BlueprintReadOnly,Category = "Skill Config")
 		float CoolDown;
-	//UPROPERTY(EditAnywhere, Category = "Skill Config")
-	//	float RecallCoolDown = 3;
-	//UPROPERTY(EditAnywhere, Category = "Skill Config")
-	//	float SlowMoCoolDown = 3;
+	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
+		float BonusSkillCoolDown;
+	UPROPERTY(EditAnywhere, Category = "Skill Config")
+		float RageModeTimer = 70;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
 		float TimerForWIdgetUpdateInfo;
-
+	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
+		float BonusTimerForWIdgetUpdateInfo;
+	
+	//SkillSlots
+	UPROPERTY(BlueprintReadWrite, Category = "Skills")
+		ESkillList CurrentSkill = ESkillList::SlowMode;
+	UPROPERTY(BlueprintReadWrite, Category = "Skills")
+		ESkillList BonusSkill = ESkillList::RageMode;
+	UFUNCTION(BlueprintCallable, Category = "Skills")
+		void SwitchSkills();
+	UFUNCTION(BlueprintCallable, Category = "Skills")
+		void ChoseSkill(ESkillList Skill);
 	
 
 	UFUNCTION(Category = "Skill Config")
 		void SkillIsEnable();
 	UFUNCTION(Category = "Skill Config")
 		void CheckTimeRemainingOnCoolDown();
+	UFUNCTION(Category = "Skill Config")
+		void CheckTimeRemainingOnBonusSkillCoolDown();
+
 	UFUNCTION(Category = "Skill Config")
 		void InitTimerRemainingCooldown();
 
@@ -81,5 +114,33 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Recall")
 		void Recall(float RecallCoolDown);
 	
-		
+	//RageSkill
+	UPROPERTY(EditAnywhere, Category = "RageSkill")
+		UParticleSystem* RageStart = nullptr;
+	UPROPERTY(EditAnywhere, Category = "RageSkill")
+		USoundBase* RageSound = nullptr;
+	UPROPERTY(BlueprintReadWrite, Category = "RageSkill")
+		bool isRageModeAvailable = false;
+	UPROPERTY(BlueprintReadWrite, Category = "RageSkill")
+		bool isRageModeOn = false;
+	UFUNCTION(BlueprintCallable, Category = "RageSkill")
+		void RageMode();
+	UFUNCTION(BlueprintCallable, Category = "RageSkill")
+		void RageModeEnd();
+
+	//SnakeMode
+	UPROPERTY(BlueprintReadWrite, Category = "SnakeMode")
+		bool isSnakeModeAvailable = false;
+	
+	//BastionMode
+	UPROPERTY(BlueprintReadWrite, Category = "BastionMode")
+		bool isBastionModeAvailable = false;
+	UPROPERTY(EditAnywhere, Category = "BastionMode")
+		UParticleSystem* BastionParticle = nullptr;
+	UPROPERTY(EditAnywhere, Category = "BastionMode")
+		USoundBase* BastionSound = nullptr;
+	UFUNCTION(BlueprintCallable, Category ="BastionMode")
+		void BastionMode();
+	UFUNCTION(BlueprintCallable, Category = "BastionMode")
+		void BastionModeEnd();
 };
