@@ -583,10 +583,10 @@ int32 AWeaponDefault::GetWeaponRound()
 	
 }
 
-void AWeaponDefault::InitReload()
+void AWeaponDefault::InitReload(float ReloadSpeed)
 {		
 	WeaponReloading = true;
-	ReloadTimer = WeaponSetting.ReloadTime;
+	ReloadTimer = ReloadSpeed;
 	UAnimMontage* AnimToPlay = nullptr;
 	if (WeaponAiming)
 		AnimToPlay = WeaponSetting.AnimWeaponInfo.AnimCharReloadAim;

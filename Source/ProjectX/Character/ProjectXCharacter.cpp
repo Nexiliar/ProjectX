@@ -233,8 +233,16 @@ void AProjectXCharacter::MovementTick(float Deltatime)
 						break;
 					}
 					//ќпредел€ем место в которое полет€т пули
-					CurrentWeapon->ShootEndLocation = ResultHit.Location + Displacement;
+				
+					CurrentWeapon->ShootEndLocation = ResultHit.Location + Displacement;											
 					//aim cursor like 3d Widget?
+				}
+
+				if (FirstWeaponInit && SecondWeaponInit)
+				{
+					FirstWeaponInit->ShootEndLocation = ResultHit.Location+(0.0f,0.0f, 100.f);
+					SecondWeaponInit->ShootEndLocation = ResultHit.Location+ (0.0f, 0.0f, 100.f);
+
 				}
 			}
 		}
@@ -244,16 +252,25 @@ void AProjectXCharacter::MovementTick(float Deltatime)
 
 void AProjectXCharacter::AttackCharEvent(bool bIsFiring)
 {
+	if (isSnakeModeEnabled)
+	{
+		FirstWeaponInit->SetWeaponStateFire(bIsFiring);
+		SecondWeaponInit->SetWeaponStateFire(bIsFiring);
+	}
+	else
+	{
 		AWeaponDefault* myWeapon = nullptr;
 		myWeapon = GetCurrentWeapon();
 		if (myWeapon)
-		{			
+		{
 			//ToDo Check melee or range
 			myWeapon->SetWeaponStateFire(bIsFiring);
 			myWeapon->EmptyMagTryToShoot();
 		}
 		//else
 			//UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
+	}
+
 }
 
 void AProjectXCharacter::CharacterUpdate()
@@ -431,8 +448,42 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 		CurrentWeapon = nullptr;
 	}
 
-	if (InfoOfWeaponToInit.WeaponClass)
+	if (isSnakeModeEnabled)
 	{
+		if (InfoOfWeaponToInit.WeaponName == "SnakeModePistol")
+		{
+			FVector SpawnLocation = GetMesh()->GetSocketLocation("SnakeModeWeaponSocket_l");
+			FRotator SpawnRotation = GetMesh()->GetSocketRotation("SnakeModeWeaponSocket_l");;
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = GetInstigator();
+						
+			
+			AWeaponDefault* FirstWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InfoOfWeaponToInit.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+			AWeaponDefault* SecondWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InfoOfWeaponToInit.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+			if (FirstWeapon && SecondWeapon)
+			{
+				FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+				
+				FirstWeapon->AttachToComponent(GetMesh(), Rule, FName("SnakeModeWeaponSocket_l"));
+				SecondWeapon->AttachToComponent(GetMesh(), Rule, FName("SnakeModeWeaponSocket_r"));
+				
+				FirstWeapon->WeaponSetting = InfoOfWeaponToInit;
+				SecondWeapon->WeaponSetting = InfoOfWeaponToInit;
+				
+				FirstWeaponInit = FirstWeapon;
+				SecondWeaponInit = SecondWeapon;
+
+				if (InventoryComponent && FirstWeaponInit)
+					InventoryComponent->OnWeaponInit.Broadcast(FirstWeaponInit->WeaponSetting.CurrentRound, FirstWeaponInit->WeaponSetting);
+			}
+		}
+	}
+	else
+	{
+		if (InfoOfWeaponToInit.WeaponClass)
+		{
 			FVector SpawnLocation = FVector(0);
 			FRotator SpawnRotation = FRotator(0);
 
@@ -443,32 +494,30 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 
 			AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InfoOfWeaponToInit.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
 			if (myWeapon)
-			{					
+			{
 				FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-				myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));								
-								
+				myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
+
 				myWeapon->WeaponSetting = InfoOfWeaponToInit;
-				
+
 				//StatsSysManage
 				myWeapon->UpdateStateWeapon(MovementState, CorrectAccuracyOnStatUp);
 				myWeapon->FireRateStatAdjust = CorrectFireRateOnStatUp;
-					
-				//myWeapon->WeaponInfo = WeaponAdditionalInfo;
-				//if (InventoryComponent)
-				//CurrentIndexWeapon = InventoryComponent->GetWeaponIndexSlotByName(IdWeaponName);
+
+
 				//—лушаем делегатов, объ€вленных в weapondefault
 				CurrentWeapon = myWeapon;
 				myWeapon->OnWeaponReloadStart.AddDynamic(this, &AProjectXCharacter::WeaponReloadStart);
 				myWeapon->OnWeaponReloadEnd.AddDynamic(this, &AProjectXCharacter::WeaponReloadEnd);
 				myWeapon->OnWeaponFireStart.AddDynamic(this, &AProjectXCharacter::WeaponFireStart);
-				
+
 				//ѕытаемс€ перезар€дитьс€, после подбора оружи€
 				if (CurrentWeapon->GetWeaponRound() <= 0 && CurrentWeapon->CheckCanWeaponReload())
-					CurrentWeapon->InitReload();	
-				
+					CurrentWeapon->InitReload(CurrentWeapon->WeaponSetting.ReloadTime - BonusReloadSpeed);
+
 				if (InventoryComponent && CurrentWeapon)
 					InventoryComponent->OnWeaponInit.Broadcast(CurrentWeapon->WeaponSetting.CurrentRound, CurrentWeapon->WeaponSetting);
-				
+
 				//Fof equip anim
 				if (CurrentWeapon && CurrentWeapon->WeaponSetting.WeaponType == EWeaponType::Pistol)
 				{
@@ -479,11 +528,13 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 					IsRifle = true;
 				}
 			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::InitWeapon - CurrentWeapon -NULL"));
+		}
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::InitWeapon - CurrentWeapon -NULL"));
-	}
+	
 }
 
 void AProjectXCharacter::TryReloadWeapon()
@@ -494,7 +545,7 @@ void AProjectXCharacter::TryReloadWeapon()
 		{
 			if (CurrentWeapon->CheckCanWeaponReload())
 			{
-				CurrentWeapon->InitReload();
+				CurrentWeapon->InitReload(CurrentWeapon->WeaponSetting.ReloadTime - BonusReloadSpeed);
 			}
 			else
 			{
@@ -661,10 +712,16 @@ void AProjectXCharacter::TryUseAbillity()
 			break;
 		case ESkillList::RageMode:
 			IsBombDropped = false;
-			SkillComponent->RageMode();
+			if(SkillComponent->isRageModeAvailable)
+				SkillComponent->RageMode();			
 			break;
 		case ESkillList::SnakeMode:
-			//SkillComponent->Recall(InventoryComponent->CoolDown);
+			if (SkillComponent->isSnakeModeAvailable)
+				SkillComponent->SnakeMode();
+			break;
+		case ESkillList::BastionMode:
+			if(SkillComponent->isBastionModeAvailable)
+				SkillComponent->BastionMode();				
 			break;
 		default:
 			break;

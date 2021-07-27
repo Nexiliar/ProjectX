@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ProjectX/Character/ProjectXSkillComponent.h"
+#include "ProjectX/Character/ProjectXCharacter.h"
 #include "DrawDebugHelpers.h"
 #include "ProjectX/Game/ProjectXGameMode.h"
 
@@ -234,14 +235,15 @@ void UProjectXSkillComponent::RageMode()
 			HealthComp->CoefDamage -= 0.5;
 
 			float TempMaxHealth = HealthComp->GetCurrentMaxHealth() * 1.2f;
-			GetWorld()->GetTimerManager().SetTimer(TimerHanlde_BonusSkillCooldown, this, &UProjectXSkillComponent::SkillIsEnable, RageModeTimer, false);
+			GetWorld()->GetTimerManager().SetTimer(TimerHanlde_BonusSkillCooldown, this, &UProjectXSkillComponent::SkillIsEnable, RageCoolDownTimer, false);
 			
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_CheckBonusTimerValue, this, &UProjectXSkillComponent::CheckTimeRemainingOnBonusSkillCoolDown, 0.1f, true);
 
 			HealthComp->SetCurrentMaxHealth(TempMaxHealth);
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_RageTimer, this, &UProjectXSkillComponent::RageModeEnd, 30, false);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_RageTimer, this, &UProjectXSkillComponent::RageModeEnd, RageTimer, false);
 			isBonusSkillOnCoolDown = true;
 			isRageModeOn = true;
+			
 		}
 	}
 
@@ -264,6 +266,57 @@ void UProjectXSkillComponent::RageModeEnd()
 	}
 }
 
+void UProjectXSkillComponent::SnakeMode()
+{
+	if (isBonusSkillOnCoolDown)
+	{
+
+	}
+	else
+	{
+		AProjectXCharacter* Player = Cast<AProjectXCharacter>(GetOwner());
+		if (Player)
+		{
+			UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
+			FWeaponInfo WeaponInfo;
+			MyGI->GetWeaponInfoByName("SnakeModePistol", WeaponInfo);
+
+			LastEquipedWeapon = Player->GetCurrentWeapon()->WeaponSetting;
+			Player->isSnakeModeEnabled = true;
+			Player->InitWeapon(WeaponInfo);
+			
+			if(StartSnakeModeAnim)
+				Player->GetMesh()->GetAnimInstance()->Montage_Play(StartSnakeModeAnim);
+
+			if (SnakeModeSound)
+				UGameplayStatics::SpawnSoundAtLocation(GetWorld(), SnakeModeSound, GetOwner()->GetActorLocation());
+
+			GetWorld()->GetTimerManager().SetTimer(TimerHanlde_BonusSkillCooldown, this, &UProjectXSkillComponent::SkillIsEnable, SnakeCoolDownTimer, false);
+
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_CheckBonusTimerValue, this, &UProjectXSkillComponent::CheckTimeRemainingOnBonusSkillCoolDown, 0.1f, true);
+
+			
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_RageTimer, this, &UProjectXSkillComponent::SnakeModeEnd, SnakeTimer, false);
+
+			isBonusSkillOnCoolDown = true;
+			
+		}
+	}
+}
+
+
+void UProjectXSkillComponent::SnakeModeEnd()
+{
+	AProjectXCharacter* Player = Cast<AProjectXCharacter>(GetOwner());
+	if (Player)
+	{		
+		Player->isSnakeModeEnabled = false;
+		Player->InitWeapon(LastEquipedWeapon);
+
+		if (EndSnakeModeAnim)
+			Player->GetMesh()->GetAnimInstance()->Montage_Play(EndSnakeModeAnim);
+	}
+}
 void UProjectXSkillComponent::BastionMode()
 {
 	if (isBonusSkillOnCoolDown)
@@ -272,20 +325,31 @@ void UProjectXSkillComponent::BastionMode()
 	}
 	else
 	{
-		UProjectXHealthComponent* HealthComp = Cast<UProjectXHealthComponent>(GetOwner()->GetComponentByClass(UProjectXHealthComponent::StaticClass()));
+		UProjectXCharacterHealthComponent* HealthComp = Cast<UProjectXCharacterHealthComponent>(GetOwner()->GetComponentByClass(UProjectXCharacterHealthComponent::StaticClass()));
 		if (HealthComp)
 		{
+			HealthComp->SetShieldValue(BastionShieldValue);
 
+			GetWorld()->GetTimerManager().SetTimer(TimerHanlde_BonusSkillCooldown, this, &UProjectXSkillComponent::SkillIsEnable, BastionCoolDownTimer, false);
 
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_CheckBonusTimerValue, this, &UProjectXSkillComponent::CheckTimeRemainingOnBonusSkillCoolDown, 0.1f, true);
 
+			
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_RageTimer, this, &UProjectXSkillComponent::BastionModeEnd, BastionTimer, false);
 
-			isBastionModeAvailable = true;
+			
 			isBonusSkillOnCoolDown = true;
 		}
 	}
 }
 
+
 void UProjectXSkillComponent::BastionModeEnd()
 {
-
+	UProjectXCharacterHealthComponent* HealthComp = Cast<UProjectXCharacterHealthComponent>(GetOwner()->GetComponentByClass(UProjectXCharacterHealthComponent::StaticClass()));
+	if (HealthComp)
+	{
+		HealthComp->SetShieldValue(0);
+	}
+	
 }

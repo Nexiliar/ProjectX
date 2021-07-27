@@ -25,8 +25,8 @@ public:
 	FTimerHandle TimerHandle_HealthRecoveryTimer;
 
 protected:
-
-	float Shield = 100.0f;
+	float MaxShield = 0.0f;
+	float Shield = 0.0f;
 
 public:
 	
@@ -51,12 +51,17 @@ public:
 	void HealthRegenStart(float HealthToRestore);
 
 	void HealthRegen();
-
+	UFUNCTION(BlueprintCallable, Category = "Shield")
 	float GetCurrentShield();
+	UFUNCTION(BlueprintCallable, Category = "Shield")
+		float GetMaxShield();
 	
 	void ChangeShieldValue(float ChangeValue);
 
-	void CoolDownShieldEnd();
+	UFUNCTION(BlueprintCallable, Category = "Shield")
+		void SetShieldValue(float ChangeValue);
+
+	//void CoolDownShieldEnd();
 	
-	void RecoveryShield();
+	//void RecoveryShield();
 };

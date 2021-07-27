@@ -145,7 +145,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		int32 GetWeaponRound();
 	UFUNCTION()
-	void InitReload();
+	void InitReload(float ReloadSpeed);
 	void FinishReload();
 	void CancelReload();
 

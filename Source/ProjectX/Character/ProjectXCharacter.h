@@ -125,13 +125,23 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EquipmentAnim")
 		bool IsRifle = false;
+	UPROPERTY()
+	AWeaponDefault* FirstWeaponInit = nullptr;
+	UPROPERTY()
+	AWeaponDefault* SecondWeaponInit = nullptr;
 	//??Delete or?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 		FName BoneNameForEffect = "foot_r";
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 		FVector EffectOffset;
 
+	//SnakeMode
+	UPROPERTY(BlueprintReadWrite)
+		bool isSnakeModeEnabled = false;
+	UPROPERTY()
+		float BonusReloadSpeed = 0.0f;
 	
+
 	//Weapon	
 	AWeaponDefault* CurrentWeapon = nullptr;
 	

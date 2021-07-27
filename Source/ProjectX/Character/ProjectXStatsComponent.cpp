@@ -137,6 +137,10 @@ void UProjectXStatsComponent::ConRiseResult(bool Init)
 	{
 		if (HealthComponent)
 		{
+			//float ToChangeHealthValue = CharacterStatistic.Constitution * 10;
+		//	HealthComponent->SetCurrentMaxHealth(ToChangeHealthValue);
+			HealthComponent->AddMaxHealthValue(10);
+
 			if (CharacterStatistic.Constitution == 10)
 			{
 				HealthComponent->CoefDamage -= 0.1;
@@ -148,7 +152,15 @@ void UProjectXStatsComponent::ConRiseResult(bool Init)
 			}
 			if (CharacterStatistic.Constitution == 20)
 			{
-				//Skill
+				HealthComponent->CoefDamage -= 0.2;
+				HealthComponent->AddMaxHealthValue(60);
+
+				UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+				if (Skill)
+				{
+					Skill->isBastionModeAvailable = true;
+					Skill->BonusSkill = ESkillList::BastionMode;
+				}
 			}
 		}
 		if (Inventory)
@@ -187,10 +199,8 @@ void UProjectXStatsComponent::StrRiseResult()
 			if (Skill)
 			{
 				Skill->isRageModeAvailable = true;
-				//if (Skill->isBastionModeAvailable || Skill->isSnakeModeAvailable)
-				//{
+				
 					Skill->BonusSkill = ESkillList::RageMode;
-				//}
 
 			}
 		}
@@ -220,6 +230,29 @@ void UProjectXStatsComponent::ReactionRiseResult()
 	{
 		Player->CorrectAccuracyOnStatUp += 0.1f;
 		Player->CorrectFireRateOnStatUp += 0.004f;
+
+		if (CharacterStatistic.Reaction == 10)
+		{
+			Player->BonusReloadSpeed += 0.1f;
+		}
+
+		if (CharacterStatistic.Reaction == 15)
+		{
+			Player->BonusReloadSpeed += 0.2f;
+		}
+
+		if (CharacterStatistic.Reaction == 20)
+		{
+			UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+			if (Skill)
+			{
+				Skill->isSnakeModeAvailable = true;
+
+				Skill->BonusSkill = ESkillList::SnakeMode;
+
+			}
+			Player->BonusReloadSpeed += 0.3f;
+		}
 	}
 }
 FStatsInfo UProjectXStatsComponent::GetEveryStat(int32& level, int32& skillpoints, int32& att)

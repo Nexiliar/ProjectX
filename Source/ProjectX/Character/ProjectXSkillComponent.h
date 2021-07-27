@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetArrayLibrary.h"
 #include "ProjectX/Character/ProjectXHealthComponent.h"
+#include "ProjectX/Character/ProjectXCharacterHealthComponent.h"
 #include "ProjectX/FunctionLibrary/Types.h"
 #include "Components/ActorComponent.h"
 #include "ProjectXSkillComponent.generated.h"
@@ -58,8 +59,7 @@ public:
 		float CoolDown;
 	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
 		float BonusSkillCoolDown;
-	UPROPERTY(EditAnywhere, Category = "Skill Config")
-		float RageModeTimer = 70;
+
 
 	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
 		float TimerForWIdgetUpdateInfo;
@@ -123,6 +123,10 @@ public:
 		bool isRageModeAvailable = false;
 	UPROPERTY(BlueprintReadWrite, Category = "RageSkill")
 		bool isRageModeOn = false;
+	UPROPERTY(EditAnywhere, Category = "RageSkill")
+		float RageCoolDownTimer = 70;
+	UPROPERTY(EditAnywhere, Category = "RageSkill")
+		float RageTimer = 30;
 	UFUNCTION(BlueprintCallable, Category = "RageSkill")
 		void RageMode();
 	UFUNCTION(BlueprintCallable, Category = "RageSkill")
@@ -131,6 +135,22 @@ public:
 	//SnakeMode
 	UPROPERTY(BlueprintReadWrite, Category = "SnakeMode")
 		bool isSnakeModeAvailable = false;
+	UPROPERTY(EditAnywhere, Category = "SnakeMode")
+		UAnimMontage* StartSnakeModeAnim = nullptr;
+	UPROPERTY(EditAnywhere, Category = "SnakeMode")
+		UAnimMontage* EndSnakeModeAnim = nullptr;
+	UPROPERTY(EditAnywhere, Category = "SnakeMode")
+		USoundBase* SnakeModeSound = nullptr;
+	UPROPERTY(EditAnywhere, Category = "SnakeMode")
+		float SnakeCoolDownTimer = 70;
+	UPROPERTY(EditAnywhere, Category = "SnakeMode")
+		FWeaponInfo LastEquipedWeapon;
+	UPROPERTY(EditAnywhere, Category = "SnakeMode")
+		float SnakeTimer = 30;
+	UFUNCTION(BlueprintCallable, Category = "SnakeMode")
+		void SnakeMode();
+	UFUNCTION(BlueprintCallable, Category = "SnakeMode")
+		void SnakeModeEnd();
 	
 	//BastionMode
 	UPROPERTY(BlueprintReadWrite, Category = "BastionMode")
@@ -139,6 +159,12 @@ public:
 		UParticleSystem* BastionParticle = nullptr;
 	UPROPERTY(EditAnywhere, Category = "BastionMode")
 		USoundBase* BastionSound = nullptr;
+	UPROPERTY(EditAnywhere, Category = "BastionMode")
+		float BastionShieldValue = 0.0f;
+	UPROPERTY(EditAnywhere, Category = "BastionMode")
+		float BastionCoolDownTimer = 70;
+	UPROPERTY(EditAnywhere, Category = "BastionMode")
+		float BastionTimer = 30;
 	UFUNCTION(BlueprintCallable, Category ="BastionMode")
 		void BastionMode();
 	UFUNCTION(BlueprintCallable, Category = "BastionMode")

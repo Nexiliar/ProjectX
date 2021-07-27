@@ -29,14 +29,19 @@ float UProjectXCharacterHealthComponent::GetCurrentShield()
 	return Shield;
 }
 
+float UProjectXCharacterHealthComponent::GetMaxShield()
+{
+	return MaxShield;
+}
+
 void UProjectXCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 {
 	Shield += ChangeValue;
 	OnShieldChange.Broadcast(Shield, ChangeValue);
 
-	if (Shield > 100.0f)
+	if (Shield > MaxShield)
 	{
-		Shield = 100.0f;
+		Shield = MaxShield;
 	}
 	else
 	{
@@ -44,16 +49,23 @@ void UProjectXCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 			Shield = 0.0f;
 		
 	}
+	/* 
 	if (GetWorld())
 	{
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_CoolDownShieldTimer, this, &UProjectXCharacterHealthComponent::CoolDownShieldEnd, CoolDownShieldRcoverTime, false);
 		
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_ShieldTimerRecoveryRateTimer);
 	}
-
+	*/
 	
 }
-
+void UProjectXCharacterHealthComponent::SetShieldValue(float ChangeValue)
+{
+	MaxShield = ChangeValue;
+	Shield = ChangeValue;
+	OnShieldChange.Broadcast(Shield, ChangeValue);
+}
+/* 
 void UProjectXCharacterHealthComponent::CoolDownShieldEnd()
 {
 	if (GetWorld())
@@ -61,9 +73,9 @@ void UProjectXCharacterHealthComponent::CoolDownShieldEnd()
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_ShieldTimerRecoveryRateTimer, this, &UProjectXCharacterHealthComponent::RecoveryShield, ShieldRecoveryRate, true);
 	}
 
-}
+}*/
 
-void UProjectXCharacterHealthComponent::RecoveryShield()
+/* void UProjectXCharacterHealthComponent::RecoveryShield()
 {
 	float tmp = Shield;
 	tmp = tmp + ShieldRecoveryValue;
@@ -81,7 +93,7 @@ void UProjectXCharacterHealthComponent::RecoveryShield()
 		Shield = tmp;
 	}
 	
-}
+}*/
 
 void UProjectXCharacterHealthComponent::HealthRegenStart(float HealthToRestore)
 {
