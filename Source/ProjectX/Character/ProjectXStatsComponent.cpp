@@ -27,8 +27,9 @@ void UProjectXStatsComponent::BeginPlay()
 
 	AmountOfExpirienceNeedForLvlUpPerLevel.SetNum(MaxLevel);
 	BasicCompsInit();
-	ConRiseResult(true);
-	ReactionRiseResult();
+	ConRiseResult(true,0);
+	ReactionRiseResult(true,0);
+	StrRiseResult(true,0);
 }
 
 
@@ -94,6 +95,7 @@ void UProjectXStatsComponent::LevelUpEvent()
 
 		Inventory->MaxWeightLimit += 5;
 		OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, SkillPoints, AttributePoints);
+		OnLevelUp.Broadcast();
 	}
 	
 }
@@ -113,17 +115,17 @@ bool UProjectXStatsComponent::UseSkillPoints()
 	}
 	return bIsSuccess;
 }
-bool UProjectXStatsComponent::UseAttributePoints()
+bool UProjectXStatsComponent::UseAttributePoints(int32 PointsDoDecrease)
 {
 	bool bIsSuccess = false;
 	if (AttributePoints > 0)
 	{
-		AttributePoints = AttributePoints - 1;
+		AttributePoints = AttributePoints - PointsDoDecrease;
 		bIsSuccess = true;
 	}
 	return bIsSuccess;
 }
-void UProjectXStatsComponent::ConRiseResult(bool Init)
+void UProjectXStatsComponent::ConRiseResult(bool Init, int32 AmountOfPointstoAdd)
 {		
 	if (Init)
 	{
@@ -135,38 +137,41 @@ void UProjectXStatsComponent::ConRiseResult(bool Init)
 	}
 	else
 	{
-		if (HealthComponent)
+		for (int32 i = 0; i < AmountOfPointstoAdd; i++)
 		{
-			//float ToChangeHealthValue = CharacterStatistic.Constitution * 10;
-		//	HealthComponent->SetCurrentMaxHealth(ToChangeHealthValue);
-			HealthComponent->AddMaxHealthValue(10);
+			if (HealthComponent)
+			{
+				//float ToChangeHealthValue = CharacterStatistic.Constitution * 10;
+			//	HealthComponent->SetCurrentMaxHealth(ToChangeHealthValue);
+				HealthComponent->AddMaxHealthValue(10);
 
-			if (CharacterStatistic.Constitution == 10)
-			{
-				HealthComponent->CoefDamage -= 0.1;
-			}
-			if (CharacterStatistic.Constitution == 15)
-			{
-				HealthComponent->CoefDamage -= 0.1;
-				HealthComponent->AddMaxHealthValue(30);
-			}
-			if (CharacterStatistic.Constitution == 20)
-			{
-				HealthComponent->CoefDamage -= 0.2;
-				HealthComponent->AddMaxHealthValue(60);
-
-				UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
-				if (Skill)
+				if (CharacterStatistic.Constitution == 10)
 				{
-					Skill->isBastionModeAvailable = true;
-					Skill->BonusSkill = ESkillList::BastionMode;
+					HealthComponent->CoefDamage -= 0.1;
+				}
+				if (CharacterStatistic.Constitution == 15)
+				{
+					HealthComponent->CoefDamage -= 0.1;
+					HealthComponent->AddMaxHealthValue(30);
+				}
+				if (CharacterStatistic.Constitution == 20)
+				{
+					HealthComponent->CoefDamage -= 0.2;
+					HealthComponent->AddMaxHealthValue(60);
+
+					UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+					if (Skill)
+					{
+						Skill->isBastionModeAvailable = true;
+						Skill->BonusSkill = ESkillList::BastionMode;
+					}
 				}
 			}
-		}
-		if (Inventory)
-		{
-			Inventory->MaxWeightLimit += 2;
-			Inventory->OnCurrentWeightChange.Broadcast(Inventory->CurrentWeight, Inventory->MaxWeightLimit);
+			if (Inventory)
+			{
+				Inventory->MaxWeightLimit += 2;
+				Inventory->OnCurrentWeightChange.Broadcast(Inventory->CurrentWeight, Inventory->MaxWeightLimit);
+			}
 		}
 	}
 		
@@ -174,36 +179,47 @@ void UProjectXStatsComponent::ConRiseResult(bool Init)
 	
 
 }
-void UProjectXStatsComponent::StrRiseResult()
+void UProjectXStatsComponent::StrRiseResult(bool Init,int32 AmountOfPointstoAdd)
 {
-	
-	if (Inventory)
+	if (Init)
 	{
-		Inventory->MaxWeightLimit += 2;
-		Inventory->OnCurrentWeightChange.Broadcast(Inventory->CurrentWeight, Inventory->MaxWeightLimit);
-		
-		if (CharacterStatistic.Strength == 10)
-		{
-			IsSlotUnlocked();
-		}
-		if (CharacterStatistic.Strength == 15)
-		{
-			IsSlotUnlocked();
-		}
-		if (CharacterStatistic.Strength == 20)
-		{
-			IsSlotUnlocked();
-			HealthComponent->CoefDamage -= 0.5f;
+		Inventory->MaxWeightLimit += CharacterStatistic.Strength * 2;
+	}
+	else
+	{
 
-			UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
-			if (Skill)
+	
+	for (int32 i = 0; i < AmountOfPointstoAdd; i++)
+	{
+		if (Inventory)
+		{
+			Inventory->MaxWeightLimit += 2;
+			Inventory->OnCurrentWeightChange.Broadcast(Inventory->CurrentWeight, Inventory->MaxWeightLimit);
+
+			if (CharacterStatistic.Strength == 10)
 			{
-				Skill->isRageModeAvailable = true;
-				
+				IsSlotUnlocked();
+			}
+			if (CharacterStatistic.Strength == 15)
+			{
+				IsSlotUnlocked();
+			}
+			if (CharacterStatistic.Strength == 20)
+			{
+				IsSlotUnlocked();
+				HealthComponent->CoefDamage -= 0.5f;
+
+				UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+				if (Skill)
+				{
+					Skill->isRageModeAvailable = true;
+
 					Skill->BonusSkill = ESkillList::RageMode;
 
+				}
 			}
 		}
+	}
 	}
 
 }
@@ -222,38 +238,55 @@ bool UProjectXStatsComponent::IsSlotUnlocked()
 	}
 	return bIsFound;
 }
-void UProjectXStatsComponent::ReactionRiseResult()
+void UProjectXStatsComponent::ReactionRiseResult(bool Init,int32 AmountOfPointstoAdd)
 {
-	//DO INIT FROM START
+	
 	AProjectXCharacter* Player = Cast<AProjectXCharacter>(GetOwner());
-	if (Player)
+	if (Init)
 	{
-		Player->CorrectAccuracyOnStatUp += 0.1f;
-		Player->CorrectFireRateOnStatUp += 0.004f;
-
-		if (CharacterStatistic.Reaction == 10)
+		if (Player)
 		{
-			Player->BonusReloadSpeed += 0.1f;
-		}
-
-		if (CharacterStatistic.Reaction == 15)
-		{
-			Player->BonusReloadSpeed += 0.2f;
-		}
-
-		if (CharacterStatistic.Reaction == 20)
-		{
-			UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
-			if (Skill)
-			{
-				Skill->isSnakeModeAvailable = true;
-
-				Skill->BonusSkill = ESkillList::SnakeMode;
-
-			}
-			Player->BonusReloadSpeed += 0.3f;
+			Player->CorrectAccuracyOnStatUp += CharacterStatistic.Reaction * 0.1f;
+			Player->CorrectFireRateOnStatUp += CharacterStatistic.Reaction* 0.004f;
 		}
 	}
+	else
+	{
+		for (int32 i = 0; i < AmountOfPointstoAdd; i++)
+		{
+			
+			if (Player)
+			{
+				Player->CorrectAccuracyOnStatUp += 0.1f;
+				Player->CorrectFireRateOnStatUp += 0.004f;
+
+				if (CharacterStatistic.Reaction == 10)
+				{
+					Player->BonusReloadSpeed += 0.1f;
+				}
+
+				if (CharacterStatistic.Reaction == 15)
+				{
+					Player->BonusReloadSpeed += 0.2f;
+				}
+
+				if (CharacterStatistic.Reaction == 20)
+				{
+					UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+					if (Skill)
+					{
+						Skill->isSnakeModeAvailable = true;
+
+						Skill->BonusSkill = ESkillList::SnakeMode;
+
+					}
+					Player->BonusReloadSpeed += 0.3f;
+				}
+			}
+		}
+	}
+	
+	
 }
 FStatsInfo UProjectXStatsComponent::GetEveryStat(int32& level, int32& skillpoints, int32& att)
 {
@@ -283,27 +316,27 @@ FStatsInfo UProjectXStatsComponent::GetCharacterInfo(int32& CurrentSkillPoints, 
 	return CharacterStatistic;
 }
 */
-bool UProjectXStatsComponent::RiseStat(EStatTypesName StatName)
+bool UProjectXStatsComponent::RiseStat(EStatTypesName StatName, int32 AmountOfPoits)
 {
 	bool bIsSucces = false;
-	if (UseAttributePoints())
+	if (UseAttributePoints(AmountOfPoits))
 	{			
 		switch (StatName)
 		{
 		case EStatTypesName::Strength:
-			CharacterStatistic.Strength = CharacterStatistic.Strength + 1;
-			StrRiseResult();
+			CharacterStatistic.Strength = CharacterStatistic.Strength + AmountOfPoits;
+			StrRiseResult(false,AmountOfPoits);
 			break;
 		case EStatTypesName::Constitution:
-			CharacterStatistic.Constitution = CharacterStatistic.Constitution + 1;
-			ConRiseResult(false);
+			CharacterStatistic.Constitution = CharacterStatistic.Constitution + AmountOfPoits;
+			ConRiseResult(false, AmountOfPoits);
 			break;
 		case EStatTypesName::Intelligence:
-			CharacterStatistic.Intelligence = CharacterStatistic.Intelligence + 1;
+			CharacterStatistic.Intelligence = CharacterStatistic.Intelligence + AmountOfPoits;
 			break;
 		case EStatTypesName::Reaction:
-			ReactionRiseResult();
-			CharacterStatistic.Reaction = CharacterStatistic.Reaction + 1;
+			ReactionRiseResult(false,AmountOfPoits);
+			CharacterStatistic.Reaction = CharacterStatistic.Reaction + AmountOfPoits;
 			break;
 		default:
 			break;

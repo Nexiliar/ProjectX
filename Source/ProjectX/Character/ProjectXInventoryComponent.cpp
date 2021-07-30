@@ -622,14 +622,24 @@ bool UProjectXInventoryComponent::EquipBracer(FInventory ItemInfo, float BracerS
 					}
 					else
 					{
-						CoolDown = BracerSkillCoolDown;
-						TimeRemaining = BracerSkillTimer;
-						EquipedBracerSkill = CurrentSkillInBracer;
+							EquipedBracerSkill = CurrentSkillInBracer;						
 
 						UProjectXSkillComponent* SkillComp = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));						
 						if (SkillComp)
 						{
-							SkillComp->CurrentSkill = CurrentSkillInBracer;
+							if (SkillComp->CurrentSkill == ESkillList::Teleport || SkillComp->CurrentSkill == ESkillList::Recall || SkillComp->CurrentSkill == ESkillList::SlowMode)
+							{
+								SkillComp->CurrentSkill = CurrentSkillInBracer;
+								CoolDown = BracerSkillCoolDown;
+								TimeRemaining = BracerSkillTimer;
+							}
+							else
+							{
+								SkillComp->BonusSkill = CurrentSkillInBracer;
+								CoolDown = BracerSkillCoolDown;
+								TimeRemaining = BracerSkillTimer;
+							}
+								
 						}
 						ChangeCurrentWeight(ItemInfo, 1, true);
 						OnEquipItem.Broadcast();

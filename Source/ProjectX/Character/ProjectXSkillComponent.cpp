@@ -61,6 +61,20 @@ void UProjectXSkillComponent::CheckTimeRemainingOnCoolDown()
 	TimerForWIdgetUpdateInfo = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_CoolDownTimer);
 	OnTimerStarted.Broadcast(TimerForWIdgetUpdateInfo);
 }
+
+void UProjectXSkillComponent::CheckSkillTimer()
+{
+	SkillTimerForWidget = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_SlowMoTimer);
+	
+	BonusSkillTimerForWidget = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_BonusSkillTimer);
+	
+	OnSkillTimerCount.Broadcast(SkillTimerForWidget, BonusSkillTimerForWidget);
+	if (SkillTimerForWidget <= 0 && BonusSkillTimerForWidget <= 0)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_SkillTimerForWidget);
+	}
+}
+
 //Инициализация таймера счетчика кд
 void UProjectXSkillComponent::InitTimerRemainingCooldown()
 {	
@@ -69,17 +83,20 @@ void UProjectXSkillComponent::InitTimerRemainingCooldown()
 
 void UProjectXSkillComponent::SwitchSkills()
 {
-	ESkillList TempSkill = CurrentSkill;
-	CurrentSkill = BonusSkill;
-	BonusSkill = TempSkill;
-	OnSkillSwitched.Broadcast();
+	if (isBastionModeAvailable || isSnakeModeAvailable || isRageModeAvailable)
+	{
+		ESkillList TempSkill = CurrentSkill;
+		CurrentSkill = BonusSkill;
+		BonusSkill = TempSkill;
+		OnSkillSwitched.Broadcast();
+	}
 }
 
 void UProjectXSkillComponent::Teleport(float TeleportCoolDown)
 {	
 	if (isSkillOnCoolDown)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UProjectXSkillComponent::Teleport COOLDOWN"));
+		
 	}
 	else
 	{
@@ -115,6 +132,7 @@ void UProjectXSkillComponent::Teleport(float TeleportCoolDown)
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EndTeleportPoint, GetOwner()->GetTransform());
 		}
 		CoolDown = TeleportCoolDown;
+		OnSkillUsed.Broadcast(ESkillList::Teleport);
 	}
 	
 }
@@ -134,7 +152,11 @@ void UProjectXSkillComponent::SlowMode(float SlowMoCooldown, float TimerRemain)
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.5f);
 
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_SlowMoTimer, this, &UProjectXSkillComponent::SlowModeEnd, TimerRemain, false);
+		
+		//Снимаем значение с таймера
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_SkillTimerForWidget, this, &UProjectXSkillComponent::CheckSkillTimer, 0.1f, true);
 		CoolDown = SlowMoCooldown;
+		OnSkillUsed.Broadcast(ESkillList::SlowMode);
 	}
 }
 
@@ -151,36 +173,39 @@ void UProjectXSkillComponent::CheckTimeRemainingOnBonusSkillCoolDown()
 
 void UProjectXSkillComponent::ChoseSkill(ESkillList Skill)
 {
-	switch (CurrentSkill)
-	{
-	case ESkillList::RageMode:
-		CurrentSkill = Skill;
-		break;
-	case ESkillList::SnakeMode:
-		CurrentSkill = Skill;
-		break;
-	case ESkillList::BastionMode:
-		CurrentSkill = Skill;
-		break;
-	default:
-		break;
-	}
 
-	switch (BonusSkill)
-	{
-	case ESkillList::RageMode:
-		BonusSkill = Skill;
-		break;
-	case ESkillList::SnakeMode:
-		BonusSkill = Skill;
-		break;
-	case ESkillList::BastionMode:
-		BonusSkill = Skill;
-		break;
-	default:
-		break;
-	}
-	
+		switch (CurrentSkill)
+		{
+		case ESkillList::RageMode:
+			CurrentSkill = Skill;
+			break;
+		case ESkillList::SnakeMode:
+			CurrentSkill = Skill;
+			break;
+		case ESkillList::BastionMode:
+			CurrentSkill = Skill;
+			break;
+		default:
+			break;
+		}
+
+
+		switch (BonusSkill)
+		{
+		case ESkillList::RageMode:
+			BonusSkill = Skill;
+			break;
+		case ESkillList::SnakeMode:
+			BonusSkill = Skill;
+			break;
+		case ESkillList::BastionMode:
+			BonusSkill = Skill;
+			break;
+		default:
+			break;
+		
+
+		}
 	OnSkillSwitched.Broadcast();
 }
 
@@ -212,10 +237,11 @@ void UProjectXSkillComponent::Recall(float RecallCoolDown)
 		}
 		if (EndRecallPoint)
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EndRecallPoint, GetOwner()->GetTransform());
-		
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_SkillTimerForWidget, this, &UProjectXSkillComponent::CheckSkillTimer, 0.1f, true);
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_CoolDownTimer, this, &UProjectXSkillComponent::SkillIsEnable, RecallCoolDown, false);
 		InitTimerRemainingCooldown();
 		CoolDown = RecallCoolDown;
+		OnSkillUsed.Broadcast(ESkillList::Recall);
 	}
 	
 
@@ -240,10 +266,11 @@ void UProjectXSkillComponent::RageMode()
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_CheckBonusTimerValue, this, &UProjectXSkillComponent::CheckTimeRemainingOnBonusSkillCoolDown, 0.1f, true);
 
 			HealthComp->SetCurrentMaxHealth(TempMaxHealth);
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_RageTimer, this, &UProjectXSkillComponent::RageModeEnd, RageTimer, false);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BonusSkillTimer, this, &UProjectXSkillComponent::RageModeEnd, RageTimer, false);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_SkillTimerForWidget, this, &UProjectXSkillComponent::CheckSkillTimer, 0.1f, true);
 			isBonusSkillOnCoolDown = true;
 			isRageModeOn = true;
-			
+			OnSkillUsed.Broadcast(ESkillList::RageMode);
 		}
 	}
 
@@ -281,7 +308,9 @@ void UProjectXSkillComponent::SnakeMode()
 			FWeaponInfo WeaponInfo;
 			MyGI->GetWeaponInfoByName("SnakeModePistol", WeaponInfo);
 
-			LastEquipedWeapon = Player->GetCurrentWeapon()->WeaponSetting;
+			if(Player->GetCurrentWeapon())
+				LastEquipedWeapon = Player->GetCurrentWeapon()->WeaponSetting;
+			
 			Player->isSnakeModeEnabled = true;
 			Player->InitWeapon(WeaponInfo);
 			
@@ -296,10 +325,12 @@ void UProjectXSkillComponent::SnakeMode()
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_CheckBonusTimerValue, this, &UProjectXSkillComponent::CheckTimeRemainingOnBonusSkillCoolDown, 0.1f, true);
 
 			
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_RageTimer, this, &UProjectXSkillComponent::SnakeModeEnd, SnakeTimer, false);
-
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BonusSkillTimer, this, &UProjectXSkillComponent::SnakeModeEnd, SnakeTimer, false);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_SkillTimerForWidget, this, &UProjectXSkillComponent::CheckSkillTimer, 0.1f, true);
+			isSnakeModeOn = true;
 			isBonusSkillOnCoolDown = true;
-			
+			OnSnakeModeStatus.Broadcast(isSnakeModeOn);
+			OnSkillUsed.Broadcast(ESkillList::SnakeMode);
 		}
 	}
 }
@@ -315,6 +346,8 @@ void UProjectXSkillComponent::SnakeModeEnd()
 
 		if (EndSnakeModeAnim)
 			Player->GetMesh()->GetAnimInstance()->Montage_Play(EndSnakeModeAnim);
+		isSnakeModeOn = false;
+		OnSnakeModeStatus.Broadcast(isSnakeModeOn);
 	}
 }
 void UProjectXSkillComponent::BastionMode()
@@ -335,10 +368,11 @@ void UProjectXSkillComponent::BastionMode()
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_CheckBonusTimerValue, this, &UProjectXSkillComponent::CheckTimeRemainingOnBonusSkillCoolDown, 0.1f, true);
 
 			
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_RageTimer, this, &UProjectXSkillComponent::BastionModeEnd, BastionTimer, false);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BonusSkillTimer, this, &UProjectXSkillComponent::BastionModeEnd, BastionTimer, false);
 
 			
 			isBonusSkillOnCoolDown = true;
+			OnSkillUsed.Broadcast(ESkillList::BastionMode);
 		}
 	}
 }

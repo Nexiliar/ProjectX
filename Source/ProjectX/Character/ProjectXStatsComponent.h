@@ -13,6 +13,7 @@
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnStatsChange, FStatsInfo,CharStats,int32,CharacterLevel,int32,CurrentSkillPoints,int32,CurrentAttributePoints);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelUp);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PROJECTX_API UProjectXStatsComponent : public UActorComponent
@@ -25,6 +26,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Statistics")
 		FOnStatsChange OnStatsChange;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Statistics")
+		FOnLevelUp OnLevelUp;
 
 protected:
 	// Called when the game starts
@@ -66,19 +69,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
 		bool UseSkillPoints();
 	UFUNCTION(BlueprintCallable, Category = "Attribute")
-		bool UseAttributePoints();
+		bool UseAttributePoints(int32 PointsDoDecrease);
 
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
-		bool RiseStat(EStatTypesName StatName);
+		bool RiseStat(EStatTypesName StatName, int32 AmountOfPoits);
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
-		void ConRiseResult(bool Init);
+		void ConRiseResult(bool Init, int32 AmountOfPointstoAdd);
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
-		void StrRiseResult();
+		void StrRiseResult(bool Init,int32 AmountOfPointstoAdd);
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
 		bool IsSlotUnlocked();
 
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
-		void ReactionRiseResult();
+		void ReactionRiseResult(bool Init,int32 AmountOfPointstoAdd);
 	UFUNCTION(BlueprintCallable, Category = "Info")
 		FStatsInfo GetEveryStat(int32& level, int32& skillpoints, int32& att);
 	UFUNCTION(BlueprintCallable, Category = "Init")

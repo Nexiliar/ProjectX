@@ -12,8 +12,11 @@
 #include "ProjectXSkillComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimerStarted, float, TimerTick);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillUsed, ESkillList, SkillUsed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBonusTimerStarted, float, TimerTick);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillTimerCount, float, MainSkill, float, BonusSkill);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillSwitched);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSnakeModeStatus, bool, IsSnakeModeOne);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PROJECTX_API UProjectXSkillComponent : public UActorComponent
@@ -32,6 +35,9 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+	FTimerHandle TimerHandle_SkillTimerForWidget;
+	FTimerHandle TimerHandle_BonusSkillTimerForWidget;
+
 	//CurrentSkill
 	FTimerHandle TimerHandle_SlowMoTimer;
 	FTimerHandle TimerHandle_CoolDownTimer;
@@ -42,14 +48,20 @@ public:
 	FTimerHandle TimerHandle_CheckBonusTimerValue;
 	
 	//Rage
-	FTimerHandle TimerHandle_RageTimer;
+	FTimerHandle TimerHandle_BonusSkillTimer;
 
-	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Skill")
 		FOnTimerStarted OnTimerStarted;
-	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Skill")
 		FOnBonusTimerStarted OnBonusTimerStarted;
-	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Skill")
 		FOnSkillSwitched OnSkillSwitched;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Skill")
+		FOnSnakeModeStatus OnSnakeModeStatus;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Skill")
+		FOnSkillTimerCount OnSkillTimerCount;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Skill")
+		FOnSkillUsed OnSkillUsed;
 	
 	bool isSkillOnCoolDown = false;
 	UPROPERTY(BlueprintReadWrite, Category = "CoolDown")
@@ -65,7 +77,14 @@ public:
 		float TimerForWIdgetUpdateInfo;
 	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
 		float BonusTimerForWIdgetUpdateInfo;
-	
+
+
+
+	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
+		float SkillTimerForWidget;
+	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
+		float BonusSkillTimerForWidget;
+
 	//SkillSlots
 	UPROPERTY(BlueprintReadWrite, Category = "Skills")
 		ESkillList CurrentSkill = ESkillList::SlowMode;
@@ -83,6 +102,8 @@ public:
 		void CheckTimeRemainingOnCoolDown();
 	UFUNCTION(Category = "Skill Config")
 		void CheckTimeRemainingOnBonusSkillCoolDown();
+	UFUNCTION(Category = "Skill Config")
+		void CheckSkillTimer();
 
 	UFUNCTION(Category = "Skill Config")
 		void InitTimerRemainingCooldown();
@@ -145,6 +166,8 @@ public:
 		float SnakeCoolDownTimer = 70;
 	UPROPERTY(EditAnywhere, Category = "SnakeMode")
 		FWeaponInfo LastEquipedWeapon;
+	UPROPERTY(EditAnywhere, Category = "SnakeMode")
+		bool isSnakeModeOn = false;
 	UPROPERTY(EditAnywhere, Category = "SnakeMode")
 		float SnakeTimer = 30;
 	UFUNCTION(BlueprintCallable, Category = "SnakeMode")

@@ -448,6 +448,13 @@ void AProjectXCharacter::InitWeapon(FWeaponInfo InfoOfWeaponToInit)
 		CurrentWeapon = nullptr;
 	}
 
+	if (FirstWeaponInit && SecondWeaponInit)
+	{
+		FirstWeaponInit->Destroy();
+		SecondWeaponInit->Destroy();
+		FirstWeaponInit = nullptr;
+		SecondWeaponInit = nullptr;
+	}
 	if (isSnakeModeEnabled)
 	{
 		if (InfoOfWeaponToInit.WeaponName == "SnakeModePistol")
