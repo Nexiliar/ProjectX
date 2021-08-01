@@ -62,6 +62,7 @@ bool UProjectXInventoryComponent::EquipWeapon(FInventory ItemInfo, FWeaponInfo I
 		isEquipWeapon = true;
 		ChangeCurrentWeight(ItemInfo, 1, true);
 		BodyKitInit(InfoOfTheWeapon);
+		WeaponSlotsInfo[FreeSlotIndex].WeaponRarity = ItemInfo.EquipmentInfo.ItemRarity;
 		//UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::EquipWeapon SUCCES"));
 
 	}
@@ -1097,7 +1098,7 @@ void UProjectXInventoryComponent::WeaponINIT()
 			UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 			FInventory ItemInfo;
 			MyGI->GetItemInfoByName(WeaponSlotsInfo[i].WeaponName, ItemInfo);
-
+		
 			ChangeCurrentWeight(ItemInfo, 1, true);
 
 			//ChangeCurrentWeight();

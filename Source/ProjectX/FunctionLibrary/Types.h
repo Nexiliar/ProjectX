@@ -378,7 +378,8 @@ struct FWeaponInfo : public FTableRowBase
 		int32 NumberProjectileByShot = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 		float BurstRate = 0.1f;
-
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+		ERarity WeaponRarity = ERarity::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
 		FWeaponDispersion DispersionWeapon;
