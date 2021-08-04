@@ -12,7 +12,7 @@
 #include "ProjectXStatsComponent.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnStatsChange, FStatsInfo,CharStats,int32,CharacterLevel,int32,CurrentSkillPoints,int32,CurrentAttributePoints);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatsChange, FStatsInfo,CharStats,int32,CharacterLevel,int32,CurrentAttributePoints);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelUp);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -32,12 +32,11 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	int32 CurrentLevel = 1;
-	int32 SkillPoints = 0;
+	int32 CurrentLevel = 1;	
 	int32 AttributePoints = 0;
 	float CurrentExpirience = 0.0f;
 	float LevelExpirience;
-	float AmountOfExpirienceGain;
+
 	
 	FStatsInfo CharacterStatistic;
 	
@@ -53,6 +52,14 @@ public:
 	UProjectXInventoryComponent* Inventory;
 	
 	
+		bool React10 = false;
+		bool React15 = false;
+		bool React20 = false;
+
+		bool Con10 = false;
+		bool Con15 = false;
+		bool Con20 = false;
+
 
 	//Function to gain expirience for level up
 	UFUNCTION(BlueprintCallable, Category = "Expirience")
@@ -66,8 +73,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Expirience")
 		void LevelUpEvent();
 	
-	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
-		bool UseSkillPoints();
+
 	UFUNCTION(BlueprintCallable, Category = "Attribute")
 		bool UseAttributePoints(int32 PointsDoDecrease);
 
@@ -78,14 +84,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
 		void StrRiseResult(bool Init,int32 AmountOfPointstoAdd);
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
-		bool IsSlotUnlocked();
+		bool IsSlotUnlocked(int32 SlotIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
 		void ReactionRiseResult(bool Init,int32 AmountOfPointstoAdd);
 	UFUNCTION(BlueprintCallable, Category = "Info")
-		FStatsInfo GetEveryStat(int32& level, int32& skillpoints, int32& att);
+		FStatsInfo GetEveryStat(int32& level, int32& att);
 	UFUNCTION(BlueprintCallable, Category = "Init")
-		void StatsInit(int32 level, int32 skillpoints, int32 att, FStatsInfo stats);
+		void StatsInit(int32 level, int32 att, FStatsInfo stats);
 	UFUNCTION(Category = "BasicInit")
 		void BasicCompsInit();
 

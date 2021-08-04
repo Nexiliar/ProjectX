@@ -21,7 +21,7 @@ void UProjectXStatsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	//OnStatsChange.Broadcast(SkillPoints, AttributePoints, CurrentLevel);
-	OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, SkillPoints, AttributePoints);
+	OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel,AttributePoints);
 	//StatDependance();
 	// ...
 
@@ -40,25 +40,28 @@ void UProjectXStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 	// ...
 }
+
 //Function to gain expirience for level up
 void UProjectXStatsComponent::ExpGain(float Amount)
 {
-	CurrentExpirience = CurrentExpirience + Amount;
+	CurrentExpirience += Amount;
 	float CurrentLeveExpirience;
 	GetExpInfo(CurrentLeveExpirience);
 	 
-	if (CurrentExpirience > CurrentLeveExpirience)
+	if (CurrentExpirience > LevelExpirience)
 	{
-		float AmountExpLeft = CurrentExpirience - CurrentLeveExpirience;
-		CurrentExpirience = AmountExpLeft;
+		float AmountExpLeft = CurrentExpirience - LevelExpirience;
+		CurrentExpirience = 0.0f;
 		LevelUpEvent();	
+		ExpGain(AmountExpLeft);
 		
 	}
-	else if (CurrentExpirience == CurrentLeveExpirience)
+	else if (CurrentExpirience == LevelExpirience)
 	{
 		CurrentExpirience = 0;
 		LevelUpEvent();		
 	}
+
 	
 	
 }
@@ -72,9 +75,7 @@ float UProjectXStatsComponent::GetExpInfo(float& CurrentMaxExp)
 			LevelExpirience = AmountOfExpirienceNeedForLvlUpPerLevel[i];
 			CurrentMaxExp = LevelExpirience;
 		}
-
-	}
-	
+	}	
 	return CurrentExpirience;
 }
 
@@ -88,13 +89,13 @@ void UProjectXStatsComponent::LevelUpEvent()
 	}
 	else
 	{
-		CurrentLevel = CurrentLevel + 1;
-		SkillPoints = SkillPoints + 1;
-		AttributePoints = AttributePoints + 1;
-
-
+		CurrentLevel += + 1;
+		
+		AttributePoints += + 1;
+		
+		HealthComponent->SetCurrentHealth(HealthComponent->GetCurrentMaxHealth());
 		Inventory->MaxWeightLimit += 5;
-		OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, SkillPoints, AttributePoints);
+		OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel,AttributePoints);
 		OnLevelUp.Broadcast();
 	}
 	
@@ -105,16 +106,6 @@ UProjectXHealthComponent* UProjectXStatsComponent::GetHealthComponent()
 	return HealthComponent;
 }
 
-bool UProjectXStatsComponent::UseSkillPoints()
-{
-	bool bIsSuccess = false;
-	if (SkillPoints > 0)
-	{
-		SkillPoints = SkillPoints - 1;
-		bIsSuccess = true;
-	}
-	return bIsSuccess;
-}
 bool UProjectXStatsComponent::UseAttributePoints(int32 PointsDoDecrease)
 {
 	bool bIsSuccess = false;
@@ -141,30 +132,43 @@ void UProjectXStatsComponent::ConRiseResult(bool Init, int32 AmountOfPointstoAdd
 		{
 			if (HealthComponent)
 			{
-				//float ToChangeHealthValue = CharacterStatistic.Constitution * 10;
-			//	HealthComponent->SetCurrentMaxHealth(ToChangeHealthValue);
 				HealthComponent->AddMaxHealthValue(10);
 
-				if (CharacterStatistic.Constitution == 10)
+				if (CharacterStatistic.Constitution >= 10)
 				{
-					HealthComponent->CoefDamage -= 0.1;
-				}
-				if (CharacterStatistic.Constitution == 15)
-				{
-					HealthComponent->CoefDamage -= 0.1;
-					HealthComponent->AddMaxHealthValue(30);
-				}
-				if (CharacterStatistic.Constitution == 20)
-				{
-					HealthComponent->CoefDamage -= 0.2;
-					HealthComponent->AddMaxHealthValue(60);
-
-					UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
-					if (Skill)
+					if (!Con10)
 					{
-						Skill->isBastionModeAvailable = true;
-						Skill->BonusSkill = ESkillList::BastionMode;
+						HealthComponent->CoefDamage -= 0.1;
+						Con10 = true;
 					}
+					
+				}
+				if (CharacterStatistic.Constitution >= 15)
+				{
+					if (!Con15)
+					{
+						HealthComponent->CoefDamage -= 0.1;
+						HealthComponent->AddMaxHealthValue(30);
+						Con15 = true;
+					}
+
+				}
+				if (CharacterStatistic.Constitution >= 20)
+				{
+					if (!Con20)
+					{
+						Con20 = true;
+						HealthComponent->CoefDamage -= 0.2;
+						HealthComponent->AddMaxHealthValue(60);
+
+						UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+						if (Skill)
+						{
+							Skill->isBastionModeAvailable = true;
+							Skill->BonusSkill = ESkillList::BastionMode;
+						}
+					}
+
 				}
 			}
 			if (Inventory)
@@ -196,18 +200,18 @@ void UProjectXStatsComponent::StrRiseResult(bool Init,int32 AmountOfPointstoAdd)
 			Inventory->MaxWeightLimit += 2;
 			Inventory->OnCurrentWeightChange.Broadcast(Inventory->CurrentWeight, Inventory->MaxWeightLimit);
 
-			if (CharacterStatistic.Strength == 10)
+			if (CharacterStatistic.Strength >= 10)
 			{
-				IsSlotUnlocked();
+				IsSlotUnlocked(1);
 			}
-			if (CharacterStatistic.Strength == 15)
+			if (CharacterStatistic.Strength >= 15)
 			{
-				IsSlotUnlocked();
+				IsSlotUnlocked(2);
 			}
-			if (CharacterStatistic.Strength == 20)
+			if (CharacterStatistic.Strength >= 20)
 			{
-				IsSlotUnlocked();
-				HealthComponent->CoefDamage -= 0.5f;
+				IsSlotUnlocked(3);
+				HealthComponent->CoefDamage -= 0.05f;
 
 				UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
 				if (Skill)
@@ -223,20 +227,16 @@ void UProjectXStatsComponent::StrRiseResult(bool Init,int32 AmountOfPointstoAdd)
 	}
 
 }
-bool UProjectXStatsComponent::IsSlotUnlocked()
+bool UProjectXStatsComponent::IsSlotUnlocked(int32 SlotIndex)
 {
-	int8 i = 0;
-	bool bIsFound = false;
-	while (i < Inventory->WeaponSlotsInfo.Num() && !bIsFound)
+	bool bIsUnlocked = false;
+	if (!Inventory->WeaponSlotsInfo[SlotIndex].CanUseSlot)
 	{
-		if (!Inventory->WeaponSlotsInfo[i].CanUseSlot)
-		{
-			Inventory->WeaponSlotsInfo[i].CanUseSlot = true;
-			bIsFound = true;
-		}
-		i++;
-	}
-	return bIsFound;
+		Inventory->WeaponSlotsInfo[SlotIndex].CanUseSlot = true;
+		bIsUnlocked = true;
+	}	
+
+	return bIsUnlocked;
 }
 void UProjectXStatsComponent::ReactionRiseResult(bool Init,int32 AmountOfPointstoAdd)
 {
@@ -260,27 +260,44 @@ void UProjectXStatsComponent::ReactionRiseResult(bool Init,int32 AmountOfPointst
 				Player->CorrectAccuracyOnStatUp += 0.1f;
 				Player->CorrectFireRateOnStatUp += 0.004f;
 
-				if (CharacterStatistic.Reaction == 10)
+				if (CharacterStatistic.Reaction >= 10)
 				{
-					Player->BonusReloadSpeed += 0.1f;
-				}
-
-				if (CharacterStatistic.Reaction == 15)
-				{
-					Player->BonusReloadSpeed += 0.2f;
-				}
-
-				if (CharacterStatistic.Reaction == 20)
-				{
-					UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
-					if (Skill)
+					if (!React10)
 					{
-						Skill->isSnakeModeAvailable = true;
-
-						Skill->BonusSkill = ESkillList::SnakeMode;
-
+						Player->BonusReloadSpeed += 0.1f;
+						React10 = true;
+						UE_LOG(LogTemp, Warning, TEXT("React10"));
 					}
-					Player->BonusReloadSpeed += 0.3f;
+					
+				}
+
+				if (CharacterStatistic.Reaction >= 15)
+				{
+					if (!React15)
+					{
+						Player->BonusReloadSpeed += 0.2f;
+						React15 = true;
+						UE_LOG(LogTemp, Warning, TEXT("React15"));
+					}					
+				}
+
+				if (CharacterStatistic.Reaction >= 20)
+				{
+					if (!React20)
+					{
+						React20 = true;
+						UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
+						if (Skill)
+						{
+							Skill->isSnakeModeAvailable = true;
+
+							Skill->BonusSkill = ESkillList::SnakeMode;
+
+						}
+						Player->BonusReloadSpeed += 0.3f;
+						UE_LOG(LogTemp, Warning, TEXT("React20"));
+					}
+
 				}
 			}
 		}
@@ -288,17 +305,15 @@ void UProjectXStatsComponent::ReactionRiseResult(bool Init,int32 AmountOfPointst
 	
 	
 }
-FStatsInfo UProjectXStatsComponent::GetEveryStat(int32& level, int32& skillpoints, int32& att)
+FStatsInfo UProjectXStatsComponent::GetEveryStat(int32& level,int32& att)
 {
-	level = CurrentLevel;
-	skillpoints = SkillPoints;
+	level = CurrentLevel;	
 	att = AttributePoints;
 	return CharacterStatistic;
 }
-void UProjectXStatsComponent::StatsInit(int32 level, int32 skillpoints, int32 att, FStatsInfo stats)
+void UProjectXStatsComponent::StatsInit(int32 level, int32 att, FStatsInfo stats)
 {
-	CurrentLevel = level;
-	SkillPoints = skillpoints;
+	CurrentLevel = level;	
 	AttributePoints = att;
 	CharacterStatistic = stats;
 }
@@ -307,15 +322,7 @@ void UProjectXStatsComponent::BasicCompsInit()
 	Inventory = Cast<UProjectXInventoryComponent>(GetOwner()->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
 	HealthComponent = Cast<UProjectXHealthComponent>(GetOwner()->GetComponentByClass(UProjectXHealthComponent::StaticClass()));
 }
-/*  Delete if not used
-FStatsInfo UProjectXStatsComponent::GetCharacterInfo(int32& CurrentSkillPoints, int32& CurrentAttributePoints, int32& CharacterLevel)
-{
-	CharacterLevel = CurrentLevel;
-	CurrentAttributePoints = AttributePoints;
-	CurrentSkillPoints = SkillPoints;
-	return CharacterStatistic;
-}
-*/
+
 bool UProjectXStatsComponent::RiseStat(EStatTypesName StatName, int32 AmountOfPoits)
 {
 	bool bIsSucces = false;
@@ -343,7 +350,7 @@ bool UProjectXStatsComponent::RiseStat(EStatTypesName StatName, int32 AmountOfPo
 		}
 		bIsSucces = true;
 		
-		OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, SkillPoints, AttributePoints);
+		OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, AttributePoints);
 	}
 	
 	return bIsSucces;

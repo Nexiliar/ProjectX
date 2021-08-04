@@ -20,7 +20,7 @@ UProjectXInventoryComponent::UProjectXInventoryComponent()
 void UProjectXInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	WeaponINIT();
+	//WeaponINIT();
 
 }
 
@@ -104,6 +104,7 @@ bool UProjectXInventoryComponent::UnequipWeapon(int32 SlotIndex)
 	{
 		//TempInv - del after reworkpickupweapon
 		FInventory TempInv;
+		TempInv.EquipmentInfo.ItemRarity = WeaponSlotsInfo[SlotIndex].WeaponRarity;
 		DropedWeapon->ItemInit(WeaponSlotsInfo[SlotIndex].WeaponName, false, InventorySlots, TempInv);
 	}
 	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
@@ -327,8 +328,7 @@ bool UProjectXInventoryComponent::CheckCanTakeWeapon(int32 &FreeSlot)
 			{
 				bIsFreeslot = true;
 				FreeSlot = i;
-			}
-			
+			}			
 		}
 		i++;
 	}
@@ -354,12 +354,15 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 		break;
 	case EEquipmentSlotType::Bracer:
 		UnequipBracer(SlotIndex);
+		bIsFind = true;
 		break;
 	case EEquipmentSlotType::BodyKit:
 		UnequipBodyKit(SlotIndex);
+		bIsFind = true;
 		break;
 	case EEquipmentSlotType::Armor:
 		UnEquipArmor(SlotIndex);
+		bIsFind = true;
 		break;
 	case EEquipmentSlotType::BackPack:
 		UnequipBackPack(SlotIndex);
@@ -506,8 +509,8 @@ bool UProjectXInventoryComponent::UnequipBodyKit(int32 SlotIndex)
 
 		}
 		DropedBodyKit->SetBodyKitInfo(BodyKitAmmoSlotsInfo);
-		DropedBodyKit->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots, EquipmentSlots[SlotIndex]);		
-		
+		DropedBodyKit->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots, EquipmentSlots[SlotIndex]);
+
 		UnequipSuccess = true;
 		isBodyKitEquiped = false;
 	}
@@ -520,6 +523,7 @@ bool UProjectXInventoryComponent::UnequipBodyKit(int32 SlotIndex)
 	BodyKitAmmoSlotsInfo = {};
 	OnEquipItem.Broadcast();
 	return UnequipSuccess;
+
 }
 
 bool UProjectXInventoryComponent::EquipArmor(FInventory ItemInfo, float Coef)
@@ -612,9 +616,10 @@ bool UProjectXInventoryComponent::EquipBracer(FInventory ItemInfo, float BracerS
 			{
 				if (EquipmentSlots[i].EquipmentInfo.SlotType == EEquipmentSlotType::Bracer)
 				{
-					EquipmentSlots[i] = ItemInfo;
+					
 					if (isBracerEquiped)
-					{						
+					{		
+						
 						UnequipBracer(i);
 						CoolDown = 0.0f;
 						TimeRemaining = 0.0f;
@@ -623,6 +628,7 @@ bool UProjectXInventoryComponent::EquipBracer(FInventory ItemInfo, float BracerS
 					}
 					else
 					{
+						EquipmentSlots[i] = ItemInfo;
 							EquipedBracerSkill = CurrentSkillInBracer;						
 
 						UProjectXSkillComponent* SkillComp = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));						
@@ -675,7 +681,7 @@ bool UProjectXInventoryComponent::UnequipBracer(int32 SlotIndex)
 		SpawnedItemCFG->AbilityTimer = TimeRemaining;
 		SpawnedItemCFG->CurrentBracerSkill = EquipedBracerSkill;
 		SpawnedItemCFG->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots, EquipmentSlots[SlotIndex]);
-		UE_LOG(LogTemp, Warning, TEXT(" UProjectXInventoryComponent::UnequipBracer SPAWNEDITEMCFG"));
+		
 	}
 	EquipmentSlots[SlotIndex] = {};
 	EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::Bracer;
@@ -1078,14 +1084,20 @@ void UProjectXInventoryComponent::DestroyItems(int32 ItemIndex)
 	OnAmountOfItemsChanged.Broadcast();
 }
 
-void UProjectXInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo)
+void UProjectXInventoryComponent::InitInventory(TArray<FWeaponInfo> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo, TArray<FInventory> NewInventorySlots, TArray<FInventory> NewEquipmentSlotInfo)
 {
+	//WeaponSlotsInfo[1].
+	WeaponSlotsInfo = NewWeaponSlotsInfo;
+	AmmoSlots = NewAmmoSlotsInfo;
+	InventorySlots = NewInventorySlots;
+	EquipmentSlots = NewEquipmentSlotInfo;
+	/* 
 	EquipmentSlots.SetNum(4);	
 	EquipmentSlots[0].EquipmentInfo.SlotType = EEquipmentSlotType::Bracer;
 	EquipmentSlots[1].EquipmentInfo.SlotType = EEquipmentSlotType::Armor;
 	EquipmentSlots[2].EquipmentInfo.SlotType = EEquipmentSlotType::BodyKit;
 	EquipmentSlots[3].EquipmentInfo.SlotType = EEquipmentSlotType::BackPack;	
-
+	*/
 
 }
 
@@ -1100,8 +1112,7 @@ void UProjectXInventoryComponent::WeaponINIT()
 			MyGI->GetItemInfoByName(WeaponSlotsInfo[i].WeaponName, ItemInfo);
 		
 			ChangeCurrentWeight(ItemInfo, 1, true);
-
-			//ChangeCurrentWeight();
+						
 		}
 		
 	}

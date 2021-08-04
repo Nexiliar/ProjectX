@@ -17,6 +17,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
+
 #include "Engine/World.h"
 #include "ProjectX/Game/ProjectXGameInstance.h"
 
@@ -61,8 +62,7 @@ AProjectXCharacter::AProjectXCharacter()
 	{
 		CharHealthComponent->OnDead.AddDynamic(this, &AProjectXCharacter::CharDead);
 	}
-
-
+	
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -77,6 +77,7 @@ void AProjectXCharacter::BeginPlay()
 		CurrentCursor = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), CursorMaterial, CursorSize, FVector(0));
 	}	
 	GetWorldTimerManager().SetTimer(DelayTimer, this, &AProjectXCharacter::Compare, 0.1f, true, 0.1f);
+	
 
 }
 void AProjectXCharacter::Tick(float DeltaSeconds)
@@ -821,7 +822,9 @@ void AProjectXCharacter::CharDead()
 
 	if (GetController())
 	{
-		GetController()->UnPossess();
+		
+		GetController()->UnPossess();		
+		
 	}
 	//UnPossessed();
 	//TimerRagdooll
@@ -831,9 +834,11 @@ void AProjectXCharacter::CharDead()
 	
 	//Подумать, как переделать, чтобы персонаж рандомно продолжал стрелять после смерти
 		AttackCharEvent(false);
-
+		
 
 	CharDead_BP();
+
+	
 }
 
 void AProjectXCharacter::EnableRagdoll()

@@ -43,6 +43,8 @@ protected:
 		int32 BackPackSlotAmount = 0;
 
 public:	
+
+	FTimerHandle CheckCharacter_Timer;
 	//BackPack
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BackPack")
 		TArray<FInventory> InventorySlots;
@@ -56,7 +58,8 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "AdditionalInfoForWidget")
 	bool isOverlapping =false;
-		
+	UPROPERTY(BlueprintReadOnly, Category = "Character")
+		bool isCharacterAlive = false;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
@@ -127,7 +130,7 @@ public:
 
 	//Bracer
 	UFUNCTION()
-		void InitBracer(bool ItemIsNew);
+		void InitBracer(bool ItemIsNew, FInventory DropedItem);
 	UFUNCTION()
 		bool EquipBracer();
 
@@ -139,9 +142,11 @@ public:
 
 	//Weapon
 	UFUNCTION()
-		void InitWeapon(bool ItemIsNew);
+		void InitWeapon(bool ItemIsNew, FInventory DropedItem);
 	UFUNCTION()
 		bool EquipWeapon();
+
+
 	//UFUNCTION()
 		//void DropWeaponOnSwitch(FDropItem DroppedItemCFG);
 

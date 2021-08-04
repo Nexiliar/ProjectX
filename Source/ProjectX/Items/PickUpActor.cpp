@@ -39,7 +39,9 @@ void APickUpActor::BeginPlay()
 
 	//Инициализируем переменную Character
 	Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
+
+	
+	
 	
 	ItemInit(NameOfTheItem, isNewItem, InventorySlots,ItemCFG);
 	
@@ -56,9 +58,11 @@ void APickUpActor::Tick(float DeltaTime)
 
 void APickUpActor::CollisionBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	AProjectXCharacter*  CharacterP = Cast<AProjectXCharacter>(OtherActor);		
-		if (CharacterP && CharacterP->InventoryComponent)
+	Character = Cast<AProjectXCharacter>(OtherActor);
+	
+		if (Character && Character->InventoryComponent)
 		{
+			Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
 			isOverlapping = true;
 			OverlapStart_BP(isOverlapping);
 		}		
@@ -66,9 +70,10 @@ void APickUpActor::CollisionBoxBeginOverlap(UPrimitiveComponent* OverlappedCompo
 
 void APickUpActor::CollisionBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	AProjectXCharacter* CharacterP = Cast<AProjectXCharacter>(OtherActor);
+	Character = Cast<AProjectXCharacter>(OtherActor);
+	if(Character)
+		Character->OnIterractButtonPressed.Clear();
 
-//	CharacterP->OnIterractButtonPressed.Clear();
 
 	isOverlapping = false;
 	OverlapStart_BP(isOverlapping);
@@ -78,18 +83,18 @@ void APickUpActor::StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedCompone
 {
 	if (ItemCFG.ItemsInfo.Itemtype != EItemType::Equipment)
 	{ 
-			AProjectXCharacter* CharacterP = Cast<AProjectXCharacter>(OtherActor);
-			if (CharacterP && CharacterP->InventoryComponent && CharacterP->InventoryComponent->InventorySlots.Num()>1)
+		Character = Cast<AProjectXCharacter>(OtherActor);
+			if (Character && Character->InventoryComponent && Character->InventoryComponent->InventorySlots.Num()>1)
 			{
-				UE_LOG(LogTemp, Warning, TEXT(" InventorySlots > 1"));
+				
 					int32 RestItems;
 					bool EmptySlotisFind = false;
 					bool FreeStackisFind = false;
-					CharacterP->InventoryComponent->SearchEmptySlotIndex(EmptySlotisFind);
+					Character->InventoryComponent->SearchEmptySlotIndex(EmptySlotisFind);
 			
 					if (EmptySlotisFind)
 					{						
-							if (CharacterP->InventoryComponent->AddItem(ItemCFG, AmountItemsTospawn, RestItems))
+							if (Character->InventoryComponent->AddItem(ItemCFG, AmountItemsTospawn, RestItems))
 							{
 								if (RestItems > 0)
 								{
@@ -103,9 +108,9 @@ void APickUpActor::StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedCompone
 					}
 					else
 					{
-						if (CharacterP->InventoryComponent->SearchFreeStack(ItemCFG.ItemsInfo, FreeStackisFind))
+						if (Character->InventoryComponent->SearchFreeStack(ItemCFG.ItemsInfo, FreeStackisFind))
 						{
-							if (CharacterP->InventoryComponent->AddItem(ItemCFG, AmountItemsTospawn, RestItems))
+							if (Character->InventoryComponent->AddItem(ItemCFG, AmountItemsTospawn, RestItems))
 							{
 								if (RestItems > 0)
 								{
@@ -153,10 +158,10 @@ void APickUpActor::ItemInit(FName ItemName, bool IsAnItemNew, TArray<FInventory>
 		case EEquipmentSlotType::None:
 			break;
 		case EEquipmentSlotType::Weapon:
-			InitWeapon(IsAnItemNew);
+			InitWeapon(IsAnItemNew, DropedItem);
 			break;
 		case EEquipmentSlotType::Bracer:
-			InitBracer(IsAnItemNew);
+			InitBracer(IsAnItemNew, DropedItem);
 			break;
 		case EEquipmentSlotType::BodyKit:
 			InitBodyKit(IsAnItemNew);
@@ -246,7 +251,7 @@ void APickUpActor::InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArr
 			break;
 		}
 		InventorySlots.SetNum(GetBackPackSlotsAmount());
-		UE_LOG(LogTemp, Warning, TEXT(" BackPackInitialized"));
+		
 	}
 	else
 	{
@@ -267,6 +272,7 @@ void APickUpActor::InitBackPack(FInventory CurrentItemInfo, bool ItemIsNew, TArr
 void APickUpActor::TryToPickUpItem()
 {
 	Character = Cast<AProjectXCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	
 	//int32 FreeSlotIndex = 0;
 	//bool isFreeSlot = Character->InventoryComponent->CheckCanTakeWeapon(FreeSlotIndex);
 	if (isOverlapping)
@@ -401,7 +407,7 @@ void APickUpActor::InitBodyKit(bool ItemIsNew)
 			break;
 		}
 	
-		UE_LOG(LogTemp, Warning, TEXT(" BodyKitInitialized"));
+		
 	}
 	else
 	{
@@ -423,7 +429,7 @@ void APickUpActor::SetBodyKitInfo(TArray<FAmmoSlot> Ammo)
 	
 }
 
-void APickUpActor::InitBracer(bool ItemIsNew)
+void APickUpActor::InitBracer(bool ItemIsNew, FInventory DropedItem)
 {
 	if (ItemIsNew)
 	{
@@ -475,11 +481,11 @@ void APickUpActor::InitBracer(bool ItemIsNew)
 			break;
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT(" BracerInit"));
+		
 	}
 	else
 	{
-
+		ItemCFG = DropedItem;
 	}
 }
 bool APickUpActor::EquipBracer()
@@ -502,7 +508,7 @@ void APickUpActor::InitArmor(bool ItemIsNew)
 		case ERarity::None:
 			break;
 		case ERarity::Common:
-			DefCoef = 0.5f;
+			DefCoef = 0.05f;
 			break;
 		case ERarity::Uncommon:
 			DefCoef = 0.11f;
@@ -520,7 +526,7 @@ void APickUpActor::InitArmor(bool ItemIsNew)
 			break;
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT(" ArmorInit"));
+		
 	}
 	else
 	{
@@ -534,7 +540,7 @@ bool APickUpActor::EquipArmor()
 	myInventory->EquipArmor(ItemCFG, DefCoef); 	
 	return bIsArmorEquipSuccess;
 }
-void APickUpActor::InitWeapon(bool ItemIsNew)
+void APickUpActor::InitWeapon(bool ItemIsNew, FInventory DropedItem)
 {
 	UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 	if (MyGI)
@@ -576,11 +582,11 @@ void APickUpActor::InitWeapon(bool ItemIsNew)
 			default:
 				break;
 			}
-			UE_LOG(LogTemp, Warning, TEXT("WeaponInit"));
+			
 		}
 		else
 		{
-			
+			ItemCFG.EquipmentInfo.ItemRarity = DropedItem.EquipmentInfo.ItemRarity;
 		}
 	}
 
@@ -598,6 +604,7 @@ bool APickUpActor::EquipWeapon()
 
 	return bIsWeaponEquipSuccess;	
 }
+
 void APickUpActor::OverlapStart_BP_Implementation(bool isOverlaping)
 {
 

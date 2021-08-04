@@ -144,7 +144,7 @@ public:
 		bool UnequipBodyKit(int32 SlotIndex);
 
 	//Armor
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 		float CoefForArmor;
 
 	UFUNCTION(BlueprintCallable, Category = "Armor")
@@ -233,7 +233,7 @@ public:
 
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-		void InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo);
+		void InitInventory(TArray<FWeaponInfo> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo, TArray<FInventory> NewInventorySlots, TArray<FInventory> NewEquipmentSlotInfo);
 	UFUNCTION(BlueprintCallable, Category = "WeaponINIT")
 		void WeaponINIT();
 
