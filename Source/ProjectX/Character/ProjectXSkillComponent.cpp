@@ -38,21 +38,44 @@ void UProjectXSkillComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 void UProjectXSkillComponent::SkillIsEnable()
 {
-	if (isSkillOnCoolDown && TimerForWIdgetUpdateInfo<=0.1f)
+	if (CharIsDead)
 	{
-		isSkillOnCoolDown = false;
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_SkillTimerForWidget);
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_BonusSkillTimerForWidget);
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_SlowMoTimer);
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_CoolDownTimer);
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_CheckTimerValue);
-		TimerForWIdgetUpdateInfo = 0.0f;
-	}
-	
-	if (isBonusSkillOnCoolDown && BonusTimerForWIdgetUpdateInfo <= 0.1f)
-	{
 		GetWorld()->GetTimerManager().ClearTimer(TimerHanlde_BonusSkillCooldown);
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_CheckBonusTimerValue);
-		isBonusSkillOnCoolDown = false;
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_BonusSkillTimer);
+		TimerForWIdgetUpdateInfo = 0.0f;
 		BonusTimerForWIdgetUpdateInfo = 0.0f;
-	}	
+		isSkillOnCoolDown = false;
+		SlowModeEnd();
+		SnakeModeEnd();		
+		BastionModeEnd();
+		if(isRageModeOn)
+			RageModeEnd();
+	}
+	else
+	{
+		if (isSkillOnCoolDown && TimerForWIdgetUpdateInfo <= 0.1f)
+		{
+			isSkillOnCoolDown = false;
+			GetWorld()->GetTimerManager().ClearTimer(TimerHandle_CoolDownTimer);
+			GetWorld()->GetTimerManager().ClearTimer(TimerHandle_CheckTimerValue);
+			TimerForWIdgetUpdateInfo = 0.0f;
+		}
+
+		if (isBonusSkillOnCoolDown && BonusTimerForWIdgetUpdateInfo <= 0.1f)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(TimerHanlde_BonusSkillCooldown);
+			GetWorld()->GetTimerManager().ClearTimer(TimerHandle_CheckBonusTimerValue);
+			isBonusSkillOnCoolDown = false;
+			BonusTimerForWIdgetUpdateInfo = 0.0f;
+		}
+	}
+
 }
 
 //Значение таймера, для счета кд

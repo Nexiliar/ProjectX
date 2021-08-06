@@ -1084,13 +1084,16 @@ void UProjectXInventoryComponent::DestroyItems(int32 ItemIndex)
 	OnAmountOfItemsChanged.Broadcast();
 }
 
-void UProjectXInventoryComponent::InitInventory(TArray<FWeaponInfo> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo, TArray<FInventory> NewInventorySlots, TArray<FInventory> NewEquipmentSlotInfo)
+void UProjectXInventoryComponent::InitInventory(TArray<FWeaponInfo> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo, TArray<FInventory> NewInventorySlots, TArray<FInventory> NewEquipmentSlotInfo, ESkillList BracerSkill, float NewCooldown, float NewSkillTimer)
 {
 	//WeaponSlotsInfo[1].
 	WeaponSlotsInfo = NewWeaponSlotsInfo;
 	AmmoSlots = NewAmmoSlotsInfo;
 	InventorySlots = NewInventorySlots;
 	EquipmentSlots = NewEquipmentSlotInfo;
+	EquipedBracerSkill = BracerSkill;
+	CoolDown = NewCooldown;
+	TimeRemaining = NewSkillTimer;
 	/* 
 	EquipmentSlots.SetNum(4);	
 	EquipmentSlots[0].EquipmentInfo.SlotType = EEquipmentSlotType::Bracer;

@@ -233,7 +233,7 @@ public:
 
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-		void InitInventory(TArray<FWeaponInfo> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo, TArray<FInventory> NewInventorySlots, TArray<FInventory> NewEquipmentSlotInfo);
+		void InitInventory(TArray<FWeaponInfo> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo, TArray<FInventory> NewInventorySlots, TArray<FInventory> NewEquipmentSlotInfo, ESkillList BracerSkill, float NewCooldown, float NewSkillTimer);
 	UFUNCTION(BlueprintCallable, Category = "WeaponINIT")
 		void WeaponINIT();
 

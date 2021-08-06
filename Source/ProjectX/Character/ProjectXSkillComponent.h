@@ -77,8 +77,9 @@ public:
 		float TimerForWIdgetUpdateInfo;
 	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
 		float BonusTimerForWIdgetUpdateInfo;
-
-
+	
+	UPROPERTY(BlueprintReadWrite, Category = "DeadEvent")
+		bool CharIsDead = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Skill Config")
 		float SkillTimerForWidget;

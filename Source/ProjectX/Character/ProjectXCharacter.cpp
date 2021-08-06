@@ -822,7 +822,8 @@ void AProjectXCharacter::CharDead()
 
 	if (GetController())
 	{
-		
+		SkillComponent->CharIsDead = true;
+		SkillComponent->SkillIsEnable();
 		GetController()->UnPossess();		
 		
 	}
