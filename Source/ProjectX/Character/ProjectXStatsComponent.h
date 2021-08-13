@@ -33,11 +33,18 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	int32 CurrentLevel = 1;	
-	int32 AttributePoints = 0;
+	int32 AttributePoints = 0;	
 	float CurrentExpirience = 0.0f;
 	float LevelExpirience;
 
-	
+
+	int32 AvailableAttributePoints = 0;
+	int32 MaxAttributePoints = 0;
+	int32 STR = 0;
+	int32 CON = 0;
+	int32 REACT = 0;
+
+	FStatsInfo DefaultCharStatistic;
 	FStatsInfo CharacterStatistic;
 	
 public:	
@@ -91,10 +98,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Info")
 		FStatsInfo GetEveryStat(int32& level, int32& att);
 	UFUNCTION(BlueprintCallable, Category = "Init")
-		void StatsInit(int32 level, int32 att, FStatsInfo stats);
+		void StatsInit(bool FirstInit, int32 level, int32 att, FStatsInfo stats);
 	UFUNCTION(Category = "BasicInit")
 		void BasicCompsInit();
 
+	//RiseAndSave Stats logic
+	UFUNCTION(BlueprintCallable, Category = "RiseAndSave")
+		void RiseAttValue(FName StatName, int32& CurrentAtt,int32& CurrentAttributePoints);
+	UFUNCTION(BlueprintCallable, Category = "RiseAndSave")
+		void DecreaseAttValue(FName StatName, int32& CurrentAtt, int32& CurrentAttributePoints);
+	UFUNCTION(BlueprintCallable, Category = "RiseAndSave")
+		void ApplyPoints();
+	UFUNCTION(BlueprintCallable, Category = "RiseAndSave")
+		void GetAttMath(int32 &AvailableAtt, int32 &MaxAtt);
+	UFUNCTION(BlueprintCallable, Category = "RiseAndSave")
+		void SetAttMath(int32 AvailableAtt, int32 MaxAtt);
 	/* Delete if not used
 	UFUNCTION(BlueprintCallable, Category = "SkillPoint")
 		FStatsInfo GetCharacterInfo(int32& CurrentSkillPoints, int32& CurrentAttributePoints, int32& CharacterLevel);

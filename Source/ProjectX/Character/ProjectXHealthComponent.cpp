@@ -19,7 +19,7 @@ void UProjectXHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	SetCurrentHealth(GetCurrentMaxHealth());
 	// ...
 	
 }
@@ -48,6 +48,7 @@ void UProjectXHealthComponent::SetCurrentHealth(float NewHealth)
 {
 	Health = NewHealth;
 	OnHealthChange.Broadcast(Health,0.0f);
+	//UE_LOG(LogTemp, Warning, TEXT("SetCurrentHealth"));
 }
 
 void UProjectXHealthComponent::SetCurrentMaxHealth(float ChangeValue)
@@ -81,6 +82,7 @@ void UProjectXHealthComponent::ChangeHealthValue(float ChangeValue)
 void UProjectXHealthComponent::AddMaxHealthValue(float NewHealth)
 {
 	MaxHealth += NewHealth;
+	Health = MaxHealth;
 	OnHealthChange.Broadcast(Health, 0);
 }
 

@@ -827,8 +827,7 @@ void AProjectXCharacter::CharDead()
 		GetController()->UnPossess();		
 		
 	}
-	//UnPossessed();
-	//TimerRagdooll
+
 	GetWorldTimerManager().SetTimer(TimerHanndle_RagDollTimer, this, &AProjectXCharacter::EnableRagdoll, TimeAnim,false);
 
 	GetCursorToWorld()->SetVisibility(false);

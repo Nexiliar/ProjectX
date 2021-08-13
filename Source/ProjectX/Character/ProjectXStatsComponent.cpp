@@ -27,9 +27,9 @@ void UProjectXStatsComponent::BeginPlay()
 
 	AmountOfExpirienceNeedForLvlUpPerLevel.SetNum(MaxLevel);
 	BasicCompsInit();
-	ConRiseResult(true,0);
-	ReactionRiseResult(true,0);
-	StrRiseResult(true,0);
+	//ConRiseResult(true,0);
+	//ReactionRiseResult(true,0);
+	//StrRiseResult(true,0);
 }
 
 
@@ -89,13 +89,15 @@ void UProjectXStatsComponent::LevelUpEvent()
 	}
 	else
 	{
-		CurrentLevel += + 1;
+		CurrentLevel += 1;
 		
-		AttributePoints += + 1;
-		
+		AttributePoints += 1;
+		AvailableAttributePoints +=1;
+		MaxAttributePoints +=1;
+
 		HealthComponent->SetCurrentHealth(HealthComponent->GetCurrentMaxHealth());
 		Inventory->MaxWeightLimit += 5;
-		OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel,AttributePoints);
+		OnStatsChange.Broadcast(CharacterStatistic, CurrentLevel, AttributePoints);
 		OnLevelUp.Broadcast();
 	}
 	
@@ -266,7 +268,7 @@ void UProjectXStatsComponent::ReactionRiseResult(bool Init,int32 AmountOfPointst
 					{
 						Player->BonusReloadSpeed += 0.1f;
 						React10 = true;
-						UE_LOG(LogTemp, Warning, TEXT("React10"));
+						
 					}
 					
 				}
@@ -277,7 +279,7 @@ void UProjectXStatsComponent::ReactionRiseResult(bool Init,int32 AmountOfPointst
 					{
 						Player->BonusReloadSpeed += 0.2f;
 						React15 = true;
-						UE_LOG(LogTemp, Warning, TEXT("React15"));
+						
 					}					
 				}
 
@@ -295,7 +297,7 @@ void UProjectXStatsComponent::ReactionRiseResult(bool Init,int32 AmountOfPointst
 
 						}
 						Player->BonusReloadSpeed += 0.3f;
-						UE_LOG(LogTemp, Warning, TEXT("React20"));
+						
 					}
 
 				}
@@ -311,16 +313,136 @@ FStatsInfo UProjectXStatsComponent::GetEveryStat(int32& level,int32& att)
 	att = AttributePoints;
 	return CharacterStatistic;
 }
-void UProjectXStatsComponent::StatsInit(int32 level, int32 att, FStatsInfo stats)
+void UProjectXStatsComponent::StatsInit(bool FirstInit, int32 level, int32 att, FStatsInfo stats)
 {
-	CurrentLevel = level;	
+	CurrentLevel = level;
 	AttributePoints = att;
 	CharacterStatistic = stats;
+	int32 TempCon;
+	int32 TempStr;
+	int32 TempReac;
+
+	if (FirstInit)
+	{
+		TempCon = DefaultCharStatistic.Constitution;
+		TempStr = DefaultCharStatistic.Strength;
+		TempReac = DefaultCharStatistic.Reaction;
+		ConRiseResult(true, TempCon);
+		StrRiseResult(true, TempStr);
+		ReactionRiseResult(true, TempReac);
+	}
+	else
+	{
+		TempCon = CharacterStatistic.Constitution; //-= DefaultCharStatistic.Constitution;
+		TempStr = CharacterStatistic.Strength; //-= DefaultCharStatistic.Strength;
+		TempReac = CharacterStatistic.Reaction; //-= DefaultCharStatistic.Reaction;
+		ConRiseResult(false, TempCon);
+		StrRiseResult(false, TempStr);
+		ReactionRiseResult(false, TempReac);
+	}
+
+
+	
 }
 void UProjectXStatsComponent::BasicCompsInit()
 {
 	Inventory = Cast<UProjectXInventoryComponent>(GetOwner()->GetComponentByClass(UProjectXInventoryComponent::StaticClass()));
 	HealthComponent = Cast<UProjectXHealthComponent>(GetOwner()->GetComponentByClass(UProjectXHealthComponent::StaticClass()));
+}
+
+void UProjectXStatsComponent::RiseAttValue(FName StatName, int32& CurrentAtt, int32 &CurrentAttributePoints)
+{
+	if (AvailableAttributePoints > 0 )
+	{
+		if (StatName == "Str")
+		{
+			STR += 1;
+			CurrentAtt = STR + CharacterStatistic.Strength;
+		}
+		if (StatName == "Con")
+		{
+			CON += 1;
+			CurrentAtt = CON + CharacterStatistic.Constitution;
+		}
+		if (StatName == "React")
+		{
+			REACT += 1;
+			CurrentAtt = REACT + CharacterStatistic.Reaction;
+		}
+		AvailableAttributePoints -= 1;
+		CurrentAttributePoints = AvailableAttributePoints;
+	}
+}
+
+void UProjectXStatsComponent::DecreaseAttValue(FName StatName, int32& CurrentAtt, int32& CurrentAttributePoints)
+{
+	if (AvailableAttributePoints != MaxAttributePoints)
+	{
+		if (StatName == "Str")
+		{			
+			if (STR + CharacterStatistic.Strength > CharacterStatistic.Strength)
+			{
+				STR -= 1;
+				CurrentAtt = STR + CharacterStatistic.Strength;
+				AvailableAttributePoints += 1;
+			}
+			
+			
+		}
+		if (StatName == "Con")
+		{
+			if (CON + CharacterStatistic.Constitution > CharacterStatistic.Constitution)
+			{
+				CON -= 1;
+				CurrentAtt = CON + CharacterStatistic.Constitution;
+				AvailableAttributePoints += 1;
+			}
+			
+		}
+		if (StatName == "React")
+		{
+			if (REACT + CharacterStatistic.Reaction > CharacterStatistic.Reaction)
+			{
+				REACT -= 1;
+				CurrentAtt = REACT + CharacterStatistic.Reaction;
+				AvailableAttributePoints += 1;
+			}
+			
+		}	
+		
+		CurrentAttributePoints = AvailableAttributePoints;
+	}
+}
+
+void UProjectXStatsComponent::ApplyPoints()
+{
+	RiseStat(EStatTypesName::Strength, STR);
+	STR = 0;
+	RiseStat(EStatTypesName::Constitution, CON);
+	CON = 0;
+	RiseStat(EStatTypesName::Reaction, REACT);
+	REACT = 0;
+	
+	if (AvailableAttributePoints == 0)
+	{
+		MaxAttributePoints = 0;
+	}
+	else
+	{
+		MaxAttributePoints = AvailableAttributePoints;
+	}
+}
+
+void UProjectXStatsComponent::GetAttMath(int32& AvailableAtt, int32& MaxAtt)
+{
+	AvailableAtt = AvailableAttributePoints;
+	MaxAtt = MaxAttributePoints;
+}
+
+void UProjectXStatsComponent::SetAttMath(int32 AvailableAtt, int32 MaxAtt)
+{
+	AvailableAttributePoints = AvailableAtt;
+	MaxAttributePoints = MaxAtt;
 }
 
 bool UProjectXStatsComponent::RiseStat(EStatTypesName StatName, int32 AmountOfPoits)

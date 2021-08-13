@@ -21,7 +21,7 @@ void UProjectXInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	//WeaponINIT();
-
+	
 }
 
 
@@ -253,28 +253,6 @@ void UProjectXInventoryComponent::BodyKitAmmoTypeChange(FAmmoSlot AmmoSlotInfo)
 
 
 
-/* /DelIF NOT USE
-void UProjectXInventoryComponent::AmmoSlotChangeValue(EWeaponType TypeWeapon, int32 CountAmmoChange)
-{
-	bool bIsFind = false;
-	int8 i = 0;
-	while (i < AmmoSlots.Num() && !bIsFind)
-	{
-		if (AmmoSlots[i].WeaponType == TypeWeapon)
-		{
-			AmmoSlots[i].Count += CountAmmoChange;
-			if (AmmoSlots[i].Count > AmmoSlots[i].MaxCount)
-				AmmoSlots[i].Count = AmmoSlots[i].MaxCount;
-			
-			OnAmmoChange.Broadcast(AmmoSlots[i].WeaponType, AmmoSlots[i].Count,AmmoSlots[i].MaxCount);
-
-			bIsFind = true;
-			
-		}
-		i++;
-	}
-}*/
-
 
 //Check how much ammo is left 
 bool UProjectXInventoryComponent::CheckAmmoForWeapon(EWeaponType TypeWeapon, int32 &AviableAmmoForWeapon)
@@ -298,21 +276,8 @@ bool UProjectXInventoryComponent::CheckAmmoForWeapon(EWeaponType TypeWeapon, int
 	return IsEnoughAmmo;
 }
 
-/* Check if need
-bool UProjectXInventoryComponent::CheckCanTakeAmmo(EWeaponType AmmoType)
-{
-	bool result = false;
-	int8 i = 0;
-	while (i < AmmoSlots.Num() && !result)
-	{
-		if (AmmoSlots[i].WeaponType == AmmoType && AmmoSlots[i].Count < AmmoSlots[i].MaxCount)
-			result = true;
-		i++;
-	}
-	return result;
-}
-*/
-//NeedRework delet comm after
+
+
 bool UProjectXInventoryComponent::CheckCanTakeWeapon(int32 &FreeSlot)
 {
 	bool bIsFreeslot = false;
@@ -366,11 +331,6 @@ bool UProjectXInventoryComponent::UnequipItem(int32 SlotIndex, FInventory& Ivent
 		break;
 	case EEquipmentSlotType::BackPack:
 		UnequipBackPack(SlotIndex);
-		isBackPackEquiped = false;
-		InventorySlots.Empty();
-		EquipmentSlots[SlotIndex] = {};
-		EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::BackPack;
-		UE_LOG(LogTemp, Warning, TEXT(" UnEquipSucces"));
 		bIsFind = true;
 		OnUnEquipItem.Broadcast();
 		break;
@@ -409,6 +369,7 @@ void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<
 				InventorySlots = InventorySlotsInfo;
 				EquipSuccessfuly = true;
 				isBackPackEquiped = true;
+				ChangeCurrentWeight(BackPackInfo, 1, true);
 			}
 				
 		}		
@@ -419,7 +380,7 @@ void UProjectXInventoryComponent::EquipBackPack(FInventory BackPackInfo, TArray<
 		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), BackPackInfo.ItemsInfo.SoundEquip, GetOwner()->GetActorLocation());
 	}
 
-	ChangeCurrentWeight(BackPackInfo, 1, true);
+	
 	OnEquipItem.Broadcast();	
 }
 
@@ -441,8 +402,13 @@ void UProjectXInventoryComponent::UnequipBackPack(int32 SlotIndex)
 		UProjectXGameInstance* MyGI = Cast<UProjectXGameInstance>(GetWorld()->GetGameInstance());
 		FInventory ItemInfo;
 		MyGI->GetItemInfoByName(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, ItemInfo);
-		ChangeCurrentWeight(ItemInfo, 1, false);
+		ChangeCurrentWeight(EquipmentSlots[SlotIndex], 1, false);
 	}
+
+	isBackPackEquiped = false;
+	InventorySlots.Empty();
+	EquipmentSlots[SlotIndex] = {};
+	EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::BackPack;
 	
 }
 
@@ -683,6 +649,7 @@ bool UProjectXInventoryComponent::UnequipBracer(int32 SlotIndex)
 		SpawnedItemCFG->ItemInit(EquipmentSlots[SlotIndex].ItemsInfo.ItemName, false, InventorySlots, EquipmentSlots[SlotIndex]);
 		
 	}
+	ChangeCurrentWeight(EquipmentSlots[SlotIndex], 1, false);
 	EquipmentSlots[SlotIndex] = {};
 	EquipmentSlots[SlotIndex].EquipmentInfo.SlotType = EEquipmentSlotType::Bracer;
 	isBracerEquiped = false;
@@ -929,6 +896,7 @@ bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOf
 	{		
 			if (AmountOfItems >= GetAmountOfItemsAtIndex(ItemIndex))
 			{
+				OnItemUsed.Broadcast(AmountOfItems, InventorySlots[ItemIndex]);
 				InventorySlots[ItemIndex].ItemsInfo = {};
 				InventorySlots[ItemIndex].ItemsInfo.isSlotOccupied = false;
 				bIsSucces = true;
@@ -936,14 +904,17 @@ bool UProjectXInventoryComponent::UseItemAtIndex(int32 ItemIndex, int32 AmountOf
 			else
 			{
 				InventorySlots[ItemIndex].ItemsInfo.AmountOfItemsInSlot -= AmountOfItems;
+				OnItemUsed.Broadcast(AmountOfItems, InventorySlots[ItemIndex]);
 				bIsSucces = true;
 			}
 				if(InventorySlots[ItemIndex].ItemsInfo.SoundUse)
 				{
 					UGameplayStatics::SpawnSoundAtLocation(GetWorld(), InventorySlots[ItemIndex].ItemsInfo.SoundUse, GetOwner()->GetActorLocation());
 				}
+
+		ChangeCurrentWeight(LocInv, AmountOfItems, false);
 		OnAmountOfItemsChanged.Broadcast();
-		OnItemUsed.Broadcast(AmountOfItems,InventorySlots[ItemIndex]);	
+			
 	}
 	return bIsSucces;
 }

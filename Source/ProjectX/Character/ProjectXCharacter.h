@@ -235,9 +235,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	ESlotType GetCurrentSlot(int32& IndexOfEnum);
 	
-	//OldSwitchSystem Del if not used
-	//void TrySwicthNextWeapon();
-	//void TrySwitchPreviosWeapon();
+
 	
 	UFUNCTION(BlueprintCallable)
 		void TryUseAbillity();
