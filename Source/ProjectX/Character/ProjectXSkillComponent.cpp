@@ -107,11 +107,19 @@ void UProjectXSkillComponent::InitTimerRemainingCooldown()
 void UProjectXSkillComponent::SwitchSkills()
 {
 	if (isBastionModeAvailable || isSnakeModeAvailable || isRageModeAvailable)
-	{
+	{		
 		ESkillList TempSkill = CurrentSkill;
-		CurrentSkill = BonusSkill;
-		BonusSkill = TempSkill;
-		OnSkillSwitched.Broadcast();
+		if (TempSkill == BonusSkill)
+		{
+
+		}
+		else
+		{
+			CurrentSkill = BonusSkill;
+			BonusSkill = TempSkill;
+			OnSkillSwitched.Broadcast();
+			UE_LOG(LogTemp, Warning, TEXT("SwitchSkill"));
+		}
 	}
 }
 
@@ -316,6 +324,12 @@ void UProjectXSkillComponent::RageModeEnd()
 	}
 }
 
+void UProjectXSkillComponent::SetSkills(ESkillList Current, ESkillList Bonus)
+{
+	CurrentSkill = Current;
+	BonusSkill = Bonus;
+}
+
 void UProjectXSkillComponent::SnakeMode()
 {
 	if (isBonusSkillOnCoolDown)
@@ -392,7 +406,7 @@ void UProjectXSkillComponent::BastionMode()
 
 			
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BonusSkillTimer, this, &UProjectXSkillComponent::BastionModeEnd, BastionTimer, false);
-
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_SkillTimerForWidget, this, &UProjectXSkillComponent::CheckSkillTimer, 0.1f, true);
 			
 			isBonusSkillOnCoolDown = true;
 			OnSkillUsed.Broadcast(ESkillList::BastionMode);

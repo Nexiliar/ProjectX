@@ -81,9 +81,18 @@ void APickUpActor::CollisionBoxEndOverlap(UPrimitiveComponent* OverlappedCompone
 
 void APickUpActor::StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	Character = Cast<AProjectXCharacter>(OtherActor);
+
+	if (Character && Character->InventoryComponent)
+	{
+		Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
+		isOverlapping = true;
+		OverlapStart_BP(isOverlapping);
+	}
+
 	if (ItemCFG.ItemsInfo.Itemtype != EItemType::Equipment)
 	{ 
-		Character = Cast<AProjectXCharacter>(OtherActor);
+		//Character = Cast<AProjectXCharacter>(OtherActor);
 			if (Character && Character->InventoryComponent && Character->InventoryComponent->InventorySlots.Num()>1)
 			{
 				
@@ -103,6 +112,8 @@ void APickUpActor::StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedCompone
 								else
 								{
 									this->Destroy();
+									isOverlapping = false;
+									OverlapStart_BP(isOverlapping);
 								}							
 							}					
 					}
@@ -119,6 +130,8 @@ void APickUpActor::StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedCompone
 								else
 								{
 									this->Destroy();
+									isOverlapping = false;
+									OverlapStart_BP(isOverlapping);
 								}
 							}
 						}

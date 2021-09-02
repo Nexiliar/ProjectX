@@ -213,7 +213,7 @@ void UProjectXStatsComponent::StrRiseResult(bool Init,int32 AmountOfPointstoAdd)
 			if (CharacterStatistic.Strength >= 20)
 			{
 				IsSlotUnlocked(3);
-				HealthComponent->CoefDamage -= 0.05f;
+				HealthComponent->CoefDamage -= 0.01f;
 
 				UProjectXSkillComponent* Skill = Cast<UProjectXSkillComponent>(GetOwner()->GetComponentByClass(UProjectXSkillComponent::StaticClass()));
 				if (Skill)

@@ -95,6 +95,8 @@ public:
 		void SwitchSkills();
 	UFUNCTION(BlueprintCallable, Category = "Skills")
 		void ChoseSkill(ESkillList Skill);
+	UFUNCTION(BlueprintCallable, Category = "Skills")
+		void SetSkills(ESkillList Current, ESkillList Bonus);
 	
 
 	UFUNCTION(Category = "Skill Config")
