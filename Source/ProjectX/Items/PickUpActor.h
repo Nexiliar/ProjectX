@@ -35,6 +35,8 @@ public:
 	UPROPERTY(EditAnywhere)
 		class UMaterialInstance* GetOutOfWeapon;
 
+	FTimerHandle Timer_LineTrace;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -88,7 +90,9 @@ public:
 		float AbilityTimer = 0.0f;
 	UPROPERTY(BlueprintReadWrite)
 	ESkillList CurrentBracerSkill;
-
+	
+	UFUNCTION()
+		void LineTracingCheck();
 	//ItemInit
 
 	UFUNCTION()

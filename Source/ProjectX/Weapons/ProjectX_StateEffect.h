@@ -8,6 +8,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "ProjectX_StateEffect.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDebuffTimerStarted, float, TimeRemainingForWidget);
 /**
  * 
  */
@@ -45,18 +46,29 @@ public:
 		float Power = 20.0f;
 };
 
-UCLASS()
+UCLASS(Blueprintable, meta = (ShowWorldContextPin))
 class PROJECTX_API UProjectX_StateEffect_ExecuteTimer : public UProjectX_StateEffect
 {
 	GENERATED_BODY()
+
+		// Перезаписываем функцию для вызова после инициализации.
+		virtual void PostInitProperties() override;
 public:
-	
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Debuff")
+		FOnDebuffTimerStarted OnDebuffTimeStarted;
 	bool InitObject(AActor* Actor) override;
 	void DestroyObject() override;
-	
 
+	UFUNCTION(BlueprintPure)
+		AActor* GetOwner() const { return Cast<AActor>(GetOuter()); };
+	
+	// Функция, которую определяем мы уже в Блупринтах.
+	UFUNCTION(BlueprintImplementableEvent)
+		void BeginPlay();
 
 	virtual void Execute();
+	
+	void TimeRemaining();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setting ExecuteTimer")
 		float Power = 20.0f;
@@ -64,9 +76,12 @@ public:
 		float Timer = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setting ExecuteTimer")
 		float RateTime = 1.0f;
+	UPROPERTY(BlueprintReadOnly, Category = "Debuff Timer For Widget")
+		float WidgetDebuffTimer = 0.0f;
 
 	FTimerHandle TimerHandle_ExecuteTimer;
 	FTimerHandle TimerHandle_EffectTimer;
+	FTimerHandle TimerHandle_WidgetInfo;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setting ExecuteTimer")
 		UParticleSystem* ParticleEffect = nullptr;

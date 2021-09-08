@@ -36,6 +36,5 @@ public:
 	virtual void AddEffect(UProjectX_StateEffect* NewEffect);
 	virtual void GetSpawnLocationForEffect(FVector&MeshLocation, FName &BoneName);
 
-	//UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	//	void DropItemToWorld(FDropItem DropItemInfo);
+
 };

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "UObject/Class.h"
+#include "DrawDebugHelpers.h"
 #include "ProjectX/Items/PickUpActor.h"
 
 // Sets default values
@@ -59,36 +60,67 @@ void APickUpActor::Tick(float DeltaTime)
 void APickUpActor::CollisionBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Character = Cast<AProjectXCharacter>(OtherActor);
-	
-		if (Character && Character->InventoryComponent)
-		{
-			Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
-			isOverlapping = true;
-			OverlapStart_BP(isOverlapping);
-		}		
+		
+	GetWorld()->GetTimerManager().SetTimer(Timer_LineTrace, this, &APickUpActor::LineTracingCheck, 0.1f, true);	
 }
 
 void APickUpActor::CollisionBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	Character = Cast<AProjectXCharacter>(OtherActor);
-	if(Character)
-		Character->OnIterractButtonPressed.Clear();
-
-
+{	
+	GetWorld()->GetTimerManager().ClearTimer(Timer_LineTrace);
 	isOverlapping = false;
 	OverlapStart_BP(isOverlapping);
+}
+
+void APickUpActor::LineTracingCheck()
+{
+	FHitResult Hit;
+	FVector End;
+	FVector Start = GetActorLocation();	
+	if (Character)
+	{
+		End = Character->GetMesh()->GetSocketLocation("Spine_Socket");
+	}
+
+	FVector Result = Start - End;
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Vector: Size = %f"), Result.Size());
+	
+
+	if (Result.Size()<=150.0f)
+	{
+		if (!isOverlapping)
+		{
+			if (Character && Character->InventoryComponent)
+			{
+				Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
+				isOverlapping = true;
+				OverlapStart_BP(isOverlapping);
+			}
+		}
+
+	}
+	else
+	{
+		if (isOverlapping)
+		{
+			if (Character)
+				Character->OnIterractButtonPressed.Clear();
+			isOverlapping = false;
+			OverlapStart_BP(isOverlapping);
+		}
+	}
 }
 
 void APickUpActor::StaticMeshBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Character = Cast<AProjectXCharacter>(OtherActor);
 
-	if (Character && Character->InventoryComponent)
-	{
-		Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
-		isOverlapping = true;
-		OverlapStart_BP(isOverlapping);
-	}
+	//if (Character && Character->InventoryComponent)
+	//{
+	//	Character->OnIterractButtonPressed.AddDynamic(this, &APickUpActor::TryToPickUpItem);
+	//	isOverlapping = true;
+	//	OverlapStart_BP(isOverlapping);
+	//}
 
 	if (ItemCFG.ItemsInfo.Itemtype != EItemType::Equipment)
 	{ 
@@ -320,9 +352,12 @@ void APickUpActor::TryToPickUpItem()
 		default:
 			break;
 		}
-		
+		isOverlapping = false;
+		OverlapStart_BP(isOverlapping);
 	}	
 }
+
+
 
 void APickUpActor::DestroyItem(int32 ItemIndex)
 {

@@ -68,12 +68,22 @@ void UProjectX_StateEffect_ExecuteOnce::ExecuteOnce()
 	DestroyObject();
 }
 
+void UProjectX_StateEffect_ExecuteTimer::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	//Вызываем только в игре, когда есть мир. В редакторе BeginPlay вызван не будет
+	if (GetOuter() && GetOuter()->GetWorld())
+		BeginPlay();
+}
+
 bool UProjectX_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 {
 	Super::InitObject(Actor);
 	//UE_LOG(LogTemp, Warning, TEXT("UProjectX_StateEffect_ExecuteTimer: FIRE"));
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_EffectTimer, this, &UProjectX_StateEffect_ExecuteTimer::DestroyObject, Timer, false);
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UProjectX_StateEffect_ExecuteTimer::Execute, RateTime, true);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_WidgetInfo, this, &UProjectX_StateEffect_ExecuteTimer::TimeRemaining, 0.1f,true);
 
 	if (ParticleEffect)
 	{	
@@ -125,6 +135,8 @@ void UProjectX_StateEffect_ExecuteTimer::DestroyObject()
 
 
 
+
+
 void UProjectX_StateEffect_ExecuteTimer::Execute()
 {
 	if (myActor)
@@ -136,4 +148,16 @@ void UProjectX_StateEffect_ExecuteTimer::Execute()
 		}
 	}
 	
+}
+
+void UProjectX_StateEffect_ExecuteTimer::TimeRemaining()
+{
+	WidgetDebuffTimer = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_EffectTimer);
+	
+
+	OnDebuffTimeStarted.Broadcast(WidgetDebuffTimer);
+	if (WidgetDebuffTimer <= 0)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_WidgetInfo);
+	}
 }

@@ -30,7 +30,4 @@ void IProjectX_Interface_GameActor::GetSpawnLocationForEffect(FVector& MeshLocat
 
 }
 
-//void IProjectX_Interface_GameActor::DropItemToWorld(FDropItem DropItemInfo)
-//{
-	
-//}
+

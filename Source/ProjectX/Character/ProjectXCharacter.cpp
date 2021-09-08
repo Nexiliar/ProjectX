@@ -77,8 +77,6 @@ void AProjectXCharacter::BeginPlay()
 		CurrentCursor = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), CursorMaterial, CursorSize, FVector(0));
 	}	
 	GetWorldTimerManager().SetTimer(DelayTimer, this, &AProjectXCharacter::Compare, 0.1f, true, 0.1f);
-	
-
 }
 void AProjectXCharacter::Tick(float DeltaSeconds)
 {
@@ -852,16 +850,7 @@ void AProjectXCharacter::EnableRagdoll()
 
 void AProjectXCharacter::EnableHealthRegenTimer(float HealthRegenSpeed)
 {
-	/* 
-	if (CharHealthComponent->RegenDone)
-	{
-		GetWorldTimerManager().ClearTimer(RegenTimer);
-	}
-	else
-	{
-		GetWorldTimerManager().SetTimer(RegenTimer, this, &AProjectXCharacter::HealthRegen, HealthRegenSpeed, true, 0.1f);
-	}
-	*/
+
 }
 
 void AProjectXCharacter::HealthRegen()

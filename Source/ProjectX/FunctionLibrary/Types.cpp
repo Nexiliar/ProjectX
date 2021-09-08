@@ -68,3 +68,57 @@ void UTypes::AddEffectBySurfaceType(AActor* TakeEffectActor, TSubclassOf<UProjec
 			}
 	}
 }
+
+void UTypes::AddDebuffEffect(AActor* ActorForEffect, TSubclassOf<UProjectX_StateEffect> AddEffectClass)
+{
+	if (ActorForEffect && AddEffectClass)
+	{
+		UProjectX_StateEffect* myEffect = Cast<UProjectX_StateEffect>(AddEffectClass->GetDefaultObject());
+		if (myEffect)
+		{
+			bool bIsCanAddEffect = false;
+				if (!myEffect->bIsStackable)
+				{
+					int8 i = 0;
+					TArray<UProjectX_StateEffect*> CurrentEffects;
+					IProjectX_Interface_GameActor* myInterface = Cast<IProjectX_Interface_GameActor>(ActorForEffect);
+					if (myInterface)
+						{
+							CurrentEffects = myInterface->GetAllCurrentEffects();
+						}
+
+					if (CurrentEffects.Num() > 0)
+					{
+						while (i < CurrentEffects.Num() && !bIsCanAddEffect)
+						{
+								if (CurrentEffects[i]->GetClass() != AddEffectClass)
+								{
+									bIsCanAddEffect = true;
+								}
+							i++;
+						}
+					}
+					else
+					{
+						bIsCanAddEffect = true;
+					}
+
+				}
+				else
+				{
+					bIsCanAddEffect = true;
+				}
+
+
+				if (bIsCanAddEffect)
+				{
+					UProjectX_StateEffect* NewEffect = NewObject<UProjectX_StateEffect>(ActorForEffect, AddEffectClass);
+					if (NewEffect)
+					{
+							NewEffect->InitObject(ActorForEffect);
+					}
+				}
+								
+		}		
+	}
+}

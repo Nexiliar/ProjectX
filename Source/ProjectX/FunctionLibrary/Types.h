@@ -64,6 +64,17 @@ enum class EWeaponType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EDebuffEffect :uint8
+{
+	Fire UMETA(DisplayName = "Fire"),
+	Poison UMETA(DisplayName = "Poison"),
+	Gas UMETA(DisplayName = "Gas"),
+	NoAir UMETA(DisplayName = "NoAir"),
+	None UMETA(DisplayName = "None"),
+
+};
+
+UENUM(BlueprintType)
 enum class EItemType : uint8
 {
 	None UMETA(DisplayName = "None"),
@@ -547,4 +558,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	static void AddEffectBySurfaceType(AActor* TakeEffectActor,TSubclassOf<UProjectX_StateEffect> AddEffectClass, EPhysicalSurface SurfaceType);
 	
+	UFUNCTION(BlueprintCallable)
+		static void AddDebuffEffect(AActor* ActorForEffect, TSubclassOf<UProjectX_StateEffect> AddEffectClass);
 };
