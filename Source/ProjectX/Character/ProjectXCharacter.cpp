@@ -784,8 +784,6 @@ void AProjectXCharacter::RemoveEffect(UProjectX_StateEffect* RemoveEffect)
 
 void AProjectXCharacter::AddEffect(UProjectX_StateEffect* NewEffect)
 {
-	
-
 	Effects.Add(NewEffect);
 }
 
@@ -799,6 +797,20 @@ void AProjectXCharacter::GetSpawnLocationForEffect(FVector& MeshLocation, FName&
 	
 }
 
+void AProjectXCharacter::ClearEffects()
+{	
+
+		for (int8 i = 0; i < Effects.Num(); i++)
+		{			
+			if (Effects[i]->isInterrupted)
+			{				
+				Effects[i]->DestroyObject();
+				UE_LOG(LogTemp, Warning, TEXT("AProjectXCharacter::ClearEffects"));
+			}				
+		}
+
+}
+
 
 void AProjectXCharacter::TryToInterractWithObject()
 {	
@@ -810,6 +822,12 @@ void AProjectXCharacter::CharDead()
 	int32 rnd = 0;
 	float TimeAnim = 0.0f;
 	rnd = FMath::RandHelper(DeadAnim.Num());
+
+	for (int8 i = 0; i < Effects.Num(); i++)
+	{
+		Effects[i]->DestroyObject();
+	}
+
 	if (DeadAnim[rnd] && DeadAnim.IsValidIndex(rnd) && GetMesh() && GetMesh()->GetAnimInstance())
 	{
 		TimeAnim = DeadAnim[rnd]->GetPlayLength()-0.3;

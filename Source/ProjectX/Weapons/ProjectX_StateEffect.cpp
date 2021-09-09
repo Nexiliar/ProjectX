@@ -31,6 +31,7 @@ void UProjectX_StateEffect::DestroyObject()
 	{
 		myInterface->RemoveEffect(this);
 	}
+	
 	myActor = nullptr;
 	if (this && this->IsValidLowLevel())
 	{
@@ -81,9 +82,22 @@ bool UProjectX_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 {
 	Super::InitObject(Actor);
 	//UE_LOG(LogTemp, Warning, TEXT("UProjectX_StateEffect_ExecuteTimer: FIRE"));
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle_EffectTimer, this, &UProjectX_StateEffect_ExecuteTimer::DestroyObject, Timer, false);
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UProjectX_StateEffect_ExecuteTimer::Execute, RateTime, true);
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle_WidgetInfo, this, &UProjectX_StateEffect_ExecuteTimer::TimeRemaining, 0.1f,true);
+	if (isInterrupted)
+	{
+		//Timer = RateTime;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UProjectX_StateEffect_ExecuteTimer::Execute, RateTime, true);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WidgetInfo, this, &UProjectX_StateEffect_ExecuteTimer::TimeRemaining, 0.1f, true);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_EffectTimer, this, &UProjectX_StateEffect_ExecuteTimer::DestroyObject, Timer, false);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UProjectX_StateEffect_ExecuteTimer::Execute, RateTime, true);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_WidgetInfo, this, &UProjectX_StateEffect_ExecuteTimer::TimeRemaining, 0.1f, true);
+	}
+
+
+
+
 
 	if (ParticleEffect)
 	{	
@@ -97,15 +111,15 @@ bool UProjectX_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 			myInterface->GetSpawnLocationForEffect(Loc, NameBoneToAttach);
 		 	if (NameBoneToAttach != "None")
 			{
-				UE_LOG(LogTemp, Warning, TEXT("BoneLocation %s"), *Loc.ToString());
-				UE_LOG(LogTemp, Warning, TEXT("BoneName %s"), *NameBoneToAttach.ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("BoneLocation %s"), *Loc.ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("BoneName %s"), *NameBoneToAttach.ToString());
 				ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(ParticleEffect, myActor->GetRootComponent()->GetChildComponent(1), NameBoneToAttach, Loc, FRotator::ZeroRotator, EAttachLocation::SnapToTarget, false);
 			}
 			else
 			{
 			
 				ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(ParticleEffect, myActor->GetRootComponent(), NameBoneToAttach, Loc, FRotator::ZeroRotator, EAttachLocation::SnapToTarget, false);
-				UE_LOG(LogTemp, Warning, TEXT("BoneName %s"), *NameBoneToAttach.ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("BoneName %s"), *NameBoneToAttach.ToString());
 			}
 
 			
@@ -123,6 +137,15 @@ bool UProjectX_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 
 void UProjectX_StateEffect_ExecuteTimer::DestroyObject()
 {
+	GetWorld()->GetTimerManager().ClearTimer(TimerHandle_EffectTimer);
+	GetWorld()->GetTimerManager().ClearTimer(TimerHandle_ExecuteTimer);
+	
+	GetWorld()->GetTimerManager().ClearTimer(TimerHandle_WidgetInfo);
+
+	WidgetDebuffTimer = 0.0f;
+	AdditionalWidgetDebuffTimer = 0.0f;
+	OnDebuffTimeStarted.Broadcast(WidgetDebuffTimer, AdditionalWidgetDebuffTimer);
+
 	if (ParticleEmitter)
 	{
 		ParticleEmitter->DestroyComponent();
@@ -130,6 +153,7 @@ void UProjectX_StateEffect_ExecuteTimer::DestroyObject()
 		Super::DestroyObject();
 	}
 
+	
 
 }
 
@@ -147,17 +171,33 @@ void UProjectX_StateEffect_ExecuteTimer::Execute()
 			myHealthComp->ChangeHealthValue(Power);
 		}
 	}
-	
+
 }
+
+
 
 void UProjectX_StateEffect_ExecuteTimer::TimeRemaining()
 {
-	WidgetDebuffTimer = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_EffectTimer);
-	
-
-	OnDebuffTimeStarted.Broadcast(WidgetDebuffTimer);
-	if (WidgetDebuffTimer <= 0)
+	if (isInterrupted)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_WidgetInfo);
+		WidgetDebuffTimer = 1;
 	}
+	else
+	{
+		WidgetDebuffTimer = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_EffectTimer);
+
+		if (WidgetDebuffTimer <= 0.1f)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(TimerHandle_WidgetInfo);
+			WidgetDebuffTimer = 0.0f;
+		}
+	}
+
+
+	//if (AdditionalWidgetDebuffTimer <= 0.1f)
+	//{
+	//	GetWorld()->GetTimerManager().ClearTimer(TimerHandle_AdditionalWidgetInfo);
+	//	AdditionalWidgetDebuffTimer = 0.0f;
+	//}
+	OnDebuffTimeStarted.Broadcast(WidgetDebuffTimer, AdditionalWidgetDebuffTimer);
 }

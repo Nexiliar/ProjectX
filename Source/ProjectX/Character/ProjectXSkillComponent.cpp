@@ -289,7 +289,7 @@ void UProjectXSkillComponent::RageMode()
 		UProjectXHealthComponent* HealthComp = Cast<UProjectXHealthComponent>(GetOwner()->GetComponentByClass(UProjectXHealthComponent::StaticClass()));
 		if (HealthComp)
 		{
-			HealthComp->CoefDamage -= 0.5;
+			HealthComp->CoefDamage -= 0.1;
 
 			float TempMaxHealth = HealthComp->GetCurrentMaxHealth() * 1.2f;
 			GetWorld()->GetTimerManager().SetTimer(TimerHanlde_BonusSkillCooldown, this, &UProjectXSkillComponent::SkillIsEnable, RageCoolDownTimer, false);

@@ -49,6 +49,13 @@ void AProjectX_DebuffZone::CollisionBoxBeginOverlap(UPrimitiveComponent* Overlap
 
 void AProjectX_DebuffZone::CollisionBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("DebuffZoneSTOPOVerlap"));
+	AProjectXCharacter* Player = Cast<AProjectXCharacter>(OtherActor);
+	if (Player)
+	{
+
+		Player->ClearEffects();
+		//UE_LOG(LogTemp, Warning, TEXT("DebuffZoneSTOPOVerlap"));
+	}
+	
 }
 

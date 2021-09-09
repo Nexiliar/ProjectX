@@ -79,7 +79,7 @@ void UTypes::AddDebuffEffect(AActor* ActorForEffect, TSubclassOf<UProjectX_State
 			bool bIsCanAddEffect = false;
 				if (!myEffect->bIsStackable)
 				{
-					int8 i = 0;
+					
 					TArray<UProjectX_StateEffect*> CurrentEffects;
 					IProjectX_Interface_GameActor* myInterface = Cast<IProjectX_Interface_GameActor>(ActorForEffect);
 					if (myInterface)
@@ -89,14 +89,25 @@ void UTypes::AddDebuffEffect(AActor* ActorForEffect, TSubclassOf<UProjectX_State
 
 					if (CurrentEffects.Num() > 0)
 					{
-						while (i < CurrentEffects.Num() && !bIsCanAddEffect)
+						for (int8 i = 0; i < CurrentEffects.Num(); i++)
 						{
-								if (CurrentEffects[i]->GetClass() != AddEffectClass)
-								{
-									bIsCanAddEffect = true;
-								}
-							i++;
+							if (CurrentEffects[i]->GetClass() != AddEffectClass)
+							{
+								bIsCanAddEffect = true;
+							}
+							else
+							{
+								bIsCanAddEffect = false;
+							}
 						}
+						//while (i < CurrentEffects.Num() && !bIsCanAddEffect)
+						//{
+						//		if (CurrentEffects[i]->GetClass() != AddEffectClass)
+						//		{
+						//			bIsCanAddEffect = true;
+						//		}
+						//	i++;
+						//}
 					}
 					else
 					{
@@ -122,3 +133,4 @@ void UTypes::AddDebuffEffect(AActor* ActorForEffect, TSubclassOf<UProjectX_State
 		}		
 	}
 }
+

@@ -8,7 +8,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "ProjectX_StateEffect.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDebuffTimerStarted, float, TimeRemainingForWidget);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDebuffTimerStarted, float, TimeRemainingForWidget, float, AdditionalTimeRemainingForWidget);
 /**
  * 
  */
@@ -28,6 +28,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
 		bool bIsStackable = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
+		bool isInterrupted = false;
+	
 
 	AActor* myActor = nullptr;
 };
@@ -68,6 +71,8 @@ public:
 
 	virtual void Execute();
 	
+	
+
 	void TimeRemaining();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setting ExecuteTimer")
@@ -79,9 +84,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Debuff Timer For Widget")
 		float WidgetDebuffTimer = 0.0f;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Additional Debuff Timer For Widget")
+		float AdditionalWidgetDebuffTimer = 0.0f;
+
 	FTimerHandle TimerHandle_ExecuteTimer;
 	FTimerHandle TimerHandle_EffectTimer;
 	FTimerHandle TimerHandle_WidgetInfo;
+	FTimerHandle TimerHandle_AdditionalExecuteTimer;
+	FTimerHandle TimerHandle_AdditionalEffectTimer;
+	FTimerHandle TimerHandle_AdditionalWidgetInfo;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Setting ExecuteTimer")
 		UParticleSystem* ParticleEffect = nullptr;
@@ -89,3 +100,4 @@ public:
 	UParticleSystemComponent* ParticleEmitter = nullptr;
 	
 };
+

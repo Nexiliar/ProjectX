@@ -560,4 +560,5 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 		static void AddDebuffEffect(AActor* ActorForEffect, TSubclassOf<UProjectX_StateEffect> AddEffectClass);
+
 };

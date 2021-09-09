@@ -130,11 +130,8 @@ public:
 	AWeaponDefault* FirstWeaponInit = nullptr;
 	UPROPERTY()
 	AWeaponDefault* SecondWeaponInit = nullptr;
-	//??Delete or?
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-		FName BoneNameForEffect = "foot_r";
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-		FVector EffectOffset;
+	
+
 
 	//SnakeMode
 	UPROPERTY(BlueprintReadWrite)
@@ -149,8 +146,14 @@ public:
 	UDecalComponent* CurrentCursor = nullptr;
 
 	//Effect
-	TArray<UProjectX_StateEffect*> Effects;
+	UPROPERTY(BlueprintReadOnly, Category = "Effects")
+		TArray<UProjectX_StateEffect*> Effects;
 	
+	//??Delete or?
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+		FName BoneNameForEffect = "foot_r";
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+		FVector EffectOffset;
 
 
 
@@ -254,6 +257,7 @@ public:
 	 void GetSpawnLocationForEffect(FVector& MeshLocation, FName& BoneName) override;
 	//End Interface
 
+	 void ClearEffects();
 
 	UFUNCTION(BlueprintCallable)
 		void TryToInterractWithObject();
